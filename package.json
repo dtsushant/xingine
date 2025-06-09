@@ -1,0 +1,44 @@
+{
+  "name": "xingine",
+  "version": "1.0.3",
+  "description": "A useful TypeScript library for decoding and validation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json && tsc-alias",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "typescript",
+    "library",
+    "decoder",
+    "validation"
+  ],
+  "author": "Sushant Pandey <dtsushant@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dtsushant/xingine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dtsushant/xingine/issues"
+  },
+  "homepage": "https://github.com/dtsushant/xingine#readme",
+  "dependencies": {
+    "decoders": "^2.7.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "tsc-alias": "^1.8.2",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
