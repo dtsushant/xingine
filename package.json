@@ -1,6 +1,6 @@
 {
   "name": "xingine",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A useful TypeScript library for decoding and validation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,11 +27,13 @@
     "url": "https://github.com/dtsushant/xingine/issues"
   },
   "homepage": "https://github.com/dtsushant/xingine#readme",
-  "dependencies": {
+  "peerDependencies": {
     "decoders": "^2.7.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "decoders": "^2.7.0",
+    "reflect-metadata": "^0.2.2",
     "tsc-alias": "^1.8.2",
     "typescript": "^5.0.0"
   },
