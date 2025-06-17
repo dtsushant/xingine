@@ -3,6 +3,7 @@
     "target": "ES6",
     "module": "CommonJS",
     "declaration": true,
+    "lib": ["ES2019", "DOM"],
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",

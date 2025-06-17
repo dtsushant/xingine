@@ -1,6 +1,6 @@
 {
   "name": "xingine",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A useful TypeScript library for decoding and validation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,8 +8,11 @@
     "dist"
   ],
   "scripts": {
+    "clean": "rimraf dist",
     "build": "tsc --project tsconfig.json && tsc-alias",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "push": "yalc push --changed",
+    "yalc:dev": "npm run clean && npm run build && npm run push"
   },
   "keywords": [
     "typescript",
@@ -32,10 +35,38 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "decoders": "^2.7.0",
+    "jest": "^30.0.0",
     "reflect-metadata": "^0.2.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.0",
     "tsc-alias": "^1.8.2",
     "typescript": "^5.0.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": ".*\\.(e2e-)?spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s",
+      "!**/dist/**"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/dist/"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   },
   "engines": {
     "node": ">=14"

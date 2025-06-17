@@ -1,5 +1,5 @@
 import {
-  BaseFilterCondition,
+  BaseFilterCondition, ConditionalExpression,
   GroupCondition,
   SearchCondition,
   SearchQuery,
@@ -127,4 +127,47 @@ function transformCondition(cond: SearchCondition): Record<string, unknown> {
   }
 
   throw new Error("Invalid SearchCondition: must be base or group");
+}
+
+export function evaluateCondition(
+    condition: ConditionalExpression,
+    context: Record<string, unknown>
+): boolean {
+  // Handle group condition
+  if ('and' in condition) {
+    return Array.isArray(condition.and) && condition.and.every((sub) => evaluateCondition(sub, context));
+  }
+
+  if ('or' in condition) {
+    return Array.isArray(condition.or) && condition.or.some((sub) => evaluateCondition(sub, context));
+  }
+
+  const base = condition as BaseFilterCondition;
+  const actualValue = resolvePath(context, base.field);
+
+  switch (base.operator) {
+    case 'eq':
+      return actualValue === base.value;
+    case 'ne':
+      return actualValue !== base.value;
+    case 'like':
+      return typeof actualValue === 'string' && typeof base.value === 'string' && actualValue.includes(base.value);
+    case 'ilike':
+      return typeof actualValue === 'string' && typeof base.value === 'string' &&
+          actualValue.toLowerCase().includes(base.value.toLowerCase());
+    case 'in':
+      return Array.isArray(base.value) && base.value.includes(actualValue);
+    case 'nin':
+      return Array.isArray(base.value) && !base.value.includes(actualValue);
+    case 'gt':
+      return typeof actualValue === 'number' && typeof base.value === 'number' && actualValue > base.value;
+    case 'gte':
+      return typeof actualValue === 'number' && typeof base.value === 'number' && actualValue >= base.value;
+    case 'lt':
+      return typeof actualValue === 'number' && typeof base.value === 'number' && actualValue < base.value;
+    case 'lte':
+      return typeof actualValue === 'number' && typeof base.value === 'number' && actualValue <= base.value;
+    default:
+      return false;
+  }
 }
