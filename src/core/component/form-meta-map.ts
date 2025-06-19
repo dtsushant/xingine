@@ -6,6 +6,7 @@ export interface InputTypeProperties {
   minLength?: number;
   disabled?: boolean;
   email?: boolean;
+  regex?: string;
 }
 
 export interface PasswordTypeProperties {

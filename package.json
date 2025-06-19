@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "typescript",
@@ -32,8 +34,11 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "decoders": "^2.7.0",
+    "jest": "^30.0.1",
     "reflect-metadata": "^0.2.2",
+    "ts-jest": "^29.4.0",
     "tsc-alias": "^1.8.2",
     "typescript": "^5.0.0"
   },

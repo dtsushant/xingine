@@ -222,6 +222,13 @@ function validateInputField(fieldMeta: FieldMeta<'input'>, value: any, errors: F
       message: `${fieldMeta.label || fieldName} must be a valid email address`
     });
   }
+
+  if (properties.regex && !isValidRegex(stringValue, properties.regex)) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must match the required format`
+    });
+  }
 }
 
 /**
@@ -378,4 +385,16 @@ function validateDateField(fieldMeta: FieldMeta<'date'>, value: any, errors: Fie
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+/**
+ * Regex validation helper
+ */
+function isValidRegex(value: string, pattern: string): boolean {
+  try {
+    const regex = new RegExp(pattern);
+    return regex.test(value);
+  } catch (error) {
+    return false;
+  }
 }
