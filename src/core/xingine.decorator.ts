@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import {
   CommissarProperties,
+  FieldValidationError,
+  FormValidationResult,
   ModuleProperties,
   ModulePropertyOptions,
   ProvisioneerProps,
@@ -11,6 +13,12 @@ import {
   ColumnMeta,
   FieldMeta,
   FormMeta,
+  InputTypeProperties,
+  NumberTypeProperties,
+  PasswordTypeProperties,
+  SelectTypeProperties,
+  DateTypeProperties,
+  TextareaTypeProperties,
 } from "./component/component-meta-map";
 import { DetailFieldMeta } from "./component/detail-meta-map";
 
@@ -110,3 +118,4 @@ export function ColumnProperty(meta: ColumnMeta): PropertyDecorator {
     );
   };
 }
+

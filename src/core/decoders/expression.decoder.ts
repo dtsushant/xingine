@@ -9,7 +9,7 @@ import {
   unknown,
 } from "decoders";
 import {
-  BaseFilterCondition,
+  BaseFilterCondition, ConditionalExpression,
   GroupCondition,
   Operator,
   SearchCondition,
@@ -59,7 +59,10 @@ export const searchConditionDecoder: Decoder<SearchCondition> = lazy(() =>
   }),
 );
 
-export const searchQueryDecoder: Decoder<SearchQuery> = object({
+const expressionDecoder = object({
   and: optional(array(searchConditionDecoder)),
   or: optional(array(searchConditionDecoder)),
 });
+
+export const searchQueryDecoder: Decoder<SearchQuery> = expressionDecoder;
+export const conditionalExpressionDecoder: Decoder<ConditionalExpression> = expressionDecoder;

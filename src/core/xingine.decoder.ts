@@ -1,4 +1,5 @@
 import {
+  ExpositionRule,
   GenericErrors,
   LayoutMandate,
   ModuleProperties,
@@ -8,9 +9,9 @@ import {
   UIComponent,
 } from "./xingine.type";
 import {
-  array,
-  Decoder,
-  either,
+  array, boolean,
+  Decoder, dict,
+  either, exact, number,
   object,
   optional,
   record,
@@ -28,6 +29,7 @@ import { formMetaDecoder } from "./decoders/form.decoder";
 import { detailMetaDecoder } from "./decoders/detail.decoder";
 import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
+import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -83,6 +85,28 @@ export function componentMetaDecoder(): Decoder<ComponentMeta> {
   });
 }
 
+export const iconMetaDecoder = exact({
+  name: optional(string),
+  color: optional(string),
+  size: optional(either(number, string)),
+  spin: optional(boolean),
+  rotate: optional(number),
+  twoToneColor: optional(string),
+  className: optional(string),
+});
+export const expositionRuleDecoder:Decoder<ExpositionRule> = exact({
+  visible: optional(either(boolean, conditionalExpressionDecoder)),
+  disabled: optional(either(boolean, conditionalExpressionDecoder)),
+  className: optional(string),
+  style: optional(dict(string)),
+  icon: optional(iconMetaDecoder),
+  tooltip: optional(string),
+  order: optional(number),
+  tag: optional(string),
+  wrapper: optional(string),
+  section: optional(string),
+});
+
 export const panelDecoder: Decoder<Panel> = object({
   presidium: string,
   assembly: string,
@@ -99,7 +123,7 @@ export const uiComponentDecoder: Decoder<UIComponent> = object({
   component: string,
   path: string,
   layout: optional(string),
-  icon: optional(string),
+  expositionRule: optional(expositionRuleDecoder),
   roles: optional(array(string)),
   permissions: optional(array(string)),
   meta: optional(componentMetaDecoder()),
