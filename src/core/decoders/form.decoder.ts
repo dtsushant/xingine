@@ -44,6 +44,8 @@ export const inputTypeDecoder: Decoder<InputTypeProperties> = object({
   minLength: optional(number),
   disabled: optional(boolean),
   email: optional(boolean),
+  validationRegex:optional(string),
+  regexValidationMessage:optional(string)
 });
 
 export const passwordTypeDecoder: Decoder<PasswordTypeProperties> = object({
@@ -218,6 +220,7 @@ const fieldMetaDecoderBase = object({
   required: optional(boolean),
   value: optional(string),
   properties: optional(unknown),
+  order:optional(number)
 });
 
 function fieldMetaDecoder(): Decoder<FieldMeta> {
