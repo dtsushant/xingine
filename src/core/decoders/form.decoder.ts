@@ -19,6 +19,7 @@ import {
   CheckboxTypeProperties,
   DateTypeProperties,
   FieldMeta,
+  FileInputProperties,
   InputTypeProperties,
   LookupTypeProperties,
   NestedCheckboxOption,
@@ -173,6 +174,23 @@ export const lookupTypePropertiesDecoder: Decoder<LookupTypeProperties> =
     resultMap: optional(array(resultMapEntryDecoder)),
   });
 
+export const fileInputPropertiesDecoder: Decoder<FileInputProperties> = object({
+  allowedFileTypes: optional(array(string)),
+  maxFileSize: optional(number),
+  maxFileSizeMB: optional(number),
+  minFileCount: optional(number),
+  maxFileCount: optional(number),
+  required: optional(boolean),
+  disabled: optional(boolean),
+  placeholder: optional(string),
+  captureFilename: optional(boolean),
+  captureUploadPath: optional(boolean),
+  allowDragDrop: optional(boolean),
+  fileTypeValidationMessage: optional(string),
+  fileSizeValidationMessage: optional(string),
+  fileCountValidationMessage: optional(string),
+});
+
 export function decodeFieldInputPropertiesByInputType(
   inputType: string,
   input?: unknown,
@@ -207,6 +225,8 @@ export function decodeFieldInputPropertiesByInputType(
       return objectTypeDecoder.verify(input);
     case "object[]":
       return objectListTypeDecoder.verify(input);
+    case "file":
+      return fileInputPropertiesDecoder.verify(input);
     default:
       throw new Error(
         `Unknown component type '${inputType}' for meta decoding`,

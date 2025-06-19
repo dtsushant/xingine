@@ -634,6 +634,64 @@ phoneNumbers!: Array<{
 **ObjectListFieldProperties:**
 - `itemFields: FieldMeta[]` - Array of field definitions for each item
 
+### File Input Field (`file`)
+
+File upload input with comprehensive validation and configuration options.
+
+```typescript
+@FormField({
+  label: 'Profile Picture',
+  inputType: 'file',
+  required: true,
+  properties: {
+    allowedFileTypes: ['.jpg', '.jpeg', '.png'],
+    maxFileSizeMB: 5,
+    maxFileCount: 1,
+    captureFilename: true,
+    captureUploadPath: true,
+    allowDragDrop: true,
+    placeholder: 'Upload your profile picture',
+    fileTypeValidationMessage: 'Only JPG, JPEG, and PNG files are allowed',
+    fileSizeValidationMessage: 'File size must be less than 5MB'
+  }
+})
+profilePicture!: string;
+
+@FormField({
+  label: 'Supporting Documents',
+  inputType: 'file',
+  required: false,
+  properties: {
+    allowedFileTypes: ['application/pdf', '.doc', '.docx', '.txt'],
+    maxFileSize: 10485760, // 10MB in bytes
+    minFileCount: 0,
+    maxFileCount: 5,
+    captureFilename: true,
+    captureUploadPath: true,
+    allowDragDrop: true,
+    placeholder: 'Upload supporting documents (optional)',
+    fileCountValidationMessage: 'You can upload up to 5 documents'
+  }
+})
+documents!: string[];
+```
+
+**FileInputProperties:**
+- `allowedFileTypes?: string[]` - Array of allowed file extensions (e.g., ['.jpg', '.png']) or MIME types (e.g., ['image/jpeg', 'application/pdf'])
+- `maxFileSize?: number` - Maximum file size in bytes (e.g., 5242880 for 5MB)
+- `maxFileSizeMB?: number` - Maximum file size in megabytes (alternative to maxFileSize)
+- `minFileCount?: number` - Minimum number of files required (defaults to 0)
+- `maxFileCount?: number` - Maximum number of files allowed (defaults to 1)
+- `required?: boolean` - Whether at least one file must be uploaded
+- `disabled?: boolean` - Whether the input field is disabled
+- `placeholder?: string` - Placeholder text when no files are selected
+- `captureFilename?: boolean` - Whether to capture and store the original filename
+- `captureUploadPath?: boolean` - Whether to capture and store the uploaded file path/URL
+- `allowDragDrop?: boolean` - Whether to enable drag and drop functionality
+- `fileTypeValidationMessage?: string` - Custom validation message for file type restrictions
+- `fileSizeValidationMessage?: string` - Custom validation message for file size restrictions
+- `fileCountValidationMessage?: string` - Custom validation message for file count restrictions
+
 ## Detail Input Types
 
 Detail fields are used for read-only data display. Here are the available types:
@@ -722,7 +780,7 @@ if (!result.isValid) {
 
 ## Component Renderers
 
-Xingine supports multiple component renderers:
+Xingine supports multiple component renderers with comprehensive rendering behavior customization:
 
 ### FormRenderer
 Renders forms based on `@FormField` decorators.
@@ -737,7 +795,175 @@ Renders read-only detail views based on `@DetailField` decorators.
 Renders tabbed interfaces with nested components.
 
 ### ChartRenderer
-Renders charts and data visualizations.
+Renders charts and data visualizations with enhanced rendering capabilities.
+
+## Renderer Interface
+
+The `Renderer` interface provides comprehensive control over UI element rendering behavior. It's fully serializable and can be used across all component types.
+
+### Basic Renderer Configuration
+
+```typescript
+import { Renderer, ChartMeta } from 'xingine';
+
+const basicRenderer: Renderer = {
+  mode: 'detailed',
+  layout: {
+    display: 'grid',
+    columns: 3,
+    spacing: 16,
+    alignment: 'center'
+  },
+  interaction: {
+    clickable: true,
+    hoverable: true,
+    keyboardNavigable: true
+  }
+};
+```
+
+### Chart Renderer Integration
+
+```typescript
+const chartMeta: ChartMeta = {
+  charts: [
+    {
+      type: 'bar',
+      title: 'Sales Performance',
+      datasets: [{
+        label: 'Revenue',
+        data: [100, 200, 150, 300]
+      }],
+      renderer: {
+        mode: 'interactive',
+        animation: {
+          type: 'scale',
+          duration: 400,
+          animateOnMount: true
+        },
+        interaction: {
+          clickable: true,
+          hoverable: true
+        }
+      }
+    }
+  ],
+  renderer: {
+    layout: {
+      display: 'grid',
+      columns: 2,
+      spacing: 20
+    },
+    display: {
+      showBorder: true,
+      borderRadius: 8,
+      showShadow: true
+    }
+  }
+};
+```
+
+### Responsive Renderer Configuration
+
+```typescript
+const responsiveRenderer: Renderer = {
+  mode: 'adaptive',
+  layout: {
+    display: 'grid',
+    columns: 4,
+    spacing: 16
+  },
+  responsive: {
+    breakpoints: {
+      mobile: {
+        mode: 'compact',
+        layout: { 
+          display: 'block',
+          columns: 1 
+        }
+      },
+      tablet: {
+        layout: { columns: 2 }
+      },
+      desktop: {
+        layout: { columns: 4 },
+        display: { showBorder: true }
+      }
+    },
+    hiddenOn: ['mobile'] // Hide on mobile devices
+  }
+};
+```
+
+### File Input Renderer Example
+
+```typescript
+@FormField({
+  label: 'Document Upload',
+  inputType: 'file',
+  properties: {
+    allowedFileTypes: ['.pdf', '.doc'],
+    maxFileSizeMB: 10,
+    renderer: {
+      mode: 'dropzone',
+      layout: {
+        display: 'flex',
+        alignment: 'center'
+      },
+      interaction: {
+        draggable: true,
+        hoverable: true
+      },
+      display: {
+        showBorder: true,
+        borderRadius: 8,
+        backgroundColor: '#f9f9f9'
+      },
+      animation: {
+        type: 'fade',
+        duration: 200
+      }
+    }
+  }
+})
+documents!: string[];
+```
+
+**Renderer Properties:**
+
+- `mode?: string` - Rendering mode ('default', 'compact', 'detailed', 'interactive', etc.)
+- `layout?: object` - Layout configuration
+  - `display?: string` - Display type ('block', 'flex', 'grid', etc.)
+  - `columns?: number` - Number of columns for grid layouts
+  - `spacing?: string | number` - Spacing between elements
+  - `alignment?: string` - Content alignment
+- `interaction?: object` - Interaction behavior
+  - `clickable?: boolean` - Whether element is clickable
+  - `hoverable?: boolean` - Whether element supports hover effects
+  - `draggable?: boolean` - Whether element supports drag and drop
+  - `keyboardNavigable?: boolean` - Whether element supports keyboard navigation
+- `display?: object` - Visual display properties
+  - `showBorder?: boolean` - Whether to show borders
+  - `showShadow?: boolean` - Whether to show shadows
+  - `backgroundColor?: string` - Background color
+  - `textColor?: string` - Text color
+  - `borderRadius?: string | number` - Border radius for rounded corners
+  - `opacity?: number` - Opacity level (0-1)
+- `responsive?: object` - Responsive behavior configuration
+  - `breakpoints?: object` - Responsive breakpoints for different screen sizes
+  - `hiddenOn?: string[]` - Screen sizes where element should be hidden
+- `animation?: object` - Animation and transition settings
+  - `type?: string` - Animation type ('fade', 'slide', 'scale', 'none')
+  - `duration?: number` - Animation duration in milliseconds
+  - `easing?: string` - Animation easing function
+  - `animateOnMount?: boolean` - Whether to animate on initial render
+- `cssClasses?: string[]` - Custom CSS classes to apply
+- `customStyles?: Record<string, string | number>` - Custom inline styles
+- `accessibility?: object` - Accessibility configuration
+  - `role?: string` - ARIA role
+  - `ariaLabel?: string` - ARIA label for screen readers
+  - `ariaDescription?: string` - ARIA description
+  - `tabIndex?: number` - Tab index for keyboard navigation
 
 ## Advanced Usage
 
@@ -786,6 +1012,8 @@ username!: string;
 - `ColumnMeta` - Table column metadata interface
 - `FieldInputTypeProperties` - Union type of all form input properties
 - `DetailInputTypeProperties` - Union type of all detail input properties
+- `FileInputProperties` - File input field properties with upload configuration
+- `Renderer` - UI element rendering behavior configuration interface
 
 ### Validation Types
 
@@ -798,7 +1026,10 @@ username!: string;
 - `TableMeta` - Table component metadata  
 - `DetailMeta` - Detail component metadata
 - `TabMeta` - Tab component metadata
-- `ChartMeta` - Chart component metadata
+- `ChartMeta` - Chart component metadata with enhanced renderer support
+- `ChartConfig` - Individual chart configuration with optional renderer
+- `ChartDataset` - Chart dataset structure
+- `ChartType` - Supported chart types ('bar' | 'line' | 'pie' | 'scatter')
 
 ## TypeScript Configuration
 
