@@ -16,6 +16,8 @@ import {
   InputTypeProperties,
   NumberTypeProperties,
   PasswordTypeProperties,
+  SelectTypeProperties,
+  DateTypeProperties,
   TextareaTypeProperties,
 } from "./component/component-meta-map";
 import { DetailFieldMeta } from "./component/detail-meta-map";
@@ -177,6 +179,12 @@ function validateFieldValue(fieldMeta: FieldMeta, value: any): FieldValidationEr
     case 'textarea':
       validateTextareaField(fieldMeta as FieldMeta<'textarea'>, value, errors);
       break;
+    case 'select':
+      validateSelectField(fieldMeta as FieldMeta<'select'>, value, errors);
+      break;
+    case 'date':
+      validateDateField(fieldMeta as FieldMeta<'date'>, value, errors);
+      break;
     // Add other field types as needed
   }
 
@@ -285,6 +293,82 @@ function validateTextareaField(fieldMeta: FieldMeta<'textarea'>, value: any, err
       field: fieldName,
       message: `${fieldMeta.label || fieldName} must not exceed ${properties.maxLength} characters`
     });
+  }
+}
+
+/**
+ * Validates select field constraints
+ */
+function validateSelectField(fieldMeta: FieldMeta<'select'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as SelectTypeProperties;
+  
+  if (!properties) return;
+
+  // Check if value is one of the allowed options
+  if (properties.options && properties.options.length > 0) {
+    const validValues = properties.options.map(opt => opt.value);
+    
+    if (properties.multiple) {
+      // For multiple select, value should be an array
+      if (!Array.isArray(value)) {
+        errors.push({
+          field: fieldName,
+          message: `${fieldMeta.label || fieldName} must be an array of values`
+        });
+        return;
+      }
+      
+      for (const item of value) {
+        if (validValues.indexOf(item) === -1) {
+          errors.push({
+            field: fieldName,
+            message: `${fieldMeta.label || fieldName} contains invalid option: ${item}`
+          });
+        }
+      }
+    } else {
+      // For single select, value should be one of the options
+      if (validValues.indexOf(value) === -1) {
+        errors.push({
+          field: fieldName,
+          message: `${fieldMeta.label || fieldName} must be one of the allowed options`
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Validates date field constraints
+ */
+function validateDateField(fieldMeta: FieldMeta<'date'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as DateTypeProperties;
+  
+  if (!properties) return;
+
+  // Check if value is a valid date
+  const date = new Date(value);
+  
+  if (isNaN(date.getTime())) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be a valid date`
+    });
+    return;
+  }
+
+  // Additional date validations could be added here
+  // For example, custom disabledDate function validation
+  if (properties.disabledDate && typeof properties.disabledDate === 'function') {
+    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    if (properties.disabledDate(dateString)) {
+      errors.push({
+        field: fieldName,
+        message: `${fieldMeta.label || fieldName} is not an allowed date`
+      });
+    }
   }
 }
 
