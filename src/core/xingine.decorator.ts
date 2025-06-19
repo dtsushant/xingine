@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import {
   CommissarProperties,
+  FieldValidationError,
+  FormValidationResult,
   ModuleProperties,
   ModulePropertyOptions,
   ProvisioneerProps,
@@ -11,6 +13,10 @@ import {
   ColumnMeta,
   FieldMeta,
   FormMeta,
+  InputTypeProperties,
+  NumberTypeProperties,
+  PasswordTypeProperties,
+  TextareaTypeProperties,
 } from "./component/component-meta-map";
 import { DetailFieldMeta } from "./component/detail-meta-map";
 
@@ -109,4 +115,183 @@ export function ColumnProperty(meta: ColumnMeta): PropertyDecorator {
       target.constructor,
     );
   };
+}
+
+/**
+ * Validates a form object against its FormField decorators
+ * @param formField - The form object instance to validate
+ * @returns FormValidationResult with isValid flag and list of errors
+ */
+export function validateFormField<T extends object>(formField: T): FormValidationResult {
+  const constructor = formField.constructor as new () => T;
+  const fields: FieldMeta[] = Reflect.getMetadata(FORM_FIELD_METADATA, constructor) || [];
+  
+  const errors: FieldValidationError[] = [];
+
+  for (const fieldMeta of fields) {
+    if (!fieldMeta.name) continue;
+    
+    const fieldValue = (formField as any)[fieldMeta.name];
+    const fieldErrors = validateFieldValue(fieldMeta, fieldValue);
+    errors.push(...fieldErrors);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Validates a single field value against its FieldMeta constraints
+ */
+function validateFieldValue(fieldMeta: FieldMeta, value: any): FieldValidationError[] {
+  const errors: FieldValidationError[] = [];
+  const fieldName = fieldMeta.name!;
+
+  // Check required validation
+  if (fieldMeta.required && (value === undefined || value === null || value === '')) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} is required`
+    });
+    return errors; // If required field is empty, skip other validations
+  }
+
+  // Skip other validations if value is empty and not required
+  if (value === undefined || value === null || value === '') {
+    return errors;
+  }
+
+  // Type-specific validations
+  switch (fieldMeta.inputType) {
+    case 'input':
+      validateInputField(fieldMeta as FieldMeta<'input'>, value, errors);
+      break;
+    case 'password':
+      validatePasswordField(fieldMeta as FieldMeta<'password'>, value, errors);
+      break;
+    case 'number':
+      validateNumberField(fieldMeta as FieldMeta<'number'>, value, errors);
+      break;
+    case 'textarea':
+      validateTextareaField(fieldMeta as FieldMeta<'textarea'>, value, errors);
+      break;
+    // Add other field types as needed
+  }
+
+  return errors;
+}
+
+/**
+ * Validates input field constraints
+ */
+function validateInputField(fieldMeta: FieldMeta<'input'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as InputTypeProperties;
+  
+  if (!properties) return;
+
+  const stringValue = String(value);
+
+  if (properties.maxLength && stringValue.length > properties.maxLength) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must not exceed ${properties.maxLength} characters`
+    });
+  }
+
+  if (properties.minLength && stringValue.length < properties.minLength) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be at least ${properties.minLength} characters`
+    });
+  }
+
+  if (properties.email && !isValidEmail(stringValue)) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be a valid email address`
+    });
+  }
+}
+
+/**
+ * Validates password field constraints
+ */
+function validatePasswordField(fieldMeta: FieldMeta<'password'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as PasswordTypeProperties;
+  
+  if (!properties) return;
+
+  const stringValue = String(value);
+
+  if (properties.minLength && stringValue.length < properties.minLength) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be at least ${properties.minLength} characters`
+    });
+  }
+}
+
+/**
+ * Validates number field constraints
+ */
+function validateNumberField(fieldMeta: FieldMeta<'number'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as NumberTypeProperties;
+  
+  if (!properties) return;
+
+  const numValue = Number(value);
+
+  if (isNaN(numValue)) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be a valid number`
+    });
+    return;
+  }
+
+  if (properties.min !== undefined && numValue < properties.min) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must be at least ${properties.min}`
+    });
+  }
+
+  if (properties.max !== undefined && numValue > properties.max) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must not exceed ${properties.max}`
+    });
+  }
+}
+
+/**
+ * Validates textarea field constraints
+ */
+function validateTextareaField(fieldMeta: FieldMeta<'textarea'>, value: any, errors: FieldValidationError[]): void {
+  const fieldName = fieldMeta.name!;
+  const properties = fieldMeta.properties as TextareaTypeProperties;
+  
+  if (!properties) return;
+
+  const stringValue = String(value);
+
+  if (properties.maxLength && stringValue.length > properties.maxLength) {
+    errors.push({
+      field: fieldName,
+      message: `${fieldMeta.label || fieldName} must not exceed ${properties.maxLength} characters`
+    });
+  }
+}
+
+/**
+ * Simple email validation helper
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }

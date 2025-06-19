@@ -94,3 +94,13 @@ export interface CommissarProperties<
   preAction?: string;
   postAction?: string;
 }
+
+export interface FieldValidationError {
+  field: string;
+  message: string;
+}
+
+export interface FormValidationResult {
+  isValid: boolean;
+  errors: FieldValidationError[];
+}
