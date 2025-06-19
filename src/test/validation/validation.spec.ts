@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import { FormField, validateFormField } from '../../core/xingine.decorator';
+import { FormField } from '../../core/xingine.decorator';
+import {validateFormField} from "../../core/utils/validation.util";
 
 /**
  * ValidationTestDto with various field types and validation properties
@@ -25,7 +26,7 @@ class ValidationTestDto {
     properties: {
       minLength: 3,
       maxLength: 20,
-      regex: '^[a-zA-Z0-9_]{3,20}$'
+      validationRegex: '^[a-zA-Z0-9_]{3,20}$'
     }
   })
   username!: string;
@@ -35,7 +36,7 @@ class ValidationTestDto {
     inputType: 'input',
     required: false,
     properties: {
-      regex: 'ROLE_[a-zA-Z0-9_]{0,15}'
+      validationRegex: 'ROLE_[a-zA-Z0-9_]{0,15}'
     }
   })
   roleCode!: string;

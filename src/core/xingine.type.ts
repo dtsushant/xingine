@@ -6,6 +6,75 @@ import {
   TabDispatchProperties,
   TableDispatchProperties,
 } from "./component/component-meta-map";
+import {ConditionalExpression} from "./expressions/operators";
+
+export interface IconMeta {
+  name?: string; // e.g. "UserOutlined"
+  color?: string; // style.color
+  size?: number | string; // style.fontSize
+  spin?: boolean;
+  rotate?: number;
+  twoToneColor?: string;
+  className?: string;
+}
+
+export interface ExpositionRule {
+  /**
+   * Whether the component/property should be visible.
+   * Can be a static boolean or a condition to evaluate.
+   */
+  visible?: boolean | ConditionalExpression;
+
+  /**
+   * Whether the component/property should be disabled (read-only).
+   */
+  disabled?: boolean | ConditionalExpression;
+
+  /**
+   * Optional CSS class name(s).
+   */
+  className?: string;
+
+  /**
+   * Optional inline style (key-value pairs as string).
+   */
+  style?: Record<string, string>;
+
+  /**
+   * Icon key, to be looked up from a predefined icon map.
+   */
+  icon?: IconMeta;
+
+
+  /**
+   * Tooltip text to show on hover.
+   */
+  tooltip?: string;
+
+  /**
+   * Display order among sibling components.
+   */
+  order?: number;
+
+
+  /**
+   * Optional badge/tag like "beta", "recommended", etc.
+   */
+  tag?: string;
+
+  /**
+   * Name of the wrapper element or layout type (e.g., 'div', 'card', 'fieldset').
+   */
+  wrapper?: string;
+
+
+  /**
+   * Logical group/section this component belongs to.
+   */
+  section?: string;
+
+
+}
 
 export interface Panel {
   presidium: string;
@@ -22,7 +91,7 @@ export interface LayoutMandate {
 export type UIComponent = {
   component: string;
   path: string;
-  icon?: string;
+  expositionRule?: ExpositionRule;
   layout?: string;
   roles?: string[];
   permissions?: string[];
@@ -86,6 +155,7 @@ export interface CommissarProperties<
   TOperative extends keyof ComponentMetaMap = keyof ComponentMetaMap,
 > {
   layout?: string;
+  expositionRule?: ExpositionRule;
   component: string;
   operative: TOperative;
   meta?: ComponentMetaMap[TOperative];

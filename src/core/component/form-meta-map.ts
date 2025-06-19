@@ -1,12 +1,35 @@
 // src/types/component-meta-map.ts
 
 export interface InputTypeProperties {
+  /**
+   * Placeholder text for the input field.
+   */
   placeholder?: string;
+  /**
+   * Maximum number of characters allowed in the input.
+   */
   maxLength?: number;
+  /**
+   * Minimum number of characters required in the input.
+   */
   minLength?: number;
+  /**
+   * Whether the input field is disabled.
+   */
   disabled?: boolean;
+  /**
+   * Whether the input should validate as an email address.
+   */
   email?: boolean;
-  regex?: string;
+  /**
+   * Regular expression pattern for custom validation.
+   */
+  validationRegex?: string;
+  /**
+   * Function to handle changes in the input value.
+   */
+  regexValidationMessage?:string;
+
 }
 
 export interface PasswordTypeProperties {

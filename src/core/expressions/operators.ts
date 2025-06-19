@@ -24,3 +24,4 @@ export interface GroupCondition {
 export type SearchCondition = BaseFilterCondition | GroupCondition;
 
 export type SearchQuery = GroupCondition;
+export type ConditionalExpression = SearchCondition;
