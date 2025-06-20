@@ -181,6 +181,87 @@ export type ObjectListFieldProperties = {
   itemFields: FieldMeta[];
 };
 
+/**
+ * Properties for file input fields supporting file upload functionality.
+ * This interface is fully serializable for use in both UI and DTO contexts.
+ */
+export interface FileInputProperties {
+  /**
+   * Array of allowed file extensions (e.g., ['.jpg', '.png', '.pdf'])
+   * or MIME types (e.g., ['image/jpeg', 'image/png', 'application/pdf']).
+   */
+  allowedFileTypes?: string[];
+  
+  /**
+   * Maximum file size allowed in bytes.
+   * Example: 5242880 for 5MB limit.
+   */
+  maxFileSize?: number;
+  
+  /**
+   * Maximum file size allowed in megabytes (alternative to maxFileSize in bytes).
+   * This will be converted to bytes internally if provided.
+   */
+  maxFileSizeMB?: number;
+  
+  /**
+   * Minimum number of files required to be uploaded.
+   * Defaults to 0 if not specified.
+   */
+  minFileCount?: number;
+  
+  /**
+   * Maximum number of files that can be uploaded.
+   * Defaults to 1 if not specified.
+   */
+  maxFileCount?: number;
+  
+  /**
+   * Whether the field is required (at least one file must be uploaded).
+   */
+  required?: boolean;
+  
+  /**
+   * Whether the input field is disabled.
+   */
+  disabled?: boolean;
+  
+  /**
+   * Placeholder text to display when no files are selected.
+   */
+  placeholder?: string;
+  
+  /**
+   * Whether to capture and store the original filename.
+   */
+  captureFilename?: boolean;
+  
+  /**
+   * Whether to capture and store the uploaded file path/URL.
+   */
+  captureUploadPath?: boolean;
+  
+  /**
+   * Whether to allow drag and drop functionality.
+   */
+  allowDragDrop?: boolean;
+  
+  /**
+   * Custom validation message for file type restrictions.
+   */
+  fileTypeValidationMessage?: string;
+  
+  /**
+   * Custom validation message for file size restrictions.
+   */
+  fileSizeValidationMessage?: string;
+  
+  /**
+   * Custom validation message for file count restrictions.
+   */
+  fileCountValidationMessage?: string;
+}
+
 export type FieldInputTypeProperties = {
   input: InputTypeProperties;
   password: PasswordTypeProperties;
@@ -196,6 +277,7 @@ export type FieldInputTypeProperties = {
   button: ButtonTypeProperties;
   object: ObjectFieldProperties;
   "object[]": ObjectListFieldProperties;
+  file: FileInputProperties;
 };
 
 export interface FieldMeta<
@@ -206,5 +288,6 @@ export interface FieldMeta<
   inputType: T;
   value?: string;
   required?: boolean;
+  order?:number;
   properties?: FieldInputTypeProperties[T];
 }
