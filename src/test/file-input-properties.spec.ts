@@ -245,5 +245,150 @@ describe('FileInputProperties', () => {
 
       expect(props.allowDragDrop).toBe(true);
     });
+
+    it('should support renderer configuration', () => {
+      const props: FileInputProperties = {
+        allowedFileTypes: ['.pdf', '.doc'],
+        maxFileSizeMB: 10,
+        renderer: {
+          mode: 'dropzone',
+          layout: {
+            display: 'flex',
+            alignment: 'center'
+          },
+          interaction: {
+            draggable: true,
+            hoverable: true
+          },
+          display: {
+            showBorder: true,
+            borderRadius: 8,
+            backgroundColor: '#f9f9f9'
+          },
+          animation: {
+            type: 'fade',
+            duration: 200
+          }
+        }
+      };
+
+      expect(props.renderer).toBeDefined();
+      expect(props.renderer?.mode).toBe('dropzone');
+      expect(props.renderer?.layout?.display).toBe('flex');
+      expect(props.renderer?.interaction?.draggable).toBe(true);
+      expect(props.renderer?.display?.backgroundColor).toBe('#f9f9f9');
+      expect(props.renderer?.animation?.type).toBe('fade');
+    });
+
+    it('should work without renderer configuration', () => {
+      const props: FileInputProperties = {
+        allowedFileTypes: ['.jpg', '.png'],
+        maxFileSize: 1048576
+      };
+
+      expect(props).toBeDefined();
+      expect(props.renderer).toBeUndefined();
+    });
+  });
+
+  describe('Decoder validation with renderer', () => {
+    it('should decode FileInputProperties with renderer configuration', () => {
+      const input = {
+        allowedFileTypes: ['.jpg', '.png'],
+        maxFileSize: 1048576,
+        renderer: {
+          mode: 'dropzone',
+          layout: {
+            display: 'flex',
+            columns: 2
+          },
+          interaction: {
+            draggable: true,
+            hoverable: true
+          },
+          display: {
+            showBorder: true,
+            backgroundColor: '#ffffff'
+          }
+        }
+      };
+
+      const decoded = fileInputPropertiesDecoder.verify(input);
+
+      expect(decoded).toEqual(input);
+      expect(decoded.renderer?.mode).toBe('dropzone');
+      expect(decoded.renderer?.layout?.columns).toBe(2);
+      expect(decoded.renderer?.interaction?.draggable).toBe(true);
+    });
+
+    it('should decode FileInputProperties with minimal renderer configuration', () => {
+      const input = {
+        allowedFileTypes: ['.pdf'],
+        renderer: {
+          mode: 'compact'
+        }
+      };
+
+      const decoded = fileInputPropertiesDecoder.verify(input);
+
+      expect(decoded.renderer?.mode).toBe('compact');
+      expect(decoded.renderer?.layout).toBeUndefined();
+      expect(decoded.renderer?.interaction).toBeUndefined();
+    });
+
+    it('should decode FileInputProperties with empty renderer configuration', () => {
+      const input = {
+        maxFileSize: 1024,
+        renderer: {}
+      };
+
+      const decoded = fileInputPropertiesDecoder.verify(input);
+
+      expect(decoded.renderer).toEqual({});
+    });
+
+    it('should decode FileInputProperties without renderer property', () => {
+      const input = {
+        allowedFileTypes: ['.txt'],
+        maxFileSize: 512
+      };
+
+      const decoded = fileInputPropertiesDecoder.verify(input);
+
+      expect(decoded.renderer).toBeUndefined();
+    });
+  });
+
+  describe('Form validation integration with renderer', () => {
+    it('should work with renderer configuration in form field definition', () => {
+      class TestFileDto {
+        @FormField({
+          label: 'Document Upload',
+          inputType: 'file',
+          properties: {
+            allowedFileTypes: ['.pdf', '.doc'],
+            maxFileSizeMB: 10,
+            renderer: {
+              mode: 'dropzone',
+              layout: {
+                display: 'flex',
+                alignment: 'center'
+              },
+              interaction: {
+                draggable: true,
+                hoverable: true
+              }
+            }
+          }
+        })
+        documents!: string[];
+      }
+
+      const dto = new TestFileDto();
+      dto.documents = ['document.pdf'];
+
+      const result = validateFormField(dto);
+      expect(result.isValid).toBe(true);
+    });
   });
 });

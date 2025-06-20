@@ -37,7 +37,7 @@ import {
   FormDispatchProperties,
   FormMeta,
 } from "../component/component-meta-map";
-import { dynamicShapeDecoder } from "../decoders/shared.decoder";
+import { dynamicShapeDecoder, rendererDecoder } from "../decoders/shared.decoder";
 
 export const inputTypeDecoder: Decoder<InputTypeProperties> = object({
   placeholder: optional(string),
@@ -189,6 +189,7 @@ export const fileInputPropertiesDecoder: Decoder<FileInputProperties> = object({
   fileTypeValidationMessage: optional(string),
   fileSizeValidationMessage: optional(string),
   fileCountValidationMessage: optional(string),
+  renderer: optional(rendererDecoder),
 });
 
 export function decodeFieldInputPropertiesByInputType(
