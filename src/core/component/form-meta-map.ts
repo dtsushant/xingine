@@ -288,5 +288,6 @@ export interface FieldMeta<
   inputType: T;
   value?: string;
   required?: boolean;
+  order?:number;
   properties?: FieldInputTypeProperties[T];
 }
