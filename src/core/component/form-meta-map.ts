@@ -1,5 +1,7 @@
 // src/types/component-meta-map.ts
 
+import { Renderer } from "./component-meta-map";
+
 export interface InputTypeProperties {
   /**
    * Placeholder text for the input field.
@@ -260,6 +262,11 @@ export interface FileInputProperties {
    * Custom validation message for file count restrictions.
    */
   fileCountValidationMessage?: string;
+  
+  /**
+   * Renderer configuration for the file input UI component.
+   */
+  renderer?: Renderer;
 }
 
 export type FieldInputTypeProperties = {
