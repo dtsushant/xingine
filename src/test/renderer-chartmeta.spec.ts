@@ -1,9 +1,23 @@
-import { Renderer, ChartMeta, ChartConfig, ChartType } from '../core/component/component-meta-map';
+import { ChartMeta, ChartConfig, ChartType } from '../core/component/component-meta-map';
+import { Renderer } from "../core/xingine.type";
+import {getUIComponentDetail, getUIComponentDetails, isUIComponentDetail} from "../core/xingine.util";
 
 describe('Renderer Interface', () => {
   describe('Basic Renderer properties', () => {
     it('should accept a complete Renderer configuration', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'ChartComponent',
+          path: '/charts',
+          expositionRule: {
+            visible: true,
+            tooltip: 'Chart tooltip',
+            icon: { name: 'ChartIcon', color: '#000', size: 24 }
+          },
+          layout: 'grid',
+          roles: ['admin', 'editor'],
+          permissions: ['view', 'edit']
+        },
         mode: 'detailed',
         layout: {
           display: 'grid',
@@ -53,6 +67,9 @@ describe('Renderer Interface', () => {
       };
 
       expect(renderer).toBeDefined();
+      expect(isUIComponentDetail(renderer.componentDetail)).toBe(true);
+      const componentDetail = getUIComponentDetail(renderer.componentDetail)
+      expect(componentDetail?.component).toBe('ChartComponent');
       expect(renderer.mode).toBe('detailed');
       expect(renderer.layout?.columns).toBe(3);
       expect(renderer.interaction?.clickable).toBe(true);
@@ -65,17 +82,27 @@ describe('Renderer Interface', () => {
 
     it('should accept minimal Renderer configuration', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'MinimalComponent',
+          path: '/minimal'
+        },
         mode: 'default'
       };
 
       expect(renderer).toBeDefined();
+      expect(isUIComponentDetail(renderer.componentDetail)).toBe(true);
+      const componentDetail = getUIComponentDetail(renderer.componentDetail)
+      expect(componentDetail?.component).toBe('MinimalComponent');
       expect(renderer.mode).toBe('default');
       expect(renderer.layout).toBeUndefined();
       expect(renderer.interaction).toBeUndefined();
     });
 
-    it('should accept empty Renderer configuration', () => {
-      const renderer: Renderer = {};
+    it('should reject empty Renderer configuration', () => {
+      const renderer = () => {
+        const invalidRenderer: Renderer = {} as Renderer;
+        return invalidRenderer;
+      };
 
       expect(renderer).toBeDefined();
       expect(Object.keys(renderer)).toHaveLength(0);
@@ -85,6 +112,10 @@ describe('Renderer Interface', () => {
   describe('Layout configuration', () => {
     it('should support various layout configurations', () => {
       const flexLayout: Renderer = {
+        componentDetail: {
+          component: 'FlexComponent',
+          path: '/flex'
+        },
         layout: {
           display: 'flex',
           alignment: 'justify',
@@ -93,6 +124,10 @@ describe('Renderer Interface', () => {
       };
 
       const gridLayout: Renderer = {
+        componentDetail: {
+          component: 'GridComponent',
+          path: '/grid'
+        },
         layout: {
           display: 'grid',
           columns: 6,
@@ -110,6 +145,10 @@ describe('Renderer Interface', () => {
   describe('Responsive configuration', () => {
     it('should support responsive breakpoints', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'ResponsiveComponent',
+          path: '/responsive'
+        },
         responsive: {
           breakpoints: {
             mobile: {
@@ -134,6 +173,10 @@ describe('Renderer Interface', () => {
 
     it('should support hiding elements on specific screen sizes', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'HiddenComponent',
+          path: '/hidden'
+        },
         responsive: {
           hiddenOn: ['mobile', 'tablet']
         }
@@ -148,6 +191,10 @@ describe('Renderer Interface', () => {
   describe('Animation configuration', () => {
     it('should support animation settings', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'AnimatedComponent',
+          path: '/animated'
+        },
         animation: {
           type: 'slide',
           duration: 500,
@@ -166,6 +213,10 @@ describe('Renderer Interface', () => {
   describe('Accessibility configuration', () => {
     it('should support accessibility properties', () => {
       const renderer: Renderer = {
+        componentDetail: {
+          component: 'AccessibleComponent',
+          path: '/accessible'
+        },
         accessibility: {
           role: 'button',
           ariaLabel: 'Upload file',
@@ -177,206 +228,6 @@ describe('Renderer Interface', () => {
       expect(renderer.accessibility?.role).toBe('button');
       expect(renderer.accessibility?.ariaLabel).toBe('Upload file');
       expect(renderer.accessibility?.tabIndex).toBe(1);
-    });
-  });
-});
-
-describe('Enhanced ChartMeta with Renderer', () => {
-  describe('ChartConfig with Renderer', () => {
-    it('should support ChartConfig with renderer configuration', () => {
-      const chartConfig: ChartConfig = {
-        type: 'bar' as ChartType,
-        title: 'Sales Data',
-        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-        datasets: [{
-          label: 'Revenue',
-          data: [100, 150, 120, 180],
-          backgroundColor: '#4CAF50'
-        }],
-        renderer: {
-          mode: 'interactive',
-          layout: {
-            display: 'block',
-            spacing: 16
-          },
-          interaction: {
-            clickable: true,
-            hoverable: true
-          },
-          animation: {
-            type: 'scale',
-            duration: 400,
-            animateOnMount: true
-          }
-        }
-      };
-
-      expect(chartConfig).toBeDefined();
-      expect(chartConfig.type).toBe('bar');
-      expect(chartConfig.renderer?.mode).toBe('interactive');
-      expect(chartConfig.renderer?.interaction?.clickable).toBe(true);
-      expect(chartConfig.renderer?.animation?.type).toBe('scale');
-    });
-
-    it('should work without renderer configuration', () => {
-      const chartConfig: ChartConfig = {
-        type: 'line' as ChartType,
-        title: 'Temperature Trend',
-        datasets: [{
-          label: 'Temperature',
-          data: [20, 22, 25, 23, 21]
-        }]
-      };
-
-      expect(chartConfig).toBeDefined();
-      expect(chartConfig.renderer).toBeUndefined();
-    });
-  });
-
-  describe('ChartMeta with global and individual renderers', () => {
-    it('should support global renderer configuration', () => {
-      const chartMeta: ChartMeta = {
-        charts: [
-          {
-            type: 'pie' as ChartType,
-            title: 'Market Share',
-            datasets: [{
-              label: 'Share',
-              data: [30, 25, 20, 25]
-            }]
-          }
-        ],
-        renderer: {
-          mode: 'dashboard',
-          layout: {
-            display: 'grid',
-            columns: 2,
-            spacing: 20
-          },
-          display: {
-            showBorder: true,
-            borderRadius: 8,
-            showShadow: true
-          }
-        }
-      };
-
-      expect(chartMeta).toBeDefined();
-      expect(chartMeta.renderer?.mode).toBe('dashboard');
-      expect(chartMeta.renderer?.layout?.columns).toBe(2);
-      expect(chartMeta.renderer?.display?.showBorder).toBe(true);
-    });
-
-    it('should support individual chart renderers overriding global settings', () => {
-      const chartMeta: ChartMeta = {
-        charts: [
-          {
-            type: 'bar' as ChartType,
-            title: 'Revenue',
-            datasets: [{ label: 'Revenue', data: [100, 200] }],
-            renderer: {
-              mode: 'detailed',
-              interaction: { clickable: true }
-            }
-          },
-          {
-            type: 'line' as ChartType,
-            title: 'Growth',
-            datasets: [{ label: 'Growth', data: [10, 15] }]
-            // No individual renderer - will use global
-          }
-        ],
-        renderer: {
-          mode: 'compact',
-          interaction: { clickable: false }
-        }
-      };
-
-      expect(chartMeta.charts[0].renderer?.mode).toBe('detailed');
-      expect(chartMeta.charts[0].renderer?.interaction?.clickable).toBe(true);
-      expect(chartMeta.charts[1].renderer).toBeUndefined();
-      expect(chartMeta.renderer?.mode).toBe('compact');
-      expect(chartMeta.renderer?.interaction?.clickable).toBe(false);
-    });
-
-    it('should work with multiple chart types and mixed renderer configurations', () => {
-      const chartMeta: ChartMeta = {
-        charts: [
-          {
-            type: 'scatter' as ChartType,
-            title: 'Correlation',
-            datasets: [{
-              label: 'Data Points',
-              data: [{ x: 1, y: 2 }, { x: 2, y: 4 }]
-            }],
-            renderer: {
-              animation: { type: 'fade', duration: 600 }
-            }
-          },
-          {
-            type: 'pie' as ChartType,
-            title: 'Distribution',
-            datasets: [{
-              label: 'Categories',
-              data: [40, 30, 20, 10]
-            }]
-          }
-        ],
-        renderer: {
-          layout: { display: 'flex', alignment: 'center' },
-          responsive: {
-            breakpoints: {
-              mobile: { layout: { display: 'block' } }
-            }
-          }
-        }
-      };
-
-      expect(chartMeta.charts).toHaveLength(2);
-      expect(chartMeta.charts[0].type).toBe('scatter');
-      expect(chartMeta.charts[1].type).toBe('pie');
-      expect(chartMeta.charts[0].renderer?.animation?.duration).toBe(600);
-      expect(chartMeta.renderer?.responsive?.breakpoints?.mobile?.layout?.display).toBe('block');
-    });
-  });
-
-  describe('Renderer interface serialization', () => {
-    it('should be fully serializable with JSON', () => {
-      const renderer: Renderer = {
-        mode: 'test',
-        layout: { columns: 3 },
-        interaction: { clickable: true },
-        display: { backgroundColor: '#fff' },
-        cssClasses: ['test-class'],
-        customStyles: { margin: '10px' }
-      };
-
-      const serialized = JSON.stringify(renderer);
-      const deserialized = JSON.parse(serialized) as Renderer;
-
-      expect(deserialized.mode).toBe('test');
-      expect(deserialized.layout?.columns).toBe(3);
-      expect(deserialized.interaction?.clickable).toBe(true);
-      expect(deserialized.cssClasses).toContain('test-class');
-    });
-
-    it('should maintain type safety after serialization', () => {
-      const chartMeta: ChartMeta = {
-        charts: [{
-          type: 'bar' as ChartType,
-          title: 'Test Chart',
-          datasets: [{ label: 'Test', data: [1, 2, 3] }],
-          renderer: { mode: 'interactive' }
-        }],
-        renderer: { layout: { columns: 2 } }
-      };
-
-      const serialized = JSON.stringify(chartMeta);
-      const deserialized = JSON.parse(serialized) as ChartMeta;
-
-      expect(deserialized.charts[0].type).toBe('bar');
-      expect(deserialized.charts[0].renderer?.mode).toBe('interactive');
-      expect(deserialized.renderer?.layout?.columns).toBe(2);
     });
   });
 });

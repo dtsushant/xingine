@@ -5,13 +5,13 @@ import {
   ModuleProperties,
   ModulePropertyOptions,
   Panel,
-  Permission,
-  UIComponent,
+  Permission, Renderer,
+  UIComponent, UIComponentDetail,
 } from "./xingine.type";
 import {
-  array, boolean,
+  array, boolean, constant,
   Decoder, dict,
-  either, exact, number,
+  either, exact, lazy, number,
   object,
   optional,
   record,
@@ -30,6 +30,7 @@ import { detailMetaDecoder } from "./decoders/detail.decoder";
 import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
 import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
+import {isRenderer, isUIComponentDetail} from "./xingine.util";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -119,7 +120,7 @@ export const LayoutMandateDecoder: Decoder<LayoutMandate> = object({
   clearanceRequired: optional(array(string)),
 });
 
-export const uiComponentDecoder: Decoder<UIComponent> = object({
+export const uiComponentDetailDecoder: Decoder<UIComponentDetail> = object({
   component: string,
   path: string,
   layout: optional(string),
@@ -129,25 +130,89 @@ export const uiComponentDecoder: Decoder<UIComponent> = object({
   meta: optional(componentMetaDecoder()),
 });
 
-/*export function uiComponentDecoder(): Decoder<UIComponent> {
-  return uiComponentDecoderBase.transform((uiComponentDecoderBase) => {
-    const base = uiComponentDecoderBase;
-    const defaultLayout: LayoutMandate = {
-      layout:'people',
-      structure: {
-        presidium: "people",
-        assembly: "people",
-        doctrine: "people",
-      },
-      clearanceRequired: [],
-    };
+export const rendererDecoder: Decoder<Renderer> = lazy(()=>object({
+  componentDetail: uiComponentDecoder,
+  mode: optional(string),
 
-    return {
-      ...base,
-      layout: base.layout ?? defaultLayout,
-    };
-  });
-}*/
+  layout: optional(
+      exact({
+        display: optional(string),
+        columns: optional(number),
+        spacing: optional(either(string, number)),
+        alignment: optional(string),
+      })
+  ),
+
+  interaction: optional(
+      exact({
+        clickable: optional(boolean),
+        hoverable: optional(boolean),
+        draggable: optional(boolean),
+        keyboardNavigable: optional(boolean),
+      })
+  ),
+
+  display: optional(
+      exact({
+        showBorder: optional(boolean),
+        showShadow: optional(boolean),
+        backgroundColor: optional(string),
+        textColor: optional(string),
+        borderRadius: optional(either(string, number)),
+        opacity: optional(number),
+      })
+  ),
+
+
+
+  animation: optional(
+      exact({
+        type: optional(string),
+        duration: optional(number),
+        easing: optional(string),
+        animateOnMount: optional(boolean),
+      })
+  ),
+  responsive: optional(
+      exact({
+          breakpoints: optional(
+              exact({
+                  mobile: optional(lazy(() => rendererDecoder)),
+                  tablet: optional(lazy(() => rendererDecoder)),
+                  desktop: optional(lazy(() => rendererDecoder)),
+              })
+          ),
+        hiddenOn: optional(array(either(constant('mobile'), constant('tablet'), constant('desktop')))),
+      })
+  ),
+
+  cssClasses: optional(array(string)),
+  customStyles: optional(dict(either(string, number))),
+
+  accessibility: optional(
+      exact({
+        role: optional(string),
+        ariaLabel: optional(string),
+        ariaDescription: optional(string),
+        tabIndex: optional(number),
+      })
+  ),
+}));
+
+
+export const uiComponentDecoder: Decoder<UIComponent> = lazy(() =>
+    unknown.transform((input) => {
+        if (isUIComponentDetail(input as UIComponent)) {
+            return uiComponentDetailDecoder.verify(input);
+        } else if (isRenderer(input as UIComponent)) {
+            return rendererDecoder.verify(input);
+        } else {
+            throw new Error("Invalid UIComponent: must be UIComponentDetail or Renderer");
+        }
+    })
+);
+
+
 
 const permissionDecoder: Decoder<Permission> = object({
   name: string,
