@@ -6,3 +6,5 @@ export * from "./core/utils/type";
 export * from "./core/expressions/operators";
 export { validateFormField } from "./core/utils/validation.util";
 export type { FieldValidationError, FormValidationResult } from "./core/xingine.type";
+export * from "./core/component"
+export * from "./core/decoders"
