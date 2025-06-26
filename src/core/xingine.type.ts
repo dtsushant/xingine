@@ -1,10 +1,9 @@
 import {
-  ComponentMeta,
-  ComponentMetaMap,
-  DetailDispatchProperties,
-  FormDispatchProperties,
+  ChartMeta,
+  DetailDispatchProperties, DetailMeta,
+  FormDispatchProperties, FormMeta, StyleMeta,
   TabDispatchProperties,
-  TableDispatchProperties,
+  TableDispatchProperties, TableMeta,
 } from "./component/component-meta-map";
 import {ConditionalExpression} from "./expressions/operators";
 
@@ -297,7 +296,76 @@ export interface GroupedPermission {
   [key: string]: Permission[];
 }
 
-export type UIComponent = Renderer | UIComponentDetail;
+export type UIComponent = Renderer | UIComponentDetail ;
+
+export interface LayoutComponentDetail {
+  component: string;
+  content?: string;
+  meta?: ComponentMeta; // For xingine component meta - more flexible typing
+}
+
+export interface LayoutRenderer {
+  type: string;
+  header?: {
+    meta?: LayoutComponentDetail;
+  };
+  content: {
+    meta: LayoutComponentDetail;
+  };
+  sider?: {
+    meta?: LayoutComponentDetail;
+  };
+  footer?: {
+    meta?: LayoutComponentDetail;
+  };
+}
+
+export interface TabMeta {
+  tabs: {
+    label: string;
+    component: keyof ComponentMetaMap;
+    meta: ComponentMetaMap[keyof ComponentMetaMap];
+  }[];
+  dispatch?: TabDispatchProperties;
+}
+
+export interface WrapperMeta extends StyleMeta {
+  [key:string] : unknown;
+  children?:LayoutComponentDetail[];
+}
+
+export type ComponentMetaMap = {
+  FormRenderer: FormMeta;
+  TableRenderer: TableMeta;
+  TabRenderer: TabMeta;
+  DetailRenderer: DetailMeta;
+  ChartRenderer: ChartMeta;
+  WrapperRenderer: WrapperMeta;
+  LayoutRenderer: Record<string, unknown>;
+  HeaderRenderer: Record<string, unknown>;
+  SidebarRenderer: Record<string, unknown>;
+  ContentRenderer: Record<string, unknown>;
+  FooterRenderer: Record<string, unknown>;
+  // UI components
+  ButtonRenderer: Record<string, unknown>;
+  SearchRenderer: Record<string, unknown>;
+  SwitchRenderer: Record<string, unknown>;
+  BadgeRenderer: Record<string, unknown>;
+  DropdownRenderer: Record<string, unknown>;
+  AvatarRenderer: Record<string, unknown>;
+  MenuRenderer: Record<string, unknown>;
+  TitleRenderer: Record<string, unknown>;
+  CardRenderer: Record<string, unknown>;
+  TextRenderer: Record<string, unknown>;
+  LinkRenderer: Record<string, unknown>;
+  PopupRenderer: Record<string, unknown>;
+};
+export interface ComponentMeta<
+    T extends keyof ComponentMetaMap = keyof ComponentMetaMap,
+> {
+  component: T;
+  properties: ComponentMetaMap[T];
+}
 
 export interface ModulePropertyOptions {
   uiComponent?: UIComponent[];
@@ -307,6 +375,8 @@ export interface ModulePropertyOptions {
 
 export interface ModuleProperties extends ModulePropertyOptions {
   name: string;
+  isMenuItem?: boolean; // if true along with having a path will be a menu in sider
+  path?:string;
 }
 
 export interface ProvisioneerProperties {

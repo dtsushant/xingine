@@ -64,22 +64,12 @@ export interface TableMeta {
   dispatch?: TableDispatchProperties;
 }
 
-export interface TabMeta {
-  tabs: {
-    label: string;
-    component: keyof ComponentMetaMap;
-    meta: ComponentMetaMap[keyof ComponentMetaMap];
-  }[];
-  dispatch?: TabDispatchProperties;
+export interface StyleMeta{
+    className?: string;
+    style?: Record<string, unknown>;
 }
 
-export type ComponentMetaMap = {
-  FormRenderer: FormMeta;
-  TableRenderer: TableMeta;
-  TabRenderer: TabMeta;
-  DetailRenderer: DetailMeta;
-  ChartRenderer: ChartMeta;
-};
+
 
 export type ChartType = "bar" | "line" | "pie" | "scatter";
 
@@ -114,11 +104,5 @@ export interface ChartMeta {
   renderer?: Renderer;
 }
 
-export interface ComponentMeta<
-  T extends keyof ComponentMetaMap = keyof ComponentMetaMap,
-> {
-  component: T;
-  properties: ComponentMetaMap[T];
-}
 
 export * from "./form-meta-map";

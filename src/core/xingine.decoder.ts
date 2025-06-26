@@ -1,12 +1,13 @@
 import {
-  ExpositionRule,
-  GenericErrors,
-  LayoutMandate,
-  ModuleProperties,
-  ModulePropertyOptions,
-  Panel,
-  Permission, Renderer,
-  UIComponent, UIComponentDetail,
+    ComponentMeta, ComponentMetaMap,
+    ExpositionRule,
+    GenericErrors, LayoutComponentDetail,
+    LayoutMandate,
+    ModuleProperties,
+    ModulePropertyOptions,
+    Panel,
+    Permission, Renderer, TabMeta,
+    UIComponent, UIComponentDetail, WrapperMeta,
 } from "./xingine.type";
 import {
   array, boolean, constant,
@@ -19,11 +20,9 @@ import {
   unknown,
 } from "decoders";
 import {
-  ColumnMeta,
-  ComponentMeta,
-  ComponentMetaMap,
-  TableMeta,
-  TabMeta,
+    ColumnMeta,
+    StyleMeta,
+    TableMeta,
 } from "./component/component-meta-map";
 import { formMetaDecoder } from "./decoders/form.decoder";
 import { detailMetaDecoder } from "./decoders/detail.decoder";
@@ -31,6 +30,7 @@ import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
 import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
 import {isRenderer, isUIComponentDetail} from "./xingine.util";
+import {dynamicShapeDecoder} from "./decoders";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -51,18 +51,56 @@ const tabMetaDecoder: Decoder<TabMeta> = object({
     }) as TabMeta,
 );
 
+
 function decodeMetaByComponent(component: string, input: unknown): object {
   switch (component) {
     case "FormRenderer":
-      return formMetaDecoder.verify(input);
+        return formMetaDecoder.verify(input);
     case "TableRenderer":
-      return tableMetaDecoder.verify(input);
+        return tableMetaDecoder.verify(input);
     case "TabRenderer":
-      return tabMetaDecoder.verify(input);
+        return tabMetaDecoder.verify(input);
     case "DetailRenderer":
-      return detailMetaDecoder.verify(input);
+        return detailMetaDecoder.verify(input);
     case "ChartRenderer":
-      return chartMetaDecoder.verify(input);
+        return chartMetaDecoder.verify(input);
+    case "WrapperRenderer":
+        return wrapperMetaDecoder.verify(input);
+    case "LayoutRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "HeaderRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "SidebarRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "ContentRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "FooterRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "ButtonRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "SearchRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "SwitchRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "BadgeRenderer:":
+        return record(dynamicShapeDecoder).verify(input);
+    case "DropdownRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "AvatarRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "MenuRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "TitleRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "CardRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "TextRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "LinkRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+    case "PopupRenderer":
+        return record(dynamicShapeDecoder).verify(input);
+
     default:
       throw new Error(
         `Unknown component type '${component}' for meta decoding`,
@@ -86,6 +124,50 @@ export function componentMetaDecoder(): Decoder<ComponentMeta> {
   });
 }
 
+export const styleDecoder:Decoder<StyleMeta> = object({
+    className:optional(string),
+    style:optional(record(dynamicShapeDecoder)),
+})
+
+export const layoutComponentDetail:Decoder<LayoutComponentDetail>= object({
+    component: string,
+    content: optional(string),
+    meta: componentMetaDecoder(),
+})
+
+export const layoutComponentDetailList:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetail);
+
+export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
+    unknown.transform((input) => {
+        const base = dict(unknown).verify(input);
+        if (!base.ok) return base;
+
+        const obj = base as Record<string, unknown>;
+        const output: WrapperMeta = {};
+
+        try {
+            if ('className' in obj) {
+                output.className = string.verify(obj.className);
+            }
+            if ('style' in obj) {
+                output.style = dynamicShapeDecoder.verify(obj.style) as Record<string, unknown>;
+            }
+            if ('children' in obj) {
+                output.children = layoutComponentDetailList.verify(obj.children);
+            }
+
+            for (const key in obj) {
+                if (key !== 'className' && key !== 'style' && key !== 'children') {
+                    output[key] = dynamicShapeDecoder.verify(obj[key]);
+                }
+            }
+
+            return { ok: true, value: output };
+        } catch (e) {
+            return { ok: false, error: (e as Error).message };
+        }
+    })
+);
 export const iconMetaDecoder = exact({
   name: optional(string),
   color: optional(string),
@@ -212,6 +294,8 @@ export const uiComponentDecoder: Decoder<UIComponent> = lazy(() =>
     })
 );
 
+export const uiComponentDecoderList:Decoder<UIComponent[]>= array(uiComponentDecoder);
+
 
 
 const permissionDecoder: Decoder<Permission> = object({
@@ -245,6 +329,5 @@ export const modulePropertiesListDecoder: Decoder<ModuleProperties[]> = array(
   modulePropertiesDecoder,
 );
 
-export * from "./decoders/shared.decoder";
-export * from "./decoders/form.decoder";
-export * from "./decoders/detail.decoder";
+
+
