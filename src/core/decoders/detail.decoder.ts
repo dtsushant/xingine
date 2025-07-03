@@ -27,6 +27,7 @@ import {
   DetailMeta,
 } from "../component/component-meta-map";
 import { dynamicShapeDecoder } from "./shared.decoder";
+import {eventBindingsDecoder} from "./action.decoder";
 
 export const textDetailDecoder: Decoder<TextDetailProperties> = object({
   placeholder: optional(string),
@@ -75,6 +76,7 @@ export const tagDetailDecoder: Decoder<TagDetailProperties> = object({
 const detailMetaDecoderBase = object({
   name: string,
   label: string,
+  event:optional(eventBindingsDecoder),
   inputType: string,
   value: optional(dynamicShapeDecoder),
   properties: optional(unknown),
@@ -82,14 +84,12 @@ const detailMetaDecoderBase = object({
 
 function detailFieldMetaDecoder(): Decoder<DetailFieldMeta> {
   return detailMetaDecoderBase.transform((baseDetailMeta) => {
-    console.log("the baseDetailMeta", baseDetailMeta);
     const inputType =
       baseDetailMeta.inputType as keyof typeof detailPropertyDecoderMap;
     const decoder = detailPropertyDecoderMap[inputType];
     const strictMeta = baseDetailMeta.properties
       ? decoder.verify(baseDetailMeta.properties)
       : undefined;
-    console.log("the strict meta", strictMeta);
     return { ...baseDetailMeta, properties: strictMeta } as DetailFieldMeta;
   });
 }
@@ -124,5 +124,6 @@ const detailDispatchPropertiesDecoder: Decoder<DetailDispatchProperties> =
 export const detailMetaDecoder: Decoder<DetailMeta> = object({
   fields: array(detailFieldMetaDecoder()).transform((f) => f ?? []),
   action: string,
+  event: optional(eventBindingsDecoder),
   dispatch: optional(detailDispatchPropertiesDecoder),
 });

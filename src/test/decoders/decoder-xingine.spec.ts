@@ -1,4 +1,5 @@
-import {styleDecoder, wrapperMetaDecoder} from "../../core/xingine.decoder";
+import {layoutComponentDetailDecoder, wrapperMetaDecoder} from "../../core/xingine.decoder";
+import {styleDecoder} from "../../core/decoders";
 
 describe('XingineDecoder', () => {
 
@@ -69,4 +70,35 @@ describe('XingineDecoder', () => {
         expect(result2.style).not.toHaveProperty('customAttrib1');
         expect(result2.style).not.toHaveProperty('customAttrib2');
     });
+    it('should decode valid ComponentLayoutDetail', () => {
+        const input = {
+            component: "Header",
+            content: "<h1>Hello</h1>",
+            contentStyle: {
+                className: 'grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8',
+                style: {
+                    background: 'linear-gradient(135deg, #ff7e5f, #feb47b)', // orange to peach gradient
+                    color: '#ffffff',
+                    padding: '16px',
+                    borderRadius: '8px',
+                }
+            },
+            meta: {
+                component: 'WrapperRenderer',
+                properties: {
+                    className: 'grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8',
+                    style: {
+                        background: 'linear-gradient(135deg, #ff7e5f, #feb47b)', // orange to peach gradient
+                        color: '#ffffff',
+                        padding: '16px',
+                        borderRadius: '8px',
+                    }
+                }
+            },
+        };
+
+        const result = layoutComponentDetailDecoder.verify(input);
+        expect(result).toEqual(input);
+    });
+
 });

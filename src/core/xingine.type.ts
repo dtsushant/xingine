@@ -1,21 +1,17 @@
 import {
   ChartMeta,
   DetailDispatchProperties, DetailMeta,
-  FormDispatchProperties, FormMeta, StyleMeta,
+  FormDispatchProperties, FormMeta,
   TabDispatchProperties,
   TableDispatchProperties, TableMeta,
 } from "./component/component-meta-map";
 import {ConditionalExpression} from "./expressions/operators";
+import {EventBindings} from "./expressions/action";
+import {ButtonMeta, IconMeta, InputMeta} from "./component";
+import {StyleMeta} from "./expressions/style";
+import {SvgMeta} from "./component/svg-meta-map";
 
-export interface IconMeta {
-  name?: string; // e.g. "UserOutlined"
-  color?: string; // style.color
-  size?: number | string; // style.fontSize
-  spin?: boolean;
-  rotate?: number;
-  twoToneColor?: string;
-  className?: string;
-}
+
 
 export interface ExpositionRule {
   /**
@@ -301,26 +297,33 @@ export type UIComponent = Renderer | UIComponentDetail ;
 export interface LayoutComponentDetail {
   component: string;
   content?: string;
+  contentStyle?:StyleMeta;
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
 export interface LayoutRenderer {
   type: string;
+  style?:StyleMeta;
   header?: {
+    style?:StyleMeta;
     meta?: LayoutComponentDetail;
   };
   content: {
+    style?:StyleMeta;
     meta: LayoutComponentDetail;
   };
   sider?: {
+    style?:StyleMeta;
     meta?: LayoutComponentDetail;
   };
   footer?: {
+    style?:StyleMeta;
     meta?: LayoutComponentDetail;
   };
 }
 
 export interface TabMeta {
+  event?:EventBindings;
   tabs: {
     label: string;
     component: keyof ComponentMetaMap;
@@ -331,6 +334,8 @@ export interface TabMeta {
 
 export interface WrapperMeta extends StyleMeta {
   [key:string] : unknown;
+  event?:EventBindings;
+  content?:string;
   children?:LayoutComponentDetail[];
 }
 
@@ -342,13 +347,16 @@ export type ComponentMetaMap = {
   ChartRenderer: ChartMeta;
   WrapperRenderer: WrapperMeta;
   LayoutRenderer: Record<string, unknown>;
-  HeaderRenderer: Record<string, unknown>;
-  SidebarRenderer: Record<string, unknown>;
-  ContentRenderer: Record<string, unknown>;
-  FooterRenderer: Record<string, unknown>;
+  HeaderRenderer: WrapperMeta;
+  SidebarRenderer: WrapperMeta;
+  ContentRenderer: WrapperMeta;
+  FooterRenderer: WrapperMeta;
+
   // UI components
-  ButtonRenderer: Record<string, unknown>;
-  SearchRenderer: Record<string, unknown>;
+  IconRenderer: IconMeta;
+  SvgRenderer:SvgMeta;
+  ButtonRenderer: ButtonMeta;
+  InputRenderer: InputMeta;
   SwitchRenderer: Record<string, unknown>;
   BadgeRenderer: Record<string, unknown>;
   DropdownRenderer: Record<string, unknown>;

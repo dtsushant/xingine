@@ -8,3 +8,4 @@ export { validateFormField } from "./core/utils/validation.util";
 export type { FieldValidationError, FormValidationResult } from "./core/xingine.type";
 export * from "./core/component"
 export * from "./core/decoders"
+export * from "./core/expressions"

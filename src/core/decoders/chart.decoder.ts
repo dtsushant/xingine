@@ -1,6 +1,6 @@
 import {
   array,
-  Decoder,
+  Decoder, number,
   object,
   oneOf,
   optional,
@@ -14,6 +14,7 @@ import {
   ChartMeta,
   ChartType,
 } from "../component/component-meta-map";
+import {eventBindingsDecoder} from "./action.decoder";
 
 const chartDatasetDecoderBase = object({
   label: string,
@@ -37,6 +38,8 @@ export const chartTypeDecoder: Decoder<ChartType> = oneOf([
 export const chartConfigDecoder: Decoder<ChartConfig> = object({
   type: chartTypeDecoder,
   title: optional(string),
+  height:optional(number),
+  width:optional(number),
   labels: optional(array(string)),
   datasets: optional(array(chartDatasetDecoder())),
   dataSourceUrl: optional(string),
@@ -45,4 +48,6 @@ export const chartConfigDecoder: Decoder<ChartConfig> = object({
 
 export const chartMetaDecoder: Decoder<ChartMeta> = object({
   charts: array(chartConfigDecoder),
+  event: optional(eventBindingsDecoder)
+
 });

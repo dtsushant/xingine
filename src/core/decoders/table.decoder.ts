@@ -14,10 +14,12 @@ import {
 } from "../component/component-meta-map";
 import { operatorDecoder } from "../decoders/expression.decoder";
 import { decodeFieldInputPropertiesByInputType } from "../decoders/form.decoder";
+import {eventBindingsDecoder} from "./action.decoder";
 
 export const tableColumnDecoder: Decoder<ColumnMeta> = object({
   title: string,
   dataIndex: string,
+  event:optional(eventBindingsDecoder),
   key: optional(string),
   render: optional(string),
   width: optional(number),
@@ -38,5 +40,6 @@ export const tableMetaDecoder: Decoder<TableMeta> = object({
   columns: array(tableColumnDecoder),
   dataSourceUrl: string,
   rowKey: optional(string),
+  event: optional(eventBindingsDecoder),
   pagination: optional(boolean),
 });

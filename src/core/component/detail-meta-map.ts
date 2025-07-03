@@ -1,3 +1,5 @@
+import {EventBindings} from "../expressions/action";
+
 export interface TextDetailProperties {
   placeholder?: string;
 }
@@ -61,6 +63,7 @@ export interface DetailFieldMeta<
 > {
   name?: string;
   label: string;
+  event?:EventBindings;
   inputType: T;
   value?: unknown;
   properties?: DetailInputTypeProperties[T];

@@ -1,3 +1,7 @@
 export * from './form-meta-map'
 export * from './detail-meta-map'
 export * from './component-meta-map'
+export * from './button-meta-map'
+export * from './icon-meta-map'
+export * from './input-meta-map'
+export * from './svg-meta-map'

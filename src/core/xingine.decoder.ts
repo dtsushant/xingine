@@ -2,7 +2,7 @@ import {
     ComponentMeta, ComponentMetaMap,
     ExpositionRule,
     GenericErrors, LayoutComponentDetail,
-    LayoutMandate,
+    LayoutMandate, LayoutRenderer,
     ModuleProperties,
     ModulePropertyOptions,
     Panel,
@@ -19,18 +19,17 @@ import {
   string,
   unknown,
 } from "decoders";
-import {
-    ColumnMeta,
-    StyleMeta,
-    TableMeta,
-} from "./component/component-meta-map";
+
 import { formMetaDecoder } from "./decoders/form.decoder";
 import { detailMetaDecoder } from "./decoders/detail.decoder";
 import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
 import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
 import {isRenderer, isUIComponentDetail} from "./xingine.util";
-import {dynamicShapeDecoder} from "./decoders";
+import {dynamicShapeDecoder, inputMetaDecoder} from "./decoders";
+import {eventBindingsDecoder} from "./decoders/action.decoder";
+import {iconMetaDecoder} from "./decoders/icon.decoder";
+import {styleDecoder} from "./decoders/style.decoder";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -40,9 +39,11 @@ const tabMetaDecoder: Decoder<TabMeta> = object({
       meta: unknown,
     }),
   ),
+  event: optional(eventBindingsDecoder)
 }).transform(
   (tabMeta) =>
     ({
+      event: tabMeta.event,
       tabs: tabMeta.tabs.map((tab) => ({
         label: tab.label,
         component: tab.component,
@@ -69,17 +70,17 @@ function decodeMetaByComponent(component: string, input: unknown): object {
     case "LayoutRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "HeaderRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return wrapperMetaDecoder.verify(input);
     case "SidebarRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return wrapperMetaDecoder.verify(input);
     case "ContentRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return wrapperMetaDecoder.verify(input);
     case "FooterRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return wrapperMetaDecoder.verify(input);
     case "ButtonRenderer":
         return record(dynamicShapeDecoder).verify(input);
-    case "SearchRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+    case "InputRenderer":
+        return inputMetaDecoder.verify(input);
     case "SwitchRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "BadgeRenderer:":
@@ -124,18 +125,43 @@ export function componentMetaDecoder(): Decoder<ComponentMeta> {
   });
 }
 
-export const styleDecoder:Decoder<StyleMeta> = object({
-    className:optional(string),
-    style:optional(record(dynamicShapeDecoder)),
-})
 
-export const layoutComponentDetail:Decoder<LayoutComponentDetail>= object({
+
+export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object({
     component: string,
     content: optional(string),
+    contentStyle: optional(styleDecoder),
     meta: componentMetaDecoder(),
 })
 
-export const layoutComponentDetailList:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetail);
+export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
+
+
+export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
+  type: string,
+  header: optional(
+    exact({
+      style: optional(styleDecoder),
+      meta: optional(layoutComponentDetailDecoder),
+    })
+  ),
+  content: exact({
+    style: optional(styleDecoder),
+    meta: layoutComponentDetailDecoder,
+  }),
+  sider: optional(
+    exact({
+      style: optional(styleDecoder),
+      meta: optional(layoutComponentDetailDecoder),
+    })
+  ),
+  footer: optional(
+    exact({
+      style: optional(styleDecoder),
+      meta: optional(layoutComponentDetailDecoder),
+    })
+  ),
+});
 
 export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
     unknown.transform((input) => {
@@ -149,11 +175,17 @@ export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
             if ('className' in obj) {
                 output.className = string.verify(obj.className);
             }
+            if('event' in obj){
+                output.event = eventBindingsDecoder.verify(obj.event)
+            }
             if ('style' in obj) {
                 output.style = dynamicShapeDecoder.verify(obj.style) as Record<string, unknown>;
             }
             if ('children' in obj) {
-                output.children = layoutComponentDetailList.verify(obj.children);
+                output.children = layoutComponentDetailListDecoder.verify(obj.children);
+            }
+            if ('content' in obj) {
+                output.content = string.verify(obj.content);
             }
 
             for (const key in obj) {
@@ -168,15 +200,7 @@ export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
         }
     })
 );
-export const iconMetaDecoder = exact({
-  name: optional(string),
-  color: optional(string),
-  size: optional(either(number, string)),
-  spin: optional(boolean),
-  rotate: optional(number),
-  twoToneColor: optional(string),
-  className: optional(string),
-});
+
 export const expositionRuleDecoder:Decoder<ExpositionRule> = exact({
   visible: optional(either(boolean, conditionalExpressionDecoder)),
   disabled: optional(either(boolean, conditionalExpressionDecoder)),

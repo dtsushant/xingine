@@ -1,4 +1,4 @@
-import {iconMetaDecoder} from "../../core/xingine.decoder";
+import {iconMetaDecoder} from "../../core/decoders/icon.decoder";
 
 describe('iconMetaDecoder', () => {
     it('should decode valid config', () => {

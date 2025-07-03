@@ -4,6 +4,7 @@ import {
   SearchCondition,
   SearchQuery,
 } from "../expressions/operators";
+import {SerializableAction} from "../expressions/action";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
@@ -31,11 +32,14 @@ export function resolveDynamicPath(
 }
 
 export function resolvePath(input: unknown, path: string): unknown {
-  if (input === null || (typeof input !== "object" && !Array.isArray(input))) {
+  if (input === null || typeof input !== "object") {
     return undefined;
   }
 
-  return path.split(".").reduce<unknown>((acc, key) => {
+  // Split path into segments: supports "items[0].name" or "user.profile.name"
+  const parts = path.split(/[\.\[\]]/).filter(Boolean); // removes empty strings
+
+  return parts.reduce<unknown>((acc, key) => {
     if (acc === null || acc === undefined) return undefined;
 
     if (Array.isArray(acc)) {
@@ -170,4 +174,53 @@ export function evaluateCondition(
     default:
       return false;
   }
+}
+
+/**
+ * Safely retrieves a typed value from an object by key.
+ * @param obj The object to retrieve the value from.
+ * @param key The key to look up in the object.
+ * @returns The value cast to type T, or undefined if the key does not exist.
+ */
+export function getTypedValue<T>(obj: { [key: string]: unknown }, key: string): T | undefined {
+  const value = resolvePath(obj, key);
+  return value as T | undefined;
+}
+
+export function extrapolate(template: string, context: Record<string, unknown>): string {
+  return template.replace(/#\{([^}]+)\}/g, (_, keyPath: string) => {
+    const result = resolvePath(context, keyPath.trim());
+    return result !== undefined && result !== null ? String(result) : 'undefined';
+  });
+}
+
+export function getActionRef(
+    expression: SerializableAction,
+    context: Record<string, unknown>
+): ((...args: unknown[]) => unknown) | undefined {
+
+  const resolveFunction = (key: string) => {
+    const fn = resolvePath(context, key);
+    return typeof fn === 'function' ? (fn as (...args: unknown[]) => unknown) : undefined;
+  };
+
+  if (typeof expression === 'string') {
+    return resolveFunction(expression);
+  }
+
+  if (typeof expression === 'object' && typeof expression.action === 'string') {
+    const baseFn = resolveFunction(expression.action);
+    if (!baseFn) return undefined;
+
+    return (...args: unknown[]) => {
+      if (expression.valueFromEvent) {
+        const [value, event] = args;
+        return baseFn(value, event);
+      } else {
+        return baseFn(expression.args);
+      }
+    };
+  }
+
+  return undefined;
 }

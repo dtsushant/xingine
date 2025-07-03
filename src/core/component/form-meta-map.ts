@@ -1,5 +1,7 @@
 // src/types/component-meta-map.ts
 
+import {EventBindings} from "../expressions/action";
+
 export interface InputTypeProperties {
   /**
    * Placeholder text for the input field.
@@ -285,6 +287,7 @@ export interface FieldMeta<
 > {
   name?: string;
   label: string;
+  event?:EventBindings;
   inputType: T;
   value?: string;
   required?: boolean;

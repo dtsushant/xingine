@@ -38,6 +38,7 @@ import {
   FormMeta,
 } from "../component/component-meta-map";
 import { dynamicShapeDecoder } from "../decoders/shared.decoder";
+import {eventBindingsDecoder} from "./action.decoder";
 
 export const inputTypeDecoder: Decoder<InputTypeProperties> = object({
   placeholder: optional(string),
@@ -240,6 +241,7 @@ const fieldMetaDecoderBase = object({
   required: optional(boolean),
   value: optional(string),
   properties: optional(unknown),
+  event:optional(eventBindingsDecoder),
   order:optional(number)
 });
 
@@ -307,9 +309,7 @@ const formDispatchPropertiesDecoderBase = object({
 });
 
 function formDispatchPropertiesDecoder(): Decoder<FormDispatchProperties> {
-  console.log("decoding the dispatch");
   return formDispatchPropertiesDecoderBase.transform((formDispatchProperty) => {
-    console.log("the property", formDispatchProperty);
     return formDispatchProperty as FormDispatchProperties;
   });
 }
@@ -334,6 +334,7 @@ function formDispatchPropertiesDecoder(): Decoder<FormDispatchProperties> {
 export const formMetaDecoder: Decoder<FormMeta> = object({
   fields: array(fieldMetaDecoder()).transform((f) => f ?? []),
   action: string,
+  event: optional(eventBindingsDecoder),
   dispatch: optional(
     formDispatchPropertiesDecoder().transform((f) => {
       return f;
