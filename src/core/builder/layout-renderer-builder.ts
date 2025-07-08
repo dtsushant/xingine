@@ -198,22 +198,43 @@ export class LayoutSectionBuilder {
   /**
    * Creates a wrapper component for this section
    */
-  wrapper(): LayoutSectionWrapperBuilder {
-    return new LayoutSectionWrapperBuilder(this.parent, this.section, this.sectionStyle);
+  wrapper(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'wrapper');
   }
 
   /**
    * Creates a button component for this section
    */
-  button(): LayoutSectionButtonBuilder {
-    return new LayoutSectionButtonBuilder(this.parent, this.section, this.sectionStyle);
+  button(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'button');
   }
 
   /**
    * Creates an input component for this section
    */
-  input(): LayoutSectionInputBuilder {
-    return new LayoutSectionInputBuilder(this.parent, this.section, this.sectionStyle);
+  input(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'input');
+  }
+
+  /**
+   * Creates a form component for this section
+   */
+  form(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'form');
+  }
+
+  /**
+   * Creates a table component for this section
+   */
+  table(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'table');
+  }
+
+  /**
+   * Creates a chart component for this section
+   */
+  chart(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'chart');
   }
 
   /**
@@ -235,218 +256,147 @@ export class LayoutSectionBuilder {
 }
 
 /**
- * Builder for wrapper components within layout sections
+ * Generic builder for components within layout sections
+ * This replaces the duplicate LayoutSectionWrapperBuilder, LayoutSectionButtonBuilder, etc.
  */
-export class LayoutSectionWrapperBuilder {
+export class LayoutSectionComponentBuilder {
   private componentBuilder: LayoutComponentDetailBuilder;
+  private currentBuilder: any;
 
   constructor(
     private parent: LayoutRendererBuilder,
     private section: 'header' | 'content' | 'sider' | 'footer',
-    private sectionStyle?: StyleMeta
+    private sectionStyle?: StyleMeta,
+    private componentType: 'wrapper' | 'button' | 'input' | 'form' | 'table' | 'chart' = 'wrapper'
   ) {
     this.componentBuilder = LayoutComponentDetailBuilder.create();
+    this.currentBuilder = this.getComponentBuilder();
   }
 
   /**
-   * Gets the wrapper builder
+   * Gets the appropriate component builder based on type
    */
-  getWrapper() {
-    return this.componentBuilder.wrapper();
+  private getComponentBuilder() {
+    switch (this.componentType) {
+      case 'wrapper':
+        return this.componentBuilder.wrapper();
+      case 'button':
+        return this.componentBuilder.button();
+      case 'input':
+        return this.componentBuilder.input();
+      case 'form':
+        return this.componentBuilder.form();
+      case 'table':
+        return this.componentBuilder.table();
+      case 'chart':
+        return this.componentBuilder.chart();
+      default:
+        return this.componentBuilder.wrapper();
+    }
   }
 
   /**
-   * Sets the wrapper className
+   * Provides access to the underlying component builder
    */
-  className(className: string): LayoutSectionWrapperBuilder {
-    this.getWrapper().className(className);
+  get component() {
+    return this.currentBuilder;
+  }
+
+  /**
+   * Forward method calls to the underlying component builder
+   */
+  private forwardToBuilder(methodName: string, ...args: any[]) {
+    if (this.currentBuilder[methodName]) {
+      this.currentBuilder[methodName](...args);
+    }
     return this;
   }
 
-  /**
-   * Sets inline styles
-   */
-  style(style: Record<string, unknown>): LayoutSectionWrapperBuilder {
-    this.getWrapper().style(style);
-    return this;
+  // Common methods that work across all component types
+  className(className: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('className', className);
   }
 
-  /**
-   * Sets content
-   */
-  content(content: string): LayoutSectionWrapperBuilder {
-    this.getWrapper().content(content);
-    return this;
+  style(style: Record<string, unknown>): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('style', style);
   }
 
-  /**
-   * Adds a child component
-   */
-  addChild(child: LayoutComponentDetail): LayoutSectionWrapperBuilder {
-    this.getWrapper().addChild(child);
-    return this;
+  // Wrapper-specific methods
+  content(content: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('content', content);
   }
 
-  /**
-   * Adds multiple children
-   */
-  addChildren(children: LayoutComponentDetail[]): LayoutSectionWrapperBuilder {
-    this.getWrapper().addChildren(children);
-    return this;
+  addChild(child: LayoutComponentDetail): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('addChild', child);
   }
 
-  /**
-   * Adds a nested wrapper
-   */
-  addWrapper() {
-    return this.getWrapper().addWrapper();
+  addChildren(children: LayoutComponentDetail[]): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('addChildren', children);
   }
 
-  /**
-   * Adds a button
-   */
-  addButton() {
-    return this.getWrapper().addButton();
+  // Button-specific methods
+  name(name: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('name', name);
   }
 
-  /**
-   * Adds an input
-   */
-  addInput() {
-    return this.getWrapper().addInput();
+  // Input-specific methods
+  placeholder(placeholder: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('placeholder', placeholder);
+  }
+
+  icon(icon: any): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('icon', icon);
+  }
+
+  // Form-specific methods
+  action(action: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('action', action);
+  }
+
+  fields(fields: any[]): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('fields', fields);
+  }
+
+  addField(field: any): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('addField', field);
+  }
+
+  // Table-specific methods
+  columns(columns: any[]): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('columns', columns);
+  }
+
+  addColumn(column: any): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('addColumn', column);
+  }
+
+  dataSourceUrl(url: string): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('dataSourceUrl', url);
+  }
+
+  // Chart-specific methods
+  charts(charts: any[]): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('charts', charts);
+  }
+
+  addChart(chart: any): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('addChart', chart);
+  }
+
+  chartBuilder(): any {
+    return this.currentBuilder.chartBuilder ? this.currentBuilder.chartBuilder() : null;
+  }
+
+  // Common methods
+  event(event: any): LayoutSectionComponentBuilder {
+    return this.forwardToBuilder('event', event);
   }
 
   /**
    * Builds and returns to parent
    */
   build(): LayoutRendererBuilder {
-    const meta = this.getWrapper().build();
-    this.parent.setSection(this.section, meta, this.sectionStyle);
-    return this.parent;
-  }
-}
-
-/**
- * Builder for button components within layout sections
- */
-export class LayoutSectionButtonBuilder {
-  private componentBuilder: LayoutComponentDetailBuilder;
-
-  constructor(
-    private parent: LayoutRendererBuilder,
-    private section: 'header' | 'content' | 'sider' | 'footer',
-    private sectionStyle?: StyleMeta
-  ) {
-    this.componentBuilder = LayoutComponentDetailBuilder.create();
-  }
-
-  /**
-   * Gets the button builder
-   */
-  getButton() {
-    return this.componentBuilder.button();
-  }
-
-  /**
-   * Sets the button name
-   */
-  name(name: string): LayoutSectionButtonBuilder {
-    this.getButton().name(name);
-    return this;
-  }
-
-  /**
-   * Sets the button content
-   */
-  content(content: string): LayoutSectionButtonBuilder {
-    this.getButton().content(content);
-    return this;
-  }
-
-  /**
-   * Sets the button className
-   */
-  className(className: string): LayoutSectionButtonBuilder {
-    this.getButton().className(className);
-    return this;
-  }
-
-  /**
-   * Sets inline styles
-   */
-  style(style: Record<string, unknown>): LayoutSectionButtonBuilder {
-    this.getButton().style(style);
-    return this;
-  }
-
-  /**
-   * Builds and returns to parent
-   */
-  build(): LayoutRendererBuilder {
-    const meta = this.getButton().build();
-    this.parent.setSection(this.section, meta, this.sectionStyle);
-    return this.parent;
-  }
-}
-
-/**
- * Builder for input components within layout sections
- */
-export class LayoutSectionInputBuilder {
-  private componentBuilder: LayoutComponentDetailBuilder;
-
-  constructor(
-    private parent: LayoutRendererBuilder,
-    private section: 'header' | 'content' | 'sider' | 'footer',
-    private sectionStyle?: StyleMeta
-  ) {
-    this.componentBuilder = LayoutComponentDetailBuilder.create();
-  }
-
-  /**
-   * Gets the input builder
-   */
-  getInput() {
-    return this.componentBuilder.input();
-  }
-
-  /**
-   * Sets the input name
-   */
-  name(name: string): LayoutSectionInputBuilder {
-    this.getInput().name(name);
-    return this;
-  }
-
-  /**
-   * Sets the input placeholder
-   */
-  placeholder(placeholder: string): LayoutSectionInputBuilder {
-    this.getInput().placeholder(placeholder);
-    return this;
-  }
-
-  /**
-   * Sets the input className
-   */
-  className(className: string): LayoutSectionInputBuilder {
-    this.getInput().className(className);
-    return this;
-  }
-
-  /**
-   * Sets inline styles
-   */
-  style(style: Record<string, unknown>): LayoutSectionInputBuilder {
-    this.getInput().style(style);
-    return this;
-  }
-
-  /**
-   * Builds and returns to parent
-   */
-  build(): LayoutRendererBuilder {
-    const meta = this.getInput().build();
+    const meta = this.currentBuilder.build();
     this.parent.setSection(this.section, meta, this.sectionStyle);
     return this.parent;
   }

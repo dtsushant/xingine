@@ -4,8 +4,10 @@ import {
   ComponentMetaMap,
   WrapperMeta
 } from '../xingine.type';
+import { ChartDataset } from '../component/component-meta-map';
 import { StyleMeta } from '../expressions/style';
 import { EventBindings } from '../expressions/action';
+import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
 
 /**
  * Fluent builder for creating LayoutComponentDetail instances
@@ -317,7 +319,7 @@ export class ButtonRendererBuilder {
  * Builder for InputRenderer components
  */
 export class InputRendererBuilder {
-  private properties: ComponentMetaMap['InputRenderer'] = { name: '' };
+  private properties: ComponentMetaMap['InputRenderer'] = {} as ComponentMetaMap['InputRenderer'];
 
   constructor(
     private parent: LayoutComponentDetailBuilder,
@@ -325,7 +327,7 @@ export class InputRendererBuilder {
   ) {}
 
   /**
-   * Sets the input name
+   * Sets the input name (required)
    */
   name(name: string): InputRendererBuilder {
     this.properties.name = name;
@@ -346,6 +348,25 @@ export class InputRendererBuilder {
   event(event: EventBindings): InputRendererBuilder {
     this.properties.event = event;
     return this;
+  }
+
+  /**
+   * Creates an EventBindingsBuilder for this input
+   */
+  eventBuilder(): EventBindingsBuilder {
+    const builder = EventBindingsBuilder.create();
+    // Return a wrapped builder that sets the event when built
+    return new Proxy(builder, {
+      get: (target, prop) => {
+        if (prop === 'build') {
+          return () => {
+            this.properties.event = target.build();
+            return this;
+          };
+        }
+        return target[prop as keyof EventBindingsBuilder];
+      }
+    }) as EventBindingsBuilder;
   }
 
   /**
@@ -371,9 +392,40 @@ export class InputRendererBuilder {
   }
 
   /**
+   * Creates a StyleMetaBuilder for this input
+   */
+  styleBuilder(): StyleMetaBuilder {
+    const builder = StyleMetaBuilder.create();
+    // Return a wrapped builder that sets the style when built
+    return new Proxy(builder, {
+      get: (target, prop) => {
+        if (prop === 'build') {
+          return () => {
+            this.properties.style = target.build();
+            return this;
+          };
+        }
+        return target[prop as keyof StyleMetaBuilder];
+      }
+    }) as StyleMetaBuilder;
+  }
+
+  /**
+   * Sets the input icon
+   */
+  icon(icon: ComponentMetaMap['InputRenderer']['icon']): InputRendererBuilder {
+    this.properties.icon = icon;
+    return this;
+  }
+
+  /**
    * Builds the input component
    */
   build(): LayoutComponentDetail {
+    if (!this.properties.name) {
+      throw new Error('Input name is required. Use .name(value) to set it.');
+    }
+
     const inputDetail: LayoutComponentDetail = {
       meta: {
         component: 'InputRenderer',
@@ -394,6 +446,10 @@ export class InputRendererBuilder {
    * Returns to the parent builder
    */
   end(): LayoutComponentDetailBuilder | WrapperRendererBuilder {
+    if (!this.properties.name) {
+      throw new Error('Input name is required. Use .name(value) to set it.');
+    }
+
     const inputDetail: LayoutComponentDetail = {
       meta: {
         component: 'InputRenderer',
@@ -546,11 +602,21 @@ export class ChartRendererBuilder {
   }
 
   /**
-   * Adds a single chart
+   * Adds a single chart using ChartConfig
    */
-  addChart(chart: ComponentMetaMap['ChartRenderer']['charts'][0]): ChartRendererBuilder {
-    this.properties.charts.push(chart);
+  addChart(chartConfig: ComponentMetaMap['ChartRenderer']['charts'][0]): ChartRendererBuilder {
+    if (!chartConfig.type) {
+      throw new Error('Chart type is required');
+    }
+    this.properties.charts.push(chartConfig);
     return this;
+  }
+
+  /**
+   * Creates a ChartConfigBuilder for adding charts safely
+   */
+  chartBuilder(): ChartConfigBuilder {
+    return new ChartConfigBuilder(this);
   }
 
   /**
@@ -577,6 +643,109 @@ export class ChartRendererBuilder {
   end(): LayoutComponentDetailBuilder {
     this.parent.withMeta('ChartRenderer', this.properties);
     return this.parent;
+  }
+}
+
+/**
+ * Builder for ChartConfig to ensure proper chart configuration
+ */
+export class ChartConfigBuilder {
+  private config: ComponentMetaMap['ChartRenderer']['charts'][0] = {} as ComponentMetaMap['ChartRenderer']['charts'][0];
+
+  constructor(private chartRenderer: ChartRendererBuilder) {}
+
+  /**
+   * Sets chart type (required)
+   */
+  type(type: ComponentMetaMap['ChartRenderer']['charts'][0]['type']): ChartConfigBuilder {
+    this.config.type = type;
+    return this;
+  }
+
+  /**
+   * Sets chart title
+   */
+  title(title: string): ChartConfigBuilder {
+    this.config.title = title;
+    return this;
+  }
+
+  /**
+   * Sets chart width
+   */
+  width(width: number): ChartConfigBuilder {
+    this.config.width = width;
+    return this;
+  }
+
+  /**
+   * Sets chart height
+   */
+  height(height: number): ChartConfigBuilder {
+    this.config.height = height;
+    return this;
+  }
+
+  /**
+   * Sets chart labels
+   */
+  labels(labels: string[]): ChartConfigBuilder {
+    this.config.labels = labels;
+    return this;
+  }
+
+  /**
+   * Sets chart datasets
+   */
+  datasets(datasets: ComponentMetaMap['ChartRenderer']['charts'][0]['datasets']): ChartConfigBuilder {
+    this.config.datasets = datasets;
+    return this;
+  }
+
+  /**
+   * Adds a single dataset
+   */
+  addDataset(dataset: ChartDataset): ChartConfigBuilder {
+    if (!this.config.datasets) {
+      this.config.datasets = [];
+    }
+    this.config.datasets.push(dataset);
+    return this;
+  }
+
+  /**
+   * Sets chart options
+   */
+  options(options: Record<string, unknown>): ChartConfigBuilder {
+    this.config.options = options;
+    return this;
+  }
+
+  /**
+   * Sets data source URL
+   */
+  dataSourceUrl(url: string): ChartConfigBuilder {
+    this.config.dataSourceUrl = url;
+    return this;
+  }
+
+  /**
+   * Sets renderer configuration
+   */
+  renderer(renderer: ComponentMetaMap['ChartRenderer']['charts'][0]['renderer']): ChartConfigBuilder {
+    this.config.renderer = renderer;
+    return this;
+  }
+
+  /**
+   * Builds the chart config and adds it to the parent ChartRenderer
+   */
+  build(): ChartRendererBuilder {
+    if (!this.config.type) {
+      throw new Error('Chart type is required. Use .type(value) to set it.');
+    }
+    this.chartRenderer.addChart(this.config);
+    return this.chartRenderer;
   }
 }
 

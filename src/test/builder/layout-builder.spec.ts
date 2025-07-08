@@ -51,6 +51,30 @@ describe('LayoutComponentDetailBuilder', () => {
     });
   });
 
+  it('should create an input component with icon', () => {
+    const result = LayoutComponentDetailBuilder.create()
+      .input()
+      .name('searchInput')
+      .placeholder('Search...')
+      .icon({ name: 'search', size: 16 })
+      .className('search-input')
+      .build();
+
+    expect(result).toEqual({
+      meta: {
+        component: 'InputRenderer',
+        properties: {
+          name: 'searchInput',
+          placeholder: 'Search...',
+          icon: { name: 'search', size: 16 },
+          style: {
+            className: 'search-input'
+          }
+        }
+      }
+    });
+  });
+
   it('should create a wrapper component with children', () => {
     const button = LayoutComponentDetailBuilder.create()
       .button()
