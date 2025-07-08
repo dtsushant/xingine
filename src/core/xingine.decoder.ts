@@ -1,12 +1,12 @@
 import {
-    ComponentMeta, ComponentMetaMap,
+    ComponentMeta, ComponentMetaMap, ConditionalMeta,
     ExpositionRule,
     GenericErrors, LayoutComponentDetail,
     LayoutMandate, LayoutRenderer,
     ModuleProperties,
     ModulePropertyOptions,
     Panel,
-    Permission, Renderer, TabMeta,
+    Permission, Renderer, SiderMeta, TabMeta,
     UIComponent, UIComponentDetail, WrapperMeta,
 } from "./xingine.type";
 import {
@@ -67,12 +67,14 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return chartMetaDecoder.verify(input);
     case "WrapperRenderer":
         return wrapperMetaDecoder.verify(input);
+  case "ConditionalRenderer":
+      return conditionalMetaDecoder.verify(input);
     case "LayoutRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "HeaderRenderer":
         return wrapperMetaDecoder.verify(input);
-    case "SidebarRenderer":
-        return wrapperMetaDecoder.verify(input);
+    case "SiderRenderer":
+        return siderMetaDecoder.verify(input);
     case "ContentRenderer":
         return wrapperMetaDecoder.verify(input);
     case "FooterRenderer":
@@ -128,9 +130,6 @@ export function componentMetaDecoder(): Decoder<ComponentMeta> {
 
 
 export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object({
-    component: string,
-    content: optional(string),
-    contentStyle: optional(styleDecoder),
     meta: componentMetaDecoder(),
 })
 
@@ -172,14 +171,11 @@ export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
         const output: WrapperMeta = {};
 
         try {
-            if ('className' in obj) {
-                output.className = string.verify(obj.className);
-            }
             if('event' in obj){
                 output.event = eventBindingsDecoder.verify(obj.event)
             }
             if ('style' in obj) {
-                output.style = dynamicShapeDecoder.verify(obj.style) as Record<string, unknown>;
+                output.style = styleDecoder.verify(obj.style);
             }
             if ('children' in obj) {
                 output.children = layoutComponentDetailListDecoder.verify(obj.children);
@@ -200,6 +196,14 @@ export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
         }
     })
 );
+
+export const siderMetaDecoder: Decoder<SiderMeta> = wrapperMetaDecoder;
+
+export const conditionalMetaDecoder:Decoder<ConditionalMeta>=exact({
+    condition: conditionalExpressionDecoder,
+    trueComponent: layoutComponentDetailDecoder,
+    falseComponent:optional(layoutComponentDetailDecoder)
+})
 
 export const expositionRuleDecoder:Decoder<ExpositionRule> = exact({
   visible: optional(either(boolean, conditionalExpressionDecoder)),

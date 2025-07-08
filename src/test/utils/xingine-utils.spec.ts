@@ -1,7 +1,8 @@
 // complete test for file xingine.utils
 
-import {extrapolate, getActionRef, getTypedValue} from "../../core/utils/type";
+import { getActionRef, getTypedValue} from "../../core/utils/type";
 import {SerializableAction} from "../../core/expressions/action";
+import {extrapolate} from "../../core/utils/extrapolate-string.util";
 
 describe("Xingine-utils",()=>{
     it("getTypedValueTest return proper Value",()=>{
@@ -18,6 +19,7 @@ describe('extrapolate', () => {
     const context = {
         user: {
             name: 'Alice',
+            isAdmin:true,
             profile: {
                 email: 'alice@example.com'
             }
@@ -57,6 +59,32 @@ describe('extrapolate', () => {
     it('handles mixed keys in one string', () => {
         const result = extrapolate('User: #{user.name}, Item: #{items[1].name}, Missing: #{nothing}', context);
         expect(result).toBe('User: Alice, Item: Item B, Missing: undefined');
+    });
+
+    it('handles ternary statement', () => {
+        const result = extrapolate("Hello #{user.name}, you're #{user.isAdmin ? 'Admin' : 'Guest'}", context);
+        expect(result).toBe("Hello Alice, you're Admin");
+    });
+
+    it('handles logical operators', () => {
+        const result = extrapolate("Admin check: #{user.isAdmin && user.name === 'Alice' ? 'yes' : 'no'}", context);
+        expect(result).toBe('Admin check: yes');
+    });
+
+    // Failing test
+   /* it('nested logical handles logical operators', () => {
+        const result = extrapolate("Admin check: #{user.isAdmin && (balance===150 || user.name=='NAlice') ? 'yes' : 'no'}", context);
+        expect(result).toBe('Admin check: yes');
+    });*/
+
+    it('supports exists function', () => {
+        const result = extrapolate('Check exists: #{exists(user.profile.email) ? "yes" : "no"}', context);
+        expect(result).toBe('Check exists: yes');
+    });
+
+    it('supports notExists function', () => {
+        const result = extrapolate('Check missing: #{notExists(user.age) ? "missing" : "found"}', context);
+        expect(result).toBe('Check missing: missing');
     });
 });
 

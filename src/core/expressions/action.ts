@@ -42,6 +42,7 @@ export interface PanelControlContext {
 export interface EventActionContext {
     onClick?: (...args: unknown[]) => void;
     onHover?: (...args: unknown[]) => void;
+    onInit?: (...args:unknown[])=>void;
     onChange?: (value: unknown, event?: unknown) => void;
     onInput?: (value: unknown, event?: unknown) => void;
     onFocus?: (event?: unknown) => void;
@@ -100,12 +101,9 @@ export const actionRegistry: Record<string, ActionHandler> = {
             method?: string;
             body?: unknown;
         });
-    },
+    }
 
-    toggleDarkMode: (_, ctx) => {
-        const current = ctx.getState('darkMode');
-        ctx.setState('darkMode', !current);
-    },
+
 };
 
 export function runAction(

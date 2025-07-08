@@ -32,9 +32,7 @@ export function resolveDynamicPath(
 }
 
 export function resolvePath(input: unknown, path: string): unknown {
-  if (input === null || typeof input !== "object") {
-    return undefined;
-  }
+  if (input === null || typeof input !== 'object') return undefined;
 
   // Split path into segments: supports "items[0].name" or "user.profile.name"
   const parts = path.split(/[\.\[\]]/).filter(Boolean); // removes empty strings
@@ -47,7 +45,7 @@ export function resolvePath(input: unknown, path: string): unknown {
       return isNaN(index) ? undefined : acc[index];
     }
 
-    if (typeof acc === "object" && key in acc) {
+    if (typeof acc === 'object' && key in acc) {
       return (acc as Record<string, unknown>)[key];
     }
 
@@ -187,12 +185,36 @@ export function getTypedValue<T>(obj: { [key: string]: unknown }, key: string): 
   return value as T | undefined;
 }
 
-export function extrapolate(template: string, context: Record<string, unknown>): string {
-  return template.replace(/#\{([^}]+)\}/g, (_, keyPath: string) => {
-    const result = resolvePath(context, keyPath.trim());
-    return result !== undefined && result !== null ? String(result) : 'undefined';
+/*export function extrapolate(template: string, context: Record<string, unknown>): string {
+  return template.replace(/#\{([^}]+)\}/g, function (_match: string, expression: string): string {
+    try {
+      const [conditionPart, truePart, falsePart] = parseTernary(expression.trim());
+
+      if (falsePart !== undefined) {
+        const conditionResult = resolvePath(context, conditionPart.trim());
+        return conditionResult ? truePart ?? '' : falsePart ?? '';
+      } else {
+        const result = resolvePath(context, conditionPart.trim());
+        return result !== undefined && result !== null ? String(result) : 'undefined';
+      }
+    } catch (e) {
+      return `#{ERROR: ${String(e)}}`;
+    }
   });
 }
+
+function parseTernary(expr: string): [string, string?, string?] {
+  const ternaryMatch = expr.match(/^(.+?)\?(.*?)\:(.*)$/);
+  if (ternaryMatch) {
+    return [
+      ternaryMatch[1].trim(),
+      ternaryMatch[2].trim().replace(/^['"]|['"]$/g, ''),
+      ternaryMatch[3].trim().replace(/^['"]|['"]$/g, '')
+    ];
+  } else {
+    return [expr];
+  }
+}*/
 
 export function getActionRef(
     expression: SerializableAction,

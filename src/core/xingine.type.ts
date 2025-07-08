@@ -295,9 +295,6 @@ export interface GroupedPermission {
 export type UIComponent = Renderer | UIComponentDetail ;
 
 export interface LayoutComponentDetail {
-  component: string;
-  content?: string;
-  contentStyle?:StyleMeta;
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
@@ -332,11 +329,20 @@ export interface TabMeta {
   dispatch?: TabDispatchProperties;
 }
 
-export interface WrapperMeta extends StyleMeta {
+export interface WrapperMeta {
   [key:string] : unknown;
   event?:EventBindings;
   content?:string;
+  style?:StyleMeta;
   children?:LayoutComponentDetail[];
+}
+
+export type SiderMeta = WrapperMeta;
+
+export interface ConditionalMeta{
+    condition: ConditionalExpression;
+    trueComponent: LayoutComponentDetail;
+    falseComponent?: LayoutComponentDetail;
 }
 
 export type ComponentMetaMap = {
@@ -348,10 +354,10 @@ export type ComponentMetaMap = {
   WrapperRenderer: WrapperMeta;
   LayoutRenderer: Record<string, unknown>;
   HeaderRenderer: WrapperMeta;
-  SidebarRenderer: WrapperMeta;
+  SiderRenderer: SiderMeta;
   ContentRenderer: WrapperMeta;
   FooterRenderer: WrapperMeta;
-
+  ConditionalRenderer: ConditionalMeta;
   // UI components
   IconRenderer: IconMeta;
   SvgRenderer:SvgMeta;
