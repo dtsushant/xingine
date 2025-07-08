@@ -196,6 +196,128 @@ describe('LayoutComponentDetailBuilder', () => {
       }
     });
   });
+
+  it('should create a form component', () => {
+    const fields = [
+      { name: 'name', label: 'Name', inputType: 'input' as const, required: true, properties: {} },
+      { name: 'email', label: 'Email', inputType: 'input' as const, required: true, properties: {} }
+    ];
+
+    const result = LayoutComponentDetailBuilder.create()
+      .form()
+      .action('createUser')
+      .fields(fields)
+      .build();
+
+    expect(result).toEqual({
+      meta: {
+        component: 'FormRenderer',
+        properties: {
+          action: 'createUser',
+          fields: fields
+        }
+      }
+    });
+  });
+
+  it('should create a table component', () => {
+    const columns = [
+      { title: 'Name', dataIndex: 'name', sortable: true },
+      { title: 'Email', dataIndex: 'email', sortable: true }
+    ];
+
+    const result = LayoutComponentDetailBuilder.create()
+      .table()
+      .dataSourceUrl('/api/users')
+      .columns(columns)
+      .rowKey('id')
+      .build();
+
+    expect(result).toEqual({
+      meta: {
+        component: 'TableRenderer',
+        properties: {
+          dataSourceUrl: '/api/users',
+          columns: columns,
+          rowKey: 'id'
+        }
+      }
+    });
+  });
+
+  it('should create a chart component', () => {
+    const chartConfig = {
+      type: 'bar' as const,
+      title: 'Sales',
+      height: 300,
+      width: 300,
+      labels: ['Jan', 'Feb', 'Mar'],
+      datasets: [{ label: 'Sales', data: [100, 200, 300], backgroundColor: '#1890ff' }]
+    };
+
+    const result = LayoutComponentDetailBuilder.create()
+      .chart()
+      .addChart(chartConfig)
+      .build();
+
+    expect(result).toEqual({
+      meta: {
+        component: 'ChartRenderer',
+        properties: {
+          charts: [chartConfig]
+        }
+      }
+    });
+  });
+
+  it('should create a detail component', () => {
+    const fields = [
+      { name: 'name', label: 'Name', inputType: 'text' as const, properties: {} },
+      { name: 'email', label: 'Email', inputType: 'text' as const, properties: {} }
+    ];
+
+    const result = LayoutComponentDetailBuilder.create()
+      .detailRenderer()
+      .action('viewUser')
+      .fields(fields)
+      .build();
+
+    expect(result).toEqual({
+      meta: {
+        component: 'DetailRenderer',
+        properties: {
+          action: 'viewUser',
+          fields: fields
+        }
+      }
+    });
+  });
+
+  it('should create a conditional component', () => {
+    const trueComponent = LayoutComponentDetailBuilder.create()
+      .button()
+      .name('adminBtn')
+      .content('Admin')
+      .build();
+
+    const falseComponent = LayoutComponentDetailBuilder.create()
+      .button()
+      .name('userBtn')
+      .content('User')
+      .build();
+
+    const result = LayoutComponentDetailBuilder.create()
+      .conditional()
+      .condition({ field: 'user.isAdmin', operator: 'eq', value: true })
+      .trueComponent(trueComponent)
+      .falseComponent(falseComponent)
+      .build();
+
+    expect(result.meta?.component).toBe('ConditionalRenderer');
+    expect((result.meta?.properties as any)?.condition.field).toBe('user.isAdmin');
+    expect((result.meta?.properties as any)?.trueComponent).toEqual(trueComponent);
+    expect((result.meta?.properties as any)?.falseComponent).toEqual(falseComponent);
+  });
 });
 
 describe('LayoutRendererBuilder', () => {
@@ -431,5 +553,120 @@ describe('TemplateBuilders', () => {
     expect(spinner.meta?.component).toBe('WrapperRenderer');
     expect((spinner.meta?.properties as any)?.style?.className).toContain('flex items-center justify-center');
     expect((spinner.meta?.properties as any)?.content).toContain('animate-spin');
+  });
+
+  it('should create form template', () => {
+    const fields = [
+      { name: 'name', label: 'Name', inputType: 'input' as const, required: true, properties: {} },
+      { name: 'email', label: 'Email', inputType: 'input' as const, required: true, properties: {} }
+    ];
+    const form = TemplateBuilders.basicForm('createUser', fields);
+    
+    expect(form.meta?.component).toBe('FormRenderer');
+    expect((form.meta?.properties as any)?.action).toBe('createUser');
+    expect((form.meta?.properties as any)?.fields).toEqual(fields);
+  });
+
+  it('should create table template', () => {
+    const columns = [
+      { title: 'Name', dataIndex: 'name' },
+      { title: 'Email', dataIndex: 'email' }
+    ];
+    const table = TemplateBuilders.basicTable('/api/users', columns);
+    
+    expect(table.meta?.component).toBe('TableRenderer');
+    expect((table.meta?.properties as any)?.dataSourceUrl).toBe('/api/users');
+    expect((table.meta?.properties as any)?.columns).toEqual(columns);
+  });
+
+  it('should create bar chart template', () => {
+    const chart = TemplateBuilders.barChart(
+      'Sales Data',
+      ['Jan', 'Feb', 'Mar'],
+      [100, 200, 300]
+    );
+    
+    expect(chart.meta?.component).toBe('ChartRenderer');
+    const chartConfig = (chart.meta?.properties as any)?.charts[0];
+    expect(chartConfig.type).toBe('bar');
+    expect(chartConfig.title).toBe('Sales Data');
+    expect(chartConfig.labels).toEqual(['Jan', 'Feb', 'Mar']);
+    expect(chartConfig.datasets[0].data).toEqual([100, 200, 300]);
+  });
+
+  it('should create line chart template', () => {
+    const chart = TemplateBuilders.lineChart(
+      'Growth Data',
+      ['Q1', 'Q2', 'Q3'],
+      [50, 75, 100],
+      '#ff0000'
+    );
+    
+    expect(chart.meta?.component).toBe('ChartRenderer');
+    const chartConfig = (chart.meta?.properties as any)?.charts[0];
+    expect(chartConfig.type).toBe('line');
+    expect(chartConfig.title).toBe('Growth Data');
+    expect(chartConfig.datasets[0].borderColor).toBe('#ff0000');
+  });
+
+  it('should create pie chart template', () => {
+    const chart = TemplateBuilders.pieChart(
+      'Distribution',
+      ['A', 'B', 'C'],
+      [30, 40, 30]
+    );
+    
+    expect(chart.meta?.component).toBe('ChartRenderer');
+    const chartConfig = (chart.meta?.properties as any)?.charts[0];
+    expect(chartConfig.type).toBe('pie');
+    expect(chartConfig.title).toBe('Distribution');
+    expect(chartConfig.labels).toEqual(['A', 'B', 'C']);
+  });
+
+  it('should create conditional content template', () => {
+    const trueComponent = TemplateBuilders.primaryButton('admin', 'Admin Action');
+    const falseComponent = TemplateBuilders.secondaryButton('user', 'User Action');
+    
+    const conditional = TemplateBuilders.conditionalContent(
+      'user.isAdmin',
+      'eq',
+      true,
+      trueComponent,
+      falseComponent
+    );
+    
+    expect(conditional.meta?.component).toBe('ConditionalRenderer');
+    const props = conditional.meta?.properties as any;
+    expect(props.condition.field).toBe('user.isAdmin');
+    expect(props.condition.operator).toBe('eq');
+    expect(props.condition.value).toBe(true);
+    expect(props.trueComponent).toEqual(trueComponent);
+    expect(props.falseComponent).toEqual(falseComponent);
+  });
+
+  it('should create user profile card template', () => {
+    const userData = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      avatar: 'https://example.com/avatar.jpg'
+    };
+    
+    const profileCard = TemplateBuilders.userProfileCard(userData);
+    
+    expect(profileCard.meta?.component).toBe('WrapperRenderer');
+    expect((profileCard.meta?.properties as any)?.style?.className).toContain('bg-white');
+    expect((profileCard.meta?.properties as any)?.content).toContain('John Doe');
+    expect((profileCard.meta?.properties as any)?.content).toContain('john@example.com');
+    expect((profileCard.meta?.properties as any)?.content).toContain('avatar.jpg');
+  });
+
+  it('should create stats card template', () => {
+    const statsCard = TemplateBuilders.statsCard('Total Sales', '$12,345', '💰', 'green');
+    
+    expect(statsCard.meta?.component).toBe('WrapperRenderer');
+    expect((statsCard.meta?.properties as any)?.style?.className).toContain('bg-green-50');
+    expect((statsCard.meta?.properties as any)?.content).toContain('$12,345');
+    expect((statsCard.meta?.properties as any)?.content).toContain('Total Sales');
+    expect((statsCard.meta?.properties as any)?.content).toContain('💰');
   });
 });

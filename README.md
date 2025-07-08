@@ -1328,6 +1328,177 @@ const styledComponent = LayoutComponentDetailBuilder.create()
   .build();
 ```
 
+### Recreating the Issue Sample Dashboard
+
+Here's how to recreate the exact dashboard layout from the issue using the fluent builder:
+
+```typescript
+import { LayoutComponentDetailBuilder, LayoutRendererBuilder } from 'xingine';
+
+// Create the complete dashboard layout
+const createTailwindDashboardLayout = () => {
+  // Create chart component with multiple charts
+  const chartComponent = LayoutComponentDetailBuilder.create()
+    .chart()
+    .charts([
+      {
+        type: 'bar',
+        height: 300,
+        width: 300,
+        title: 'Sales Performance',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Sales',
+            data: [4000, 3000, 2000, 2780, 1890, 2390],
+            backgroundColor: '#1890ff',
+          },
+        ],
+      },
+      {
+        type: 'line',
+        title: 'User Growth',
+        height: 300,
+        width: 300,
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Users',
+            data: [240, 221, 229, 200, 218, 250],
+            borderColor: '#52c41a',
+          },
+        ],
+      },
+      // ... more charts
+    ])
+    .build();
+
+  // Create form component
+  const formComponent = LayoutComponentDetailBuilder.create()
+    .form()
+    .action('handleUserCreate')
+    .fields([
+      { name: 'name', label: 'Name', inputType: 'input', required: true, properties: {} },
+      { name: 'email', label: 'Email', inputType: 'input', required: true, properties: {} },
+      { name: 'role', label: 'Role', inputType: 'select', required: true, properties: {} }
+    ])
+    .build();
+
+  // Create table component
+  const tableComponent = LayoutComponentDetailBuilder.create()
+    .table()
+    .dataSourceUrl('/api/users')
+    .columns([
+      { title: 'Name', dataIndex: 'name', sortable: true },
+      { title: 'Email', dataIndex: 'email', sortable: true },
+      { title: 'Role', dataIndex: 'role', sortable: true },
+      { title: 'Status', dataIndex: 'active' },
+      { title: 'Created', dataIndex: 'createdAt' },
+    ])
+    .build();
+
+  // Create dashboard content with nested structure
+  const dashboardContent = LayoutComponentDetailBuilder.create()
+    .wrapper()
+    .className('min-h-full max-w-full w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+    .addChild(
+      // Charts Row
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+        .style({
+          background: 'linear-gradient(135deg, #ff7e5f, #feb47b)',
+          color: '#ffffff',
+          padding: '16px',
+          borderRadius: '8px',
+        })
+        .addChild(chartComponent)
+        .build()
+    )
+    .addChild(
+      // Form and Table Row
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+        .addChild(tableComponent)
+        .addChild(formComponent)
+        .build()
+    )
+    .build();
+
+  // Create header with navigation
+  const headerComponent = LayoutComponentDetailBuilder.create()
+    .wrapper()
+    .className('h-16 px-4 flex items-center justify-between')
+    .addChild(
+      // Left section with menu buttons
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('flex items-center space-x-4')
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .button()
+            .name('collapseButton')
+            .content('☰')
+            .event({ onClick: 'headerActionContext.handleToggleCollapsed' })
+            .className('p-2 rounded-md hover:bg-gray-100 transition-colors')
+            .build()
+        )
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .button()
+            .name('HomeButton')
+            .content('🏠')
+            .className('p-2 rounded-md hover:bg-gray-100 transition-colors')
+            .build()
+        )
+        .build()
+    )
+    .addChild(
+      // Search section
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('flex-1 max-w-md mx-4')
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .input()
+            .name('search')
+            .placeholder('Search with Icon...')
+            .className('w-full h-10 px-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500')
+            .build()
+        )
+        .build()
+    )
+    .build();
+
+  // Create complete layout
+  return LayoutRendererBuilder.create()
+    .type('tailwind')
+    .className('min-h-screen')
+    .withHeader(headerComponent, {
+      className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
+    })
+    .withContent(dashboardContent)
+    .build();
+};
+
+// Usage
+const dashboardLayout = createTailwindDashboardLayout();
+console.log('Dashboard created:', dashboardLayout);
+```
+
+This example demonstrates:
+
+- **Complex nesting**: Dashboard > Content > Rows > Sections > Components
+- **Multiple component types**: Charts, Forms, Tables, Buttons, Inputs
+- **Recursive structure**: Wrappers containing wrappers containing components
+- **Flexible positioning**: Adding components at any level of the hierarchy
+- **Rich styling**: CSS classes and inline styles
+- **Event handling**: Button click handlers
+- **Data binding**: Form fields, table columns, chart datasets
+
+The fluent builder makes it easy to construct complex layouts that would otherwise require verbose JSON structures, while maintaining full type safety and IDE support.
+
 ### Component Types
 
 - `FormMeta` - Form component metadata

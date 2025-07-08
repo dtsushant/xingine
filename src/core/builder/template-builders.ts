@@ -264,4 +264,176 @@ export class TemplateBuilders {
       .content(message)
       .build();
   }
+
+  /**
+   * Creates a basic form template
+   */
+  static basicForm(action: string, fields: any[]): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .form()
+      .action(action)
+      .fields(fields)
+      .build();
+  }
+
+  /**
+   * Creates a basic table template
+   */
+  static basicTable(dataSourceUrl: string, columns: any[]): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .table()
+      .dataSourceUrl(dataSourceUrl)
+      .columns(columns)
+      .build();
+  }
+
+  /**
+   * Creates a basic chart template
+   */
+  static basicChart(chartConfig: any): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .chart()
+      .addChart(chartConfig)
+      .build();
+  }
+
+  /**
+   * Creates a bar chart template
+   */
+  static barChart(title: string, labels: string[], data: number[], backgroundColor = '#1890ff'): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .chart()
+      .addChart({
+        type: 'bar',
+        title,
+        height: 300,
+        width: 300,
+        labels,
+        datasets: [
+          {
+            label: title,
+            data,
+            backgroundColor,
+          },
+        ],
+      })
+      .build();
+  }
+
+  /**
+   * Creates a line chart template
+   */
+  static lineChart(title: string, labels: string[], data: number[], borderColor = '#52c41a'): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .chart()
+      .addChart({
+        type: 'line',
+        title,
+        height: 300,
+        width: 300,
+        labels,
+        datasets: [
+          {
+            label: title,
+            data,
+            borderColor,
+          },
+        ],
+      })
+      .build();
+  }
+
+  /**
+   * Creates a pie chart template
+   */
+  static pieChart(title: string, labels: string[], data: number[], backgroundColor = '#1890ff'): LayoutComponentDetail {
+    return LayoutComponentDetailBuilder.create()
+      .chart()
+      .addChart({
+        type: 'pie',
+        title,
+        height: 300,
+        width: 300,
+        labels,
+        datasets: [
+          {
+            label: title,
+            data,
+            backgroundColor,
+          },
+        ],
+      })
+      .build();
+  }
+
+  /**
+   * Creates a conditional wrapper that shows different content based on a condition
+   */
+  static conditionalContent(
+    field: string,
+    operator: string,
+    value: any,
+    trueComponent: LayoutComponentDetail,
+    falseComponent?: LayoutComponentDetail
+  ): LayoutComponentDetail {
+    const builder = LayoutComponentDetailBuilder.create()
+      .conditional()
+      .condition({ field, operator, value } as any)
+      .trueComponent(trueComponent);
+    
+    if (falseComponent) {
+      builder.falseComponent(falseComponent);
+    }
+    
+    return builder.build();
+  }
+
+  /**
+   * Creates a user profile card template
+   */
+  static userProfileCard(userData: { name: string; email: string; avatar?: string }): LayoutComponentDetail {
+    const avatarContent = userData.avatar
+      ? `<img src="${userData.avatar}" alt="Profile" class="w-12 h-12 rounded-full">`
+      : '<div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">' +
+        userData.name.charAt(0).toUpperCase() + '</div>';
+
+    return LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('bg-white dark:bg-gray-800 rounded-lg shadow-md p-6')
+      .content(`
+        <div class="flex items-center space-x-4">
+          ${avatarContent}
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${userData.name}</h3>
+            <p class="text-gray-600 dark:text-gray-400">${userData.email}</p>
+          </div>
+        </div>
+      `)
+      .build();
+  }
+
+  /**
+   * Creates a statistics card template
+   */
+  static statsCard(title: string, value: string | number, icon?: string, color = 'blue'): LayoutComponentDetail {
+    const colorClasses = {
+      blue: 'bg-blue-50 text-blue-600 border-blue-200',
+      green: 'bg-green-50 text-green-600 border-green-200',
+      red: 'bg-red-50 text-red-600 border-red-200',
+      yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
+      purple: 'bg-purple-50 text-purple-600 border-purple-200',
+    };
+
+    const iconHtml = icon ? `<div class="text-2xl mb-2">${icon}</div>` : '';
+
+    return LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className(`${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue} rounded-lg border p-6 text-center`)
+      .content(`
+        ${iconHtml}
+        <div class="text-2xl font-bold mb-1">${value}</div>
+        <div class="text-sm font-medium">${title}</div>
+      `)
+      .build();
+  }
 }

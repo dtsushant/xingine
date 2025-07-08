@@ -411,57 +411,302 @@ export class InputRendererBuilder {
   }
 }
 
-// Placeholder builders for other components
+// Component builders for other components
 export class FormRendererBuilder {
+  private properties: ComponentMetaMap['FormRenderer'] = { fields: [], action: '' };
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets the form action
+   */
+  action(action: string): FormRendererBuilder {
+    this.properties.action = action;
+    return this;
+  }
+
+  /**
+   * Sets the form fields
+   */
+  fields(fields: ComponentMetaMap['FormRenderer']['fields']): FormRendererBuilder {
+    this.properties.fields = fields;
+    return this;
+  }
+
+  /**
+   * Adds a single field
+   */
+  addField(field: ComponentMetaMap['FormRenderer']['fields'][0]): FormRendererBuilder {
+    this.properties.fields.push(field);
+    return this;
+  }
+
+  /**
+   * Sets event bindings
+   */
+  event(event: EventBindings): FormRendererBuilder {
+    this.properties.event = event;
+    return this;
+  }
+
+  /**
+   * Sets dispatch properties
+   */
+  dispatch(dispatch: ComponentMetaMap['FormRenderer']['dispatch']): FormRendererBuilder {
+    this.properties.dispatch = dispatch;
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement FormRenderer builder
+    this.parent.withMeta('FormRenderer', this.properties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('FormRenderer', this.properties);
+    return this.parent;
   }
 }
 
 export class TableRendererBuilder {
+  private properties: ComponentMetaMap['TableRenderer'] = { columns: [], dataSourceUrl: '' };
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets the data source URL
+   */
+  dataSourceUrl(url: string): TableRendererBuilder {
+    this.properties.dataSourceUrl = url;
+    return this;
+  }
+
+  /**
+   * Sets the table columns
+   */
+  columns(columns: ComponentMetaMap['TableRenderer']['columns']): TableRendererBuilder {
+    this.properties.columns = columns;
+    return this;
+  }
+
+  /**
+   * Adds a single column
+   */
+  addColumn(column: ComponentMetaMap['TableRenderer']['columns'][0]): TableRendererBuilder {
+    this.properties.columns.push(column);
+    return this;
+  }
+
+  /**
+   * Sets the row key
+   */
+  rowKey(key: string): TableRendererBuilder {
+    this.properties.rowKey = key;
+    return this;
+  }
+
+  /**
+   * Sets event bindings
+   */
+  event(event: EventBindings): TableRendererBuilder {
+    this.properties.event = event;
+    return this;
+  }
+
+  /**
+   * Sets dispatch properties
+   */
+  dispatch(dispatch: ComponentMetaMap['TableRenderer']['dispatch']): TableRendererBuilder {
+    this.properties.dispatch = dispatch;
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement TableRenderer builder
+    this.parent.withMeta('TableRenderer', this.properties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('TableRenderer', this.properties);
+    return this.parent;
   }
 }
 
 export class ChartRendererBuilder {
+  private properties: ComponentMetaMap['ChartRenderer'] = { charts: [] };
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets the charts array
+   */
+  charts(charts: ComponentMetaMap['ChartRenderer']['charts']): ChartRendererBuilder {
+    this.properties.charts = charts;
+    return this;
+  }
+
+  /**
+   * Adds a single chart
+   */
+  addChart(chart: ComponentMetaMap['ChartRenderer']['charts'][0]): ChartRendererBuilder {
+    this.properties.charts.push(chart);
+    return this;
+  }
+
+  /**
+   * Sets event bindings
+   */
+  event(event: EventBindings): ChartRendererBuilder {
+    this.properties.event = event;
+    return this;
+  }
+
+  /**
+   * Sets renderer configuration
+   */
+  renderer(renderer: ComponentMetaMap['ChartRenderer']['renderer']): ChartRendererBuilder {
+    this.properties.renderer = renderer;
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement ChartRenderer builder
+    this.parent.withMeta('ChartRenderer', this.properties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('ChartRenderer', this.properties);
+    return this.parent;
   }
 }
 
 export class DetailRendererBuilder {
+  private properties: ComponentMetaMap['DetailRenderer'] = { fields: [], action: '' };
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets the detail action
+   */
+  action(action: string): DetailRendererBuilder {
+    this.properties.action = action;
+    return this;
+  }
+
+  /**
+   * Sets the detail fields
+   */
+  fields(fields: ComponentMetaMap['DetailRenderer']['fields']): DetailRendererBuilder {
+    this.properties.fields = fields;
+    return this;
+  }
+
+  /**
+   * Adds a single field
+   */
+  addField(field: ComponentMetaMap['DetailRenderer']['fields'][0]): DetailRendererBuilder {
+    this.properties.fields.push(field);
+    return this;
+  }
+
+  /**
+   * Sets event bindings
+   */
+  event(event: EventBindings): DetailRendererBuilder {
+    this.properties.event = event;
+    return this;
+  }
+
+  /**
+   * Sets dispatch properties
+   */
+  dispatch(dispatch: ComponentMetaMap['DetailRenderer']['dispatch']): DetailRendererBuilder {
+    this.properties.dispatch = dispatch;
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement DetailRenderer builder
+    this.parent.withMeta('DetailRenderer', this.properties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('DetailRenderer', this.properties);
+    return this.parent;
   }
 }
 
 export class ConditionalRendererBuilder {
+  private properties: ComponentMetaMap['ConditionalRenderer'] = {
+    condition: { field: '', operator: 'eq', value: true },
+    trueComponent: {}
+  };
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets the condition
+   */
+  condition(condition: ComponentMetaMap['ConditionalRenderer']['condition']): ConditionalRendererBuilder {
+    this.properties.condition = condition;
+    return this;
+  }
+
+  /**
+   * Sets the true component
+   */
+  trueComponent(component: LayoutComponentDetail): ConditionalRendererBuilder {
+    this.properties.trueComponent = component;
+    return this;
+  }
+
+  /**
+   * Sets the false component
+   */
+  falseComponent(component: LayoutComponentDetail): ConditionalRendererBuilder {
+    this.properties.falseComponent = component;
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement ConditionalRenderer builder
+    this.parent.withMeta('ConditionalRenderer', this.properties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('ConditionalRenderer', this.properties);
+    return this.parent;
   }
 }
 
 export class PopupRendererBuilder {
+  private popupProperties: ComponentMetaMap['PopupRenderer'] = {};
+
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Sets a property on the popup
+   */
+  property(key: string, value: unknown): PopupRendererBuilder {
+    this.popupProperties[key] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple properties
+   */
+  setProperties(props: Record<string, unknown>): PopupRendererBuilder {
+    Object.assign(this.popupProperties, props);
+    return this;
+  }
   
   build(): LayoutComponentDetail {
-    // TODO: Implement PopupRenderer builder
+    this.parent.withMeta('PopupRenderer', this.popupProperties);
     return this.parent.build();
+  }
+
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta('PopupRenderer', this.popupProperties);
+    return this.parent;
   }
 }
