@@ -10,6 +10,7 @@ A powerful TypeScript library that provides decorators, types, and utilities to 
 - 🏗️ **Component Rendering** - FormRenderer, TableRenderer, DetailRenderer, TabRenderer, and ChartRenderer
 - 📝 **Type Safety** - Full TypeScript support with runtime type checking
 - 🔄 **Runtime Decoding** - Robust decoders for runtime validation and type safety
+- 🏗️ **Fluent Builder API** - Intuitive builder pattern for creating complex layouts with recursive nesting support
 
 ## Installation
 
@@ -1019,6 +1020,313 @@ username!: string;
 
 - `FieldValidationError` - Validation error structure
 - `FormValidationResult` - Validation result structure
+
+## Fluent Builder API
+
+The Xingine library provides powerful fluent builder APIs for creating complex layouts with recursive nesting support. The builder pattern allows you to construct `LayoutComponentDetail` and `LayoutRenderer` instances with intuitive, chainable methods.
+
+### Basic Usage
+
+#### Creating Layout Components
+
+```typescript
+import { LayoutComponentDetailBuilder, LayoutRendererBuilder, TemplateBuilders } from 'xingine';
+
+// Create a simple button
+const button = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('myButton')
+  .content('Click Me')
+  .className('btn btn-primary')
+  .build();
+
+// Create an input field
+const input = LayoutComponentDetailBuilder.create()
+  .input()
+  .name('userInput')
+  .placeholder('Enter your name...')
+  .className('form-control')
+  .build();
+
+// Create a wrapper with children
+const wrapper = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('container')
+  .addChild(button)
+  .addChild(input)
+  .build();
+```
+
+#### Creating Layout Renderers
+
+```typescript
+// Create a complete layout
+const layout = LayoutRendererBuilder.create()
+  .type('tailwind')
+  .className('min-h-screen bg-gray-100')
+  .withHeader(headerComponent)
+  .withContent(contentComponent)
+  .withFooter(footerComponent)
+  .build();
+
+// Using fluent section builders
+const fluentLayout = LayoutRendererBuilder.create()
+  .type('dashboard')
+  .header()
+  .className('header-style')
+  .wrapper()
+  .className('nav-wrapper')
+  .addChild(navButton)
+  .build()
+  .content()
+  .className('main-content')
+  .wrapper()
+  .className('content-wrapper')
+  .addChildren([contentElements])
+  .build()
+  .build();
+```
+
+### Recursive and Nested Support
+
+The builder supports arbitrary depth and combinations of components:
+
+```typescript
+// Create deeply nested structure
+const complexLayout = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('outer-container')
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('middle-container')
+      .addChild(
+        LayoutComponentDetailBuilder.create()
+          .wrapper()
+          .className('inner-container')
+          .addChild(
+            LayoutComponentDetailBuilder.create()
+              .button()
+              .name('deepButton')
+              .content('Deep Button')
+              .build()
+          )
+          .build()
+      )
+      .build()
+  )
+  .build();
+```
+
+### Dashboard Example
+
+Create a complete dashboard layout with charts, forms, and tables:
+
+```typescript
+// Create chart component
+const chartComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('ChartRenderer', {
+    charts: [
+      {
+        type: 'bar',
+        height: 300,
+        width: 300,
+        title: 'Sales Performance',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Sales',
+            data: [4000, 3000, 2000, 2780, 1890, 2390],
+            backgroundColor: '#1890ff',
+          },
+        ],
+      },
+    ],
+  })
+  .build();
+
+// Create form component
+const formComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('FormRenderer', {
+    action: 'createUser',
+    fields: [
+      {
+        name: 'name',
+        label: 'Name',
+        inputType: 'input',
+        required: true,
+        properties: {}
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        inputType: 'input',
+        required: true,
+        properties: {}
+      }
+    ]
+  })
+  .build();
+
+// Create dashboard content with nested layout
+const dashboardContent = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('grid grid-cols-1 lg:grid-cols-2 gap-6')
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('chart-section')
+      .style({
+        background: 'linear-gradient(135deg, #ff7e5f, #feb47b)',
+        padding: '16px',
+        borderRadius: '8px',
+      })
+      .addChild(chartComponent)
+      .build()
+  )
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('form-section')
+      .addChild(formComponent)
+      .build()
+  )
+  .build();
+
+// Create complete dashboard
+const dashboard = LayoutRendererBuilder.create()
+  .type('tailwind')
+  .className('min-h-screen')
+  .withHeader(headerComponent)
+  .withContent(dashboardContent)
+  .build();
+```
+
+### Template Builders
+
+Use pre-built templates for common layouts:
+
+```typescript
+// Create dashboard using templates
+const dashboardLayout = TemplateBuilders.dashboardLayout()
+  .withHeader(TemplateBuilders.defaultHeader())
+  .withContent(TemplateBuilders.gridContentWrapper())
+  .build();
+
+// Create components using templates
+const primaryButton = TemplateBuilders.primaryButton('action', 'Primary Action');
+const secondaryButton = TemplateBuilders.secondaryButton('cancel', 'Cancel');
+const standardInput = TemplateBuilders.standardInput('search', 'Search...');
+const cardWrapper = TemplateBuilders.cardWrapper();
+const alertMessage = TemplateBuilders.alert('success', 'Operation completed!');
+
+// Create responsive grid
+const responsiveGrid = TemplateBuilders.responsiveGrid(3); // 3 columns on large screens
+
+// Create flex container
+const flexContainer = TemplateBuilders.flexContainer('row', 'center');
+```
+
+### Available Builder Methods
+
+#### LayoutComponentDetailBuilder
+
+- `button()` - Creates a ButtonRenderer
+- `input()` - Creates an InputRenderer  
+- `wrapper()` - Creates a WrapperRenderer
+- `form()` - Creates a FormRenderer
+- `table()` - Creates a TableRenderer
+- `chart()` - Creates a ChartRenderer
+- `detailRenderer()` - Creates a DetailRenderer
+- `conditional()` - Creates a ConditionalRenderer
+- `popup()` - Creates a PopupRenderer
+- `withMeta(component, properties)` - Sets custom component metadata
+
+#### WrapperRendererBuilder
+
+- `className(className)` - Sets CSS class
+- `style(styles)` - Sets inline styles
+- `content(content)` - Sets content text
+- `addChild(child)` - Adds a single child component
+- `addChildren(children)` - Adds multiple child components
+- `addWrapper()` - Adds a nested wrapper
+- `addButton()` - Adds a button child
+- `addInput()` - Adds an input child
+
+#### LayoutRendererBuilder
+
+- `type(type)` - Sets layout type
+- `className(className)` - Sets root CSS class
+- `style(style)` - Sets root styles
+- `header()` - Configures header section
+- `content()` - Configures content section
+- `sider()` - Configures sidebar section
+- `footer()` - Configures footer section
+- `withHeader(meta, style?)` - Sets header with pre-built component
+- `withContent(meta, style?)` - Sets content with pre-built component
+- `withSider(meta, style?)` - Sets sidebar with pre-built component
+- `withFooter(meta, style?)` - Sets footer with pre-built component
+
+#### Template Builders
+
+- `TemplateBuilders.dashboardLayout()` - Creates dashboard layout
+- `TemplateBuilders.defaultHeader()` - Creates default header
+- `TemplateBuilders.primaryButton(name, content)` - Creates primary button
+- `TemplateBuilders.secondaryButton(name, content)` - Creates secondary button
+- `TemplateBuilders.standardInput(name, placeholder?)` - Creates standard input
+- `TemplateBuilders.cardWrapper()` - Creates card wrapper
+- `TemplateBuilders.gridContentWrapper()` - Creates grid wrapper
+- `TemplateBuilders.responsiveGrid(columns)` - Creates responsive grid
+- `TemplateBuilders.flexContainer(direction, justify)` - Creates flex container
+- `TemplateBuilders.alert(type, message)` - Creates alert component
+- `TemplateBuilders.loadingSpinner()` - Creates loading spinner
+
+### Advanced Features
+
+#### Conditional Rendering
+
+```typescript
+const conditionalComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('ConditionalRenderer', {
+    condition: {
+      field: 'user.isAdmin',
+      operator: 'eq',
+      value: true
+    },
+    trueComponent: adminButton,
+    falseComponent: regularButton
+  })
+  .build();
+```
+
+#### Event Handling
+
+```typescript
+const interactiveButton = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('actionButton')
+  .content('Click Me')
+  .event({
+    onClick: 'handleButtonClick',
+    onHover: 'handleHover'
+  })
+  .build();
+```
+
+#### Styling
+
+```typescript
+const styledComponent = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('custom-wrapper')
+  .style({
+    backgroundColor: '#f0f0f0',
+    padding: '16px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  })
+  .build();
+```
 
 ### Component Types
 

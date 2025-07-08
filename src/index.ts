@@ -10,3 +10,4 @@ export type { FieldValidationError, FormValidationResult } from "./core/xingine.
 export * from "./core/component"
 export * from "./core/decoders"
 export * from "./core/expressions"
+export * from "./core/builder"
