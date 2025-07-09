@@ -7,4 +7,5 @@ export interface InputMeta{
     event?:EventBindings;
     style?: StyleMeta;
     icon?:IconMeta;
+    [key: string]: unknown;
 }

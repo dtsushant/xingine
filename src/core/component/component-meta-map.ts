@@ -52,6 +52,7 @@ export interface FormMeta {
   action: string;
   event?:EventBindings;
   dispatch?: FormDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface DetailMeta {
@@ -59,6 +60,7 @@ export interface DetailMeta {
   event?:EventBindings;
   action: string;
   dispatch?: DetailDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface TableMeta {
@@ -67,6 +69,7 @@ export interface TableMeta {
   rowKey?: string;
   event?:EventBindings;
   dispatch?: TableDispatchProperties;
+  [key: string]: unknown;
 }
 
 
@@ -107,6 +110,7 @@ export interface ChartMeta {
    * Individual chart renderers will override these settings.
    */
   renderer?: Renderer;
+  [key: string]: unknown;
 }
 
 

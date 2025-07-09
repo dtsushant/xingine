@@ -101,6 +101,13 @@ export class LayoutComponentDetailBuilder {
   }
 
   /**
+   * Creates a dynamic/custom component with user-defined type and properties
+   */
+  dynamic(componentName: string): DynamicRendererBuilder {
+    return new DynamicRendererBuilder(this, componentName);
+  }
+
+  /**
    * Builds and returns the final LayoutComponentDetail
    */
   build(): LayoutComponentDetail {
@@ -876,6 +883,112 @@ export class PopupRendererBuilder {
 
   end(): LayoutComponentDetailBuilder {
     this.parent.withMeta('PopupRenderer', this.popupProperties);
+    return this.parent;
+  }
+}
+
+/**
+ * Builder for Dynamic/Custom Renderer components
+ * Allows users to create components with custom names and properties
+ */
+export class DynamicRendererBuilder {
+  private componentProperties: Record<string, unknown> = {};
+
+  constructor(
+    private parent: LayoutComponentDetailBuilder,
+    private componentName: string
+  ) {}
+
+  /**
+   * Sets a property value for the dynamic component
+   */
+  property(key: string, value: unknown): DynamicRendererBuilder {
+    this.componentProperties[key] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple properties at once
+   */
+  setProperties(props: Record<string, unknown>): DynamicRendererBuilder {
+    Object.assign(this.componentProperties, props);
+    return this;
+  }
+
+  /**
+   * Sets the name property (commonly used)
+   */
+  name(name: string): DynamicRendererBuilder {
+    this.componentProperties.name = name;
+    return this;
+  }
+
+  /**
+   * Sets the content property (commonly used)
+   */
+  content(content: unknown): DynamicRendererBuilder {
+    this.componentProperties.content = content;
+    return this;
+  }
+
+  /**
+   * Sets the className for styling
+   */
+  className(className: string): DynamicRendererBuilder {
+    if (!this.componentProperties.style) {
+      this.componentProperties.style = {};
+    }
+    (this.componentProperties.style as any).className = className;
+    return this;
+  }
+
+  /**
+   * Sets event bindings for the dynamic component
+   */
+  withEventBindings(eventBindings: EventBindings): DynamicRendererBuilder {
+    this.componentProperties.event = eventBindings;
+    return this;
+  }
+
+  /**
+   * Creates event bindings using the fluent builder
+   */
+  eventBuilder(): EventBindingsBuilder {
+    const builder = EventBindingsBuilder.create();
+    // We'll need to manually apply the result when calling build
+    return builder;
+  }
+
+  /**
+   * Sets style properties for the dynamic component
+   */
+  withStyleMeta(styleMeta: StyleMeta): DynamicRendererBuilder {
+    this.componentProperties.style = styleMeta;
+    return this;
+  }
+
+  /**
+   * Creates style properties using the fluent builder
+   */
+  styleBuilder(): StyleMetaBuilder {
+    const builder = StyleMetaBuilder.create();
+    // We'll need to manually apply the result when calling build
+    return builder;
+  }
+
+  /**
+   * Builds the dynamic component and returns to parent
+   */
+  build(): LayoutComponentDetail {
+    this.parent.withMeta(this.componentName as any, this.componentProperties);
+    return this.parent.build();
+  }
+
+  /**
+   * Returns to the parent builder
+   */
+  end(): LayoutComponentDetailBuilder {
+    this.parent.withMeta(this.componentName as any, this.componentProperties);
     return this.parent;
   }
 }

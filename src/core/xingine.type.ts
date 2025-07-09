@@ -327,6 +327,7 @@ export interface TabMeta {
     meta: ComponentMetaMap[keyof ComponentMetaMap];
   }[];
   dispatch?: TabDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface WrapperMeta {
@@ -343,6 +344,7 @@ export interface ConditionalMeta{
     condition: ConditionalExpression;
     trueComponent: LayoutComponentDetail;
     falseComponent?: LayoutComponentDetail;
+    [key: string]: unknown;
 }
 
 export type ComponentMetaMap = {
@@ -373,6 +375,7 @@ export type ComponentMetaMap = {
   TextRenderer: Record<string, unknown>;
   LinkRenderer: Record<string, unknown>;
   PopupRenderer: Record<string, unknown>;
+} & {
   [K:string]:Record<string, unknown>;
 };
 export interface ComponentMeta<

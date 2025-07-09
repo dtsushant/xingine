@@ -11,4 +11,5 @@ export interface IconMeta {
     style?: StyleMeta;
     event?:EventBindings;
     svg?:SvgMeta;
+    [key: string]: unknown;
 }

@@ -1240,6 +1240,7 @@ const flexContainer = TemplateBuilders.flexContainer('row', 'center');
 - `detailRenderer()` - Creates a DetailRenderer
 - `conditional()` - Creates a ConditionalRenderer
 - `popup()` - Creates a PopupRenderer
+- `dynamic(componentName)` - Creates a dynamic/custom component with user-defined type
 - `withMeta(component, properties)` - Sets custom component metadata
 
 #### WrapperRendererBuilder
@@ -1509,6 +1510,90 @@ The fluent builder makes it easy to construct complex layouts that would otherwi
 - `ChartConfig` - Individual chart configuration with optional renderer
 - `ChartDataset` - Chart dataset structure
 - `ChartType` - Supported chart types ('bar' | 'line' | 'pie' | 'scatter')
+
+### Dynamic Components
+
+The builder now supports creating dynamic/custom components that can be defined by end users. This allows for maximum flexibility in component creation while still maintaining the fluent API benefits.
+
+#### Creating Dynamic Components
+
+```typescript
+import { LayoutComponentDetailBuilder } from 'xingine';
+
+// Create a basic custom component
+const customWidget = LayoutComponentDetailBuilder.create()
+  .dynamic('MyCustomWidget')
+  .name('widget1')
+  .content('Custom Content')
+  .className('custom-widget-style')
+  .build();
+
+// Add custom properties
+const advancedComponent = LayoutComponentDetailBuilder.create()
+  .dynamic('AdvancedDataGrid')
+  .setProperties({
+    columns: ['id', 'name', 'email', 'status'],
+    dataSource: '/api/users',
+    pagination: { pageSize: 20, showSizeChanger: true },
+    sorting: { defaultSort: 'name', direction: 'asc' },
+    filters: [
+      { field: 'status', type: 'select', options: ['active', 'inactive'] },
+      { field: 'name', type: 'text', placeholder: 'Search by name...' }
+    ],
+    customActions: ['export', 'import', 'bulk-edit']
+  })
+  .property('title', 'User Management Grid')
+  .property('height', 600)
+  .build();
+```
+
+#### Reusing Existing Component Types with Custom Properties
+
+```typescript
+// Use ButtonRenderer with additional custom properties
+const enhancedButton = LayoutComponentDetailBuilder.create()
+  .dynamic('ButtonRenderer')
+  .setProperties({
+    name: 'enhancedButton',
+    content: 'Enhanced Click Me',
+    customIcon: 'star',
+    priority: 'high',
+    analytics: {
+      trackingId: 'btn_001',
+      category: 'primary_actions',
+      metadata: { source: 'dashboard', version: '2.1' }
+    },
+    accessibility: {
+      ariaLabel: 'Enhanced action button',
+      tabIndex: 1
+    }
+  })
+  .className('enhanced-button')
+  .build();
+```
+
+#### Dynamic Component Builder Methods
+
+- `dynamic(componentName)` - Creates a dynamic component with the specified name
+- `property(key, value)` - Sets a single property
+- `setProperties(props)` - Sets multiple properties at once
+- `name(name)` - Sets the name property (commonly used)
+- `content(content)` - Sets the content property (commonly used)
+- `className(className)` - Sets CSS class for styling
+- `withEventBindings(eventBindings)` - Sets event bindings object
+- `withStyleMeta(styleMeta)` - Sets style metadata object
+- `eventBuilder()` - Returns EventBindingsBuilder for fluent event creation
+- `styleBuilder()` - Returns StyleMetaBuilder for fluent style creation
+
+#### Use Cases for Dynamic Components
+
+1. **Custom UI Widgets**: Create specialized components not covered by built-in types
+2. **Third-party Integrations**: Wrapper components for external libraries
+3. **Business-specific Components**: Domain-specific components with custom properties
+4. **Extended Built-ins**: Enhance existing component types with additional metadata
+5. **Rapid Prototyping**: Quick component creation during development
+
+The dynamic component feature leverages the `[K:string]:Record<string, unknown>` addition to `ComponentMetaMap`, allowing any string to be used as a component name while maintaining type safety for the properties.
 
 ## TypeScript Configuration
 
