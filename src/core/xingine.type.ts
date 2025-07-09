@@ -373,6 +373,7 @@ export type ComponentMetaMap = {
   TextRenderer: Record<string, unknown>;
   LinkRenderer: Record<string, unknown>;
   PopupRenderer: Record<string, unknown>;
+  [K:string]:Record<string, unknown>;
 };
 export interface ComponentMeta<
     T extends keyof ComponentMetaMap = keyof ComponentMetaMap,

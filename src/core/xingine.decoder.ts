@@ -103,11 +103,8 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return record(dynamicShapeDecoder).verify(input);
     case "PopupRenderer":
         return record(dynamicShapeDecoder).verify(input);
-
     default:
-      throw new Error(
-        `Unknown component type '${component}' for meta decoding`,
-      );
+      return record(dynamicShapeDecoder).verify(input);
   }
 }
 

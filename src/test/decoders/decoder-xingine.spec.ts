@@ -93,7 +93,21 @@ describe('XingineDecoder', () => {
                             padding: '16px',
                             borderRadius: '8px',
                         }
+                    },
+                    children: [
+                        {
+                        meta:{
+                            component:'UserDefinedComponent',
+                                properties:{
+                                customProperty: 'customValue',
+                                    customPropertyNested:{
+                                    nested1: 'nestedValue1',
+                                    nested2:'nestedValue2'
+                            }
+                        }
+                        }
                     }
+                    ]
                 }
             },
         };
