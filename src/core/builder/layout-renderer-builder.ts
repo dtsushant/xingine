@@ -22,6 +22,23 @@ export class LayoutRendererBuilder {
   }
 
   /**
+   * Create a builder from an existing LayoutRenderer object
+   */
+  static fromLayoutRenderer(renderer: LayoutRenderer): LayoutRendererBuilder {
+    const builder = new LayoutRendererBuilder();
+    builder.layout = { ...renderer };
+    return builder;
+  }
+
+  /**
+   * Set the complete LayoutRenderer object
+   */
+  fromObject(renderer: LayoutRenderer): LayoutRendererBuilder {
+    this.layout = { ...renderer };
+    return this;
+  }
+
+  /**
    * Sets the layout type
    */
   type(type: string): LayoutRendererBuilder {

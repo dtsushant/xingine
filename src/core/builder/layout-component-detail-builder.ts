@@ -2,9 +2,19 @@ import {
   LayoutComponentDetail, 
   ComponentMeta, 
   ComponentMetaMap,
-  WrapperMeta
+  WrapperMeta,
+  ConditionalMeta
 } from '../xingine.type';
-import { ChartDataset } from '../component/component-meta-map';
+import { 
+  ChartDataset, 
+  ChartMeta, 
+  ChartConfig,
+  FormMeta, 
+  DetailMeta, 
+  TableMeta,
+  ColumnMeta
+} from '../component/component-meta-map';
+import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
 import { EventBindings } from '../expressions/action';
 import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
@@ -21,6 +31,23 @@ export class LayoutComponentDetailBuilder {
    */
   static create(): LayoutComponentDetailBuilder {
     return new LayoutComponentDetailBuilder();
+  }
+
+  /**
+   * Create a builder from an existing LayoutComponentDetail object
+   */
+  static fromLayoutComponentDetail(detail: LayoutComponentDetail): LayoutComponentDetailBuilder {
+    const builder = new LayoutComponentDetailBuilder();
+    builder.layoutDetail = { ...detail };
+    return builder;
+  }
+
+  /**
+   * Set the complete LayoutComponentDetail object
+   */
+  fromObject(detail: LayoutComponentDetail): LayoutComponentDetailBuilder {
+    this.layoutDetail = { ...detail };
+    return this;
   }
 
   /**
@@ -122,6 +149,14 @@ export class WrapperRendererBuilder {
   private properties: WrapperMeta = {};
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Set the complete WrapperMeta object
+   */
+  fromWrapperMeta(meta: WrapperMeta): WrapperRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the className for styling
@@ -228,12 +263,20 @@ export class WrapperRendererBuilder {
  * Builder for ButtonRenderer components
  */
 export class ButtonRendererBuilder {
-  private properties: ComponentMetaMap['ButtonRenderer'] = { name: '' };
+  private properties: ButtonMeta = { name: '' };
 
   constructor(
     private parent: LayoutComponentDetailBuilder,
     private wrapperParent?: WrapperRendererBuilder
   ) {}
+
+  /**
+   * Set the complete ButtonMeta object
+   */
+  fromButtonMeta(meta: ButtonMeta): ButtonRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the button name
@@ -326,12 +369,20 @@ export class ButtonRendererBuilder {
  * Builder for InputRenderer components
  */
 export class InputRendererBuilder {
-  private properties: ComponentMetaMap['InputRenderer'] = {} as ComponentMetaMap['InputRenderer'];
+  private properties: InputMeta = {} as InputMeta;
 
   constructor(
     private parent: LayoutComponentDetailBuilder,
     private wrapperParent?: WrapperRendererBuilder
   ) {}
+
+  /**
+   * Set the complete InputMeta object
+   */
+  fromInputMeta(meta: InputMeta): InputRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the input name (required)
@@ -420,7 +471,7 @@ export class InputRendererBuilder {
   /**
    * Sets the input icon
    */
-  icon(icon: ComponentMetaMap['InputRenderer']['icon']): InputRendererBuilder {
+  icon(icon: IconMeta): InputRendererBuilder {
     this.properties.icon = icon;
     return this;
   }
@@ -476,9 +527,17 @@ export class InputRendererBuilder {
 
 // Component builders for other components
 export class FormRendererBuilder {
-  private properties: ComponentMetaMap['FormRenderer'] = { fields: [], action: '' };
+  private properties: FormMeta = { fields: [], action: '' };
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Set the complete FormMeta object
+   */
+  fromFormMeta(meta: FormMeta): FormRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the form action
@@ -491,7 +550,7 @@ export class FormRendererBuilder {
   /**
    * Sets the form fields
    */
-  fields(fields: ComponentMetaMap['FormRenderer']['fields']): FormRendererBuilder {
+  fields(fields: FormMeta['fields']): FormRendererBuilder {
     this.properties.fields = fields;
     return this;
   }
@@ -499,7 +558,7 @@ export class FormRendererBuilder {
   /**
    * Adds a single field
    */
-  addField(field: ComponentMetaMap['FormRenderer']['fields'][0]): FormRendererBuilder {
+  addField(field: FormMeta['fields'][0]): FormRendererBuilder {
     this.properties.fields.push(field);
     return this;
   }
@@ -515,7 +574,7 @@ export class FormRendererBuilder {
   /**
    * Sets dispatch properties
    */
-  dispatch(dispatch: ComponentMetaMap['FormRenderer']['dispatch']): FormRendererBuilder {
+  dispatch(dispatch: FormMeta['dispatch']): FormRendererBuilder {
     this.properties.dispatch = dispatch;
     return this;
   }
@@ -532,9 +591,17 @@ export class FormRendererBuilder {
 }
 
 export class TableRendererBuilder {
-  private properties: ComponentMetaMap['TableRenderer'] = { columns: [], dataSourceUrl: '' };
+  private properties: TableMeta = { columns: [], dataSourceUrl: '' };
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Set the complete TableMeta object
+   */
+  fromTableMeta(meta: TableMeta): TableRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the data source URL
@@ -547,7 +614,7 @@ export class TableRendererBuilder {
   /**
    * Sets the table columns
    */
-  columns(columns: ComponentMetaMap['TableRenderer']['columns']): TableRendererBuilder {
+  columns(columns: TableMeta['columns']): TableRendererBuilder {
     this.properties.columns = columns;
     return this;
   }
@@ -555,7 +622,7 @@ export class TableRendererBuilder {
   /**
    * Adds a single column
    */
-  addColumn(column: ComponentMetaMap['TableRenderer']['columns'][0]): TableRendererBuilder {
+  addColumn(column: ColumnMeta): TableRendererBuilder {
     this.properties.columns.push(column);
     return this;
   }
@@ -579,7 +646,7 @@ export class TableRendererBuilder {
   /**
    * Sets dispatch properties
    */
-  dispatch(dispatch: ComponentMetaMap['TableRenderer']['dispatch']): TableRendererBuilder {
+  dispatch(dispatch: TableMeta['dispatch']): TableRendererBuilder {
     this.properties.dispatch = dispatch;
     return this;
   }
@@ -596,14 +663,22 @@ export class TableRendererBuilder {
 }
 
 export class ChartRendererBuilder {
-  private properties: ComponentMetaMap['ChartRenderer'] = { charts: [] };
+  private properties: ChartMeta = { charts: [] };
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
 
   /**
+   * Set the complete ChartMeta object
+   */
+  fromChartMeta(meta: ChartMeta): ChartRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
+
+  /**
    * Sets the charts array
    */
-  charts(charts: ComponentMetaMap['ChartRenderer']['charts']): ChartRendererBuilder {
+  charts(charts: ChartMeta['charts']): ChartRendererBuilder {
     this.properties.charts = charts;
     return this;
   }
@@ -611,7 +686,7 @@ export class ChartRendererBuilder {
   /**
    * Adds a single chart using ChartConfig
    */
-  addChart(chartConfig: ComponentMetaMap['ChartRenderer']['charts'][0]): ChartRendererBuilder {
+  addChart(chartConfig: ChartConfig): ChartRendererBuilder {
     if (!chartConfig.type) {
       throw new Error('Chart type is required');
     }
@@ -637,7 +712,7 @@ export class ChartRendererBuilder {
   /**
    * Sets renderer configuration
    */
-  renderer(renderer: ComponentMetaMap['ChartRenderer']['renderer']): ChartRendererBuilder {
+  renderer(renderer: ChartMeta['renderer']): ChartRendererBuilder {
     this.properties.renderer = renderer;
     return this;
   }
@@ -657,14 +732,22 @@ export class ChartRendererBuilder {
  * Builder for ChartConfig to ensure proper chart configuration
  */
 export class ChartConfigBuilder {
-  private config: ComponentMetaMap['ChartRenderer']['charts'][0] = {} as ComponentMetaMap['ChartRenderer']['charts'][0];
+  private config: ChartConfig = {} as ChartConfig;
 
   constructor(private chartRenderer: ChartRendererBuilder) {}
 
   /**
+   * Set the complete ChartConfig object
+   */
+  fromChartConfig(config: ChartConfig): ChartConfigBuilder {
+    this.config = { ...config };
+    return this;
+  }
+
+  /**
    * Sets chart type (required)
    */
-  type(type: ComponentMetaMap['ChartRenderer']['charts'][0]['type']): ChartConfigBuilder {
+  type(type: ChartConfig['type']): ChartConfigBuilder {
     this.config.type = type;
     return this;
   }
@@ -704,7 +787,7 @@ export class ChartConfigBuilder {
   /**
    * Sets chart datasets
    */
-  datasets(datasets: ComponentMetaMap['ChartRenderer']['charts'][0]['datasets']): ChartConfigBuilder {
+  datasets(datasets: ChartConfig['datasets']): ChartConfigBuilder {
     this.config.datasets = datasets;
     return this;
   }
@@ -739,7 +822,7 @@ export class ChartConfigBuilder {
   /**
    * Sets renderer configuration
    */
-  renderer(renderer: ComponentMetaMap['ChartRenderer']['charts'][0]['renderer']): ChartConfigBuilder {
+  renderer(renderer: ChartConfig['renderer']): ChartConfigBuilder {
     this.config.renderer = renderer;
     return this;
   }
@@ -757,9 +840,17 @@ export class ChartConfigBuilder {
 }
 
 export class DetailRendererBuilder {
-  private properties: ComponentMetaMap['DetailRenderer'] = { fields: [], action: '' };
+  private properties: DetailMeta = { fields: [], action: '' };
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Set the complete DetailMeta object
+   */
+  fromDetailMeta(meta: DetailMeta): DetailRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets the detail action
@@ -772,7 +863,7 @@ export class DetailRendererBuilder {
   /**
    * Sets the detail fields
    */
-  fields(fields: ComponentMetaMap['DetailRenderer']['fields']): DetailRendererBuilder {
+  fields(fields: DetailMeta['fields']): DetailRendererBuilder {
     this.properties.fields = fields;
     return this;
   }
@@ -780,7 +871,7 @@ export class DetailRendererBuilder {
   /**
    * Adds a single field
    */
-  addField(field: ComponentMetaMap['DetailRenderer']['fields'][0]): DetailRendererBuilder {
+  addField(field: DetailMeta['fields'][0]): DetailRendererBuilder {
     this.properties.fields.push(field);
     return this;
   }
@@ -796,7 +887,7 @@ export class DetailRendererBuilder {
   /**
    * Sets dispatch properties
    */
-  dispatch(dispatch: ComponentMetaMap['DetailRenderer']['dispatch']): DetailRendererBuilder {
+  dispatch(dispatch: DetailMeta['dispatch']): DetailRendererBuilder {
     this.properties.dispatch = dispatch;
     return this;
   }
@@ -813,7 +904,7 @@ export class DetailRendererBuilder {
 }
 
 export class ConditionalRendererBuilder {
-  private properties: ComponentMetaMap['ConditionalRenderer'] = {
+  private properties: ConditionalMeta = {
     condition: { field: '', operator: 'eq', value: true },
     trueComponent: {}
   };
@@ -821,9 +912,17 @@ export class ConditionalRendererBuilder {
   constructor(private parent: LayoutComponentDetailBuilder) {}
 
   /**
+   * Set the complete ConditionalMeta object
+   */
+  fromConditionalMeta(meta: ConditionalMeta): ConditionalRendererBuilder {
+    this.properties = { ...meta };
+    return this;
+  }
+
+  /**
    * Sets the condition
    */
-  condition(condition: ComponentMetaMap['ConditionalRenderer']['condition']): ConditionalRendererBuilder {
+  condition(condition: ConditionalMeta['condition']): ConditionalRendererBuilder {
     this.properties.condition = condition;
     return this;
   }
@@ -859,6 +958,14 @@ export class PopupRendererBuilder {
   private popupProperties: ComponentMetaMap['PopupRenderer'] = {};
 
   constructor(private parent: LayoutComponentDetailBuilder) {}
+
+  /**
+   * Set the complete popup properties object
+   */
+  fromPopupMeta(meta: Record<string, unknown>): PopupRendererBuilder {
+    this.popupProperties = { ...meta };
+    return this;
+  }
 
   /**
    * Sets a property on the popup
