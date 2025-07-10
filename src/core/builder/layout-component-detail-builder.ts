@@ -289,7 +289,7 @@ export class ButtonRendererBuilder {
   /**
    * Sets the button content
    */
-  content(content: string): ButtonRendererBuilder {
+  content(content: string | IconMeta): ButtonRendererBuilder {
     this.properties.content = content;
     return this;
   }
@@ -999,18 +999,18 @@ export class PopupRendererBuilder {
  * Allows users to create components with custom names and properties
  */
 export class DynamicRendererBuilder {
-  private componentProperties: Record<string, unknown> = {};
+  private properties: Record<string, unknown> = {};
 
   constructor(
     private parent: LayoutComponentDetailBuilder,
-    private componentName: string
+    private component: string
   ) {}
 
   /**
    * Sets a property value for the dynamic component
    */
   property(key: string, value: unknown): DynamicRendererBuilder {
-    this.componentProperties[key] = value;
+    this.properties[key] = value;
     return this;
   }
 
@@ -1018,7 +1018,7 @@ export class DynamicRendererBuilder {
    * Sets multiple properties at once
    */
   setProperties(props: Record<string, unknown>): DynamicRendererBuilder {
-    Object.assign(this.componentProperties, props);
+    Object.assign(this.properties, props);
     return this;
   }
 
@@ -1026,7 +1026,7 @@ export class DynamicRendererBuilder {
    * Sets the name property (commonly used)
    */
   name(name: string): DynamicRendererBuilder {
-    this.componentProperties.name = name;
+    this.properties.name = name;
     return this;
   }
 
@@ -1034,7 +1034,7 @@ export class DynamicRendererBuilder {
    * Sets the content property (commonly used)
    */
   content(content: unknown): DynamicRendererBuilder {
-    this.componentProperties.content = content;
+    this.properties.content = content;
     return this;
   }
 
@@ -1042,10 +1042,10 @@ export class DynamicRendererBuilder {
    * Sets the className for styling
    */
   className(className: string): DynamicRendererBuilder {
-    if (!this.componentProperties.style) {
-      this.componentProperties.style = {};
+    if (!this.properties.style) {
+      this.properties.style = {};
     }
-    (this.componentProperties.style as any).className = className;
+    (this.properties.style as any).className = className;
     return this;
   }
 
@@ -1053,7 +1053,7 @@ export class DynamicRendererBuilder {
    * Sets event bindings for the dynamic component
    */
   withEventBindings(eventBindings: EventBindings): DynamicRendererBuilder {
-    this.componentProperties.event = eventBindings;
+    this.properties.event = eventBindings;
     return this;
   }
 
@@ -1070,7 +1070,7 @@ export class DynamicRendererBuilder {
    * Sets style properties for the dynamic component
    */
   withStyleMeta(styleMeta: StyleMeta): DynamicRendererBuilder {
-    this.componentProperties.style = styleMeta;
+    this.properties.style = styleMeta;
     return this;
   }
 
@@ -1087,7 +1087,7 @@ export class DynamicRendererBuilder {
    * Builds the dynamic component and returns to parent
    */
   build(): LayoutComponentDetail {
-    this.parent.withMeta(this.componentName as any, this.componentProperties);
+    this.parent.withMeta(this.component, this.properties);
     return this.parent.build();
   }
 
@@ -1095,7 +1095,7 @@ export class DynamicRendererBuilder {
    * Returns to the parent builder
    */
   end(): LayoutComponentDetailBuilder {
-    this.parent.withMeta(this.componentName as any, this.componentProperties);
+    this.parent.withMeta(this.component, this.properties);
     return this.parent;
   }
 }
