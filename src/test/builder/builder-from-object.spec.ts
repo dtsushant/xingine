@@ -137,13 +137,13 @@ describe('Builder fromObject Methods', () => {
         },
         content: {
           style: { className: 'content-class' },
-          meta: {
+          meta: [{
             path: '/main-content',
             meta: {
               component: 'WrapperRenderer',
               properties: { content: 'Main content' }
             }
-          }
+          }]
         }
       };
 
@@ -159,13 +159,13 @@ describe('Builder fromObject Methods', () => {
       const existingRenderer: LayoutRenderer = {
         type: 'default',
         content: {
-          meta: {
+          meta: [{
             path: '/original-content',
             meta: {
               component: 'WrapperRenderer',
               properties: { content: 'Original content' }
             }
-          }
+          }]
         }
       };
 
@@ -175,7 +175,7 @@ describe('Builder fromObject Methods', () => {
         .build();
 
       expect(result.type).toBe('modified');
-      expect((result.content.meta.meta?.properties as any)?.content).toBe('Original content');
+      expect((result.content.meta[0].meta?.properties as any)?.content).toBe('Original content');
     });
   });
 });

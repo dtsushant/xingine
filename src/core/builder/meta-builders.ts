@@ -512,3 +512,95 @@ export class ChartConfigMetaBuilder {
     return { ...this.config };
   }
 }
+
+/**
+ * Builder for Commissar objects
+ * Commissar extends LayoutComponentDetail and adds path and permission properties
+ */
+export class CommissarBuilder {
+  private commissar: import('../xingine.type').Commissar = {
+    path: ''
+  };
+
+  static create(): CommissarBuilder {
+    return new CommissarBuilder();
+  }
+
+  /**
+   * Create a builder from an existing Commissar object
+   */
+  static fromCommissar(commissar: import('../xingine.type').Commissar): CommissarBuilder {
+    const builder = new CommissarBuilder();
+    builder.commissar = { ...commissar };
+    return builder;
+  }
+
+  /**
+   * Set the complete Commissar object
+   */
+  fromObject(commissar: import('../xingine.type').Commissar): CommissarBuilder {
+    this.commissar = { ...commissar };
+    return this;
+  }
+
+  /**
+   * Sets the path (required for Commissar)
+   */
+  path(path: string): CommissarBuilder {
+    this.commissar.path = path;
+    return this;
+  }
+
+  /**
+   * Sets the permission array (optional for Commissar)
+   */
+  permission(permission: string[]): CommissarBuilder {
+    this.commissar.permission = permission;
+    return this;
+  }
+
+  /**
+   * Adds a single permission to the permission array
+   */
+  addPermission(permission: string): CommissarBuilder {
+    if (!this.commissar.permission) {
+      this.commissar.permission = [];
+    }
+    this.commissar.permission.push(permission);
+    return this;
+  }
+
+  /**
+   * Sets the meta (component meta)
+   */
+  meta(meta: any): CommissarBuilder {
+    this.commissar.meta = meta;
+    return this;
+  }
+
+  /**
+   * Sets a custom property
+   */
+  property(key: string, value: unknown): CommissarBuilder {
+    (this.commissar as any)[key] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple properties at once
+   */
+  setProperties(properties: Record<string, unknown>): CommissarBuilder {
+    Object.assign(this.commissar, properties);
+    return this;
+  }
+
+  /**
+   * Builds and returns the final Commissar object
+   */
+  build(): import('../xingine.type').Commissar {
+    if (!this.commissar.path) {
+      throw new Error('Path is required for Commissar');
+    }
+    return { ...this.commissar };
+  }
+}

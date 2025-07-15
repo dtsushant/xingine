@@ -1060,16 +1060,33 @@ const wrapper = LayoutComponentDetailBuilder.create()
 #### Creating Layout Renderers
 
 ```typescript
-// Create a complete layout
+// Create a complete layout with array of Commissar objects
 const layout = LayoutRendererBuilder.create()
   .type('tailwind')
   .className('min-h-screen bg-gray-100')
   .withHeader(headerComponent)
-  .withContent({
+  .withContent([{
     path: '/dashboard',
     meta: contentComponent
-  })
+  }])
   .withFooter(footerComponent)
+  .build();
+
+// Adding multiple content routes
+const multiRouteLayout = LayoutRendererBuilder.create()
+  .type('multi-route')
+  .withContent([
+    {
+      path: '/dashboard',
+      permission: ['user', 'read'],
+      meta: dashboardComponent
+    },
+    {
+      path: '/admin',
+      permission: ['admin'],
+      meta: adminComponent
+    }
+  ])
   .build();
 
 // Using fluent section builders
@@ -1741,33 +1758,98 @@ export interface EventBindings {
 
 ### Fluent Builder API Updates
 
-With the new `Commissar` interface, content sections require path specification:
+With the new `Commissar` interface, content sections now support arrays of route-based content:
+
+#### CommissarBuilder
+
+Create individual route-based content components:
 
 ```typescript
-// Create layout with route-based content
-const layout = LayoutRendererBuilder.create()
-  .type('spa-application')
-  .withContent({
-    path: '/dashboard',           // Required: Route path
-    permission: ['admin', 'user'], // Optional: Access permissions
-    meta: {
-      component: 'WrapperRenderer',
-      properties: {
-        className: 'dashboard-content',
-        children: [/* dashboard components */]
-      }
+import { CommissarBuilder } from 'xingine';
+
+// Create a simple commissar with path
+const dashboardRoute = CommissarBuilder.create()
+  .path('/dashboard')
+  .permission(['user', 'read'])
+  .meta({
+    component: 'WrapperRenderer',
+    properties: {
+      className: 'dashboard-content',
+      children: [/* dashboard components */]
     }
   })
   .build();
 
-// Using fluent content builder with path
+// Create multiple routes
+const adminRoute = CommissarBuilder.create()
+  .path('/admin')
+  .addPermission('admin')
+  .addPermission('write')
+  .meta(adminComponent)
+  .build();
+
+// Using fromObject for existing data
+const existingRoute = CommissarBuilder.create()
+  .fromObject({
+    path: '/settings',
+    permission: ['user']
+  })
+  .addPermission('settings')
+  .build();
+```
+
+#### LayoutRenderer with Multiple Routes
+
+The content section now accepts arrays of `Commissar` objects:
+
+```typescript
+// Create layout with multiple route-based content
+const layout = LayoutRendererBuilder.create()
+  .type('spa-application')
+  .withContent([
+    {
+      path: '/dashboard',           // Required: Route path
+      permission: ['admin', 'user'], // Optional: Access permissions
+      meta: {
+        component: 'WrapperRenderer',
+        properties: {
+          className: 'dashboard-content',
+          children: [/* dashboard components */]
+        }
+      }
+    },
+    {
+      path: '/settings',
+      permission: ['user'],
+      meta: settingsComponent
+    }
+  ])
+  .build();
+
+// Adding routes incrementally
+const incrementalLayout = LayoutRendererBuilder.create()
+  .type('dynamic-routes')
+  .addContentCommissar(dashboardRoute)
+  .addContentCommissar(adminRoute)
+  .contentStyle({ className: 'main-content' })
+  .build();
+
+// Using fluent content builder with multiple routes
 const dynamicLayout = LayoutRendererBuilder.create()
+  .type('multi-route-app')
   .content()
   .path('/users/:id')            // Dynamic route with parameter
   .permission(['admin'])         // Admin-only access
   .wrapper()
   .className('user-detail-page')
   .addChild(userDetailComponent)
+  .build()
+  .content()                     // Add another route
+  .path('/dashboard')
+  .permission(['user', 'read'])
+  .wrapper()
+  .className('dashboard-page')
+  .addChild(dashboardComponent)
   .build()
   .build();
 ```

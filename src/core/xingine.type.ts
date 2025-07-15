@@ -312,7 +312,7 @@ export interface LayoutRenderer {
   };
   content: {
     style?:StyleMeta;
-    meta: Commissar;
+    meta: Commissar[];
   };
   sider?: {
     style?:StyleMeta;

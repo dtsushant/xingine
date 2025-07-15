@@ -148,7 +148,7 @@ export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   ),
   content: exact({
     style: optional(styleDecoder),
-    meta: commissarDecoder,
+    meta: array(commissarDecoder),
   }),
   sider: optional(
     exact({

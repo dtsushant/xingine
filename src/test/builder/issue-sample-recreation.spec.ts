@@ -314,10 +314,10 @@ describe('Issue Sample Dashboard Recreation', () => {
         .withHeader(headerComponent, {
           className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
         })
-        .withContent({
+        .withContent([{
           path: '/dashboard',
           ...dashboardContent
-        })
+        }])
         .build();
     };
 
@@ -340,8 +340,8 @@ describe('Issue Sample Dashboard Recreation', () => {
     expect(headerChildren).toHaveLength(3); // left, middle, right sections
 
     // Verify content structure
-    expect(result.content.meta?.meta?.component).toBe('WrapperRenderer');
-    const contentChildren = (result.content.meta?.meta?.properties as any)?.children;
+    expect(result.content.meta[0]?.meta?.component).toBe('WrapperRenderer');
+    const contentChildren = (result.content.meta[0]?.meta?.properties as any)?.children;
     expect(contentChildren).toHaveLength(3); // charts, form+table, detail+popup rows
 
     // Verify charts section

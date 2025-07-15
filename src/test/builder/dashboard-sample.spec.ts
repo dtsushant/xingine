@@ -168,10 +168,10 @@ describe('Dashboard Layout Sample', () => {
       .withHeader(headerComponent, {
         className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
       })
-      .withContent({
+      .withContent([{
         path: '/dashboard',
         ...dashboardContent
-      }, {
+      }], {
         className: 'pt-16 p-6'
       })
       .build();
@@ -187,11 +187,11 @@ describe('Dashboard Layout Sample', () => {
     expect((dashboardLayout.header?.meta?.meta?.properties as any)?.children).toHaveLength(3);
     
     // Verify content structure
-    expect(dashboardLayout.content.meta?.meta?.component).toBe('WrapperRenderer');
-    expect((dashboardLayout.content.meta?.meta?.properties as any)?.children).toHaveLength(2);
+    expect(dashboardLayout.content.meta[0]?.meta?.component).toBe('WrapperRenderer');
+    expect((dashboardLayout.content.meta[0]?.meta?.properties as any)?.children).toHaveLength(2);
     
     // Verify nested structure integrity
-    const contentChildren = (dashboardLayout.content.meta?.meta?.properties as any)?.children;
+    const contentChildren = (dashboardLayout.content.meta[0]?.meta?.properties as any)?.children;
     expect(contentChildren[0].meta?.component).toBe('WrapperRenderer'); // Charts row
     expect(contentChildren[1].meta?.component).toBe('WrapperRenderer'); // Form and table row
   });
@@ -225,16 +225,16 @@ describe('Dashboard Layout Sample', () => {
 
     const deeplyNested = LayoutRendererBuilder.create()
       .type('complex')
-      .withContent({
+      .withContent([{
         path: '/nested-content',
         ...nestedContent
-      })
+      }])
       .build();
 
     expect(deeplyNested.type).toBe('complex');
     
     // Navigate through the nested structure
-    const contentMeta = deeplyNested.content.meta?.meta?.properties as any;
+    const contentMeta = deeplyNested.content.meta[0]?.meta?.properties as any;
     expect(contentMeta.style?.className).toBe('outer-wrapper');
     expect(contentMeta.children).toHaveLength(1);
     
@@ -325,10 +325,10 @@ describe('Dashboard Layout Sample', () => {
       .type('template-based')
       .className('min-h-screen bg-gray-50')
       .withHeader(header)
-      .withContent({
+      .withContent([{
         path: '/custom-content',
         ...customContent
-      })
+      }])
       .withFooter(TemplateBuilders.footerLayout())
       .build();
 
@@ -338,7 +338,7 @@ describe('Dashboard Layout Sample', () => {
     expect(layout.footer).toBeDefined();
     
     // Verify content has the expected number of children
-    const contentChildren = (layout.content.meta?.meta?.properties as any)?.children;
+    const contentChildren = (layout.content.meta[0]?.meta?.properties as any)?.children;
     expect(contentChildren).toHaveLength(4);
     expect(contentChildren[0].meta?.component).toBe('ButtonRenderer');
     expect(contentChildren[1].meta?.component).toBe('ButtonRenderer');
