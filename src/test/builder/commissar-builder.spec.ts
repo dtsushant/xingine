@@ -41,14 +41,17 @@ describe('CommissarBuilder', () => {
       expect(commissar.permission).toEqual(['read', 'write']);
     });
 
-    it('should support setting meta component', () => {
-      const meta = { component: 'WrapperRenderer', properties: { content: 'test' } };
+    it('should support building components using inherited builder methods', () => {
       const commissar = CommissarBuilder.create()
         .path('/content')
-        .meta(meta)
+        .wrapper()
+        .content('test wrapper content')
+        .className('test-wrapper')
         .build();
 
-      expect(commissar.meta).toEqual(meta);
+      expect(commissar.meta?.component).toBe('WrapperRenderer');
+      expect((commissar.meta?.properties as any).content).toBe('test wrapper content');
+      expect((commissar.meta?.properties as any).style?.className).toBe('test-wrapper');
     });
   });
 
@@ -57,7 +60,7 @@ describe('CommissarBuilder', () => {
       const existing: Commissar = {
         path: '/existing',
         permission: ['user'],
-        meta: { component: 'ButtonRenderer', properties: {} }
+        meta: { component: 'ButtonRenderer', properties: { content: 'Button', name: 'testBtn' } }
       };
 
       const result = CommissarBuilder.fromCommissar(existing)
@@ -92,6 +95,201 @@ describe('CommissarBuilder', () => {
       expect((commissar as any).prop2).toBe('value2');
     });
   });
+
+  describe('Real-world usage with actual data', () => {
+    const userFormFields = [
+      {
+        name: "name",
+        label: "Name",
+        inputType: "input" as const,
+        required: true,
+        properties: {},
+      },
+      {
+        name: "email",
+        label: "Email",
+        inputType: "input" as const,
+        required: true,
+        properties: {},
+      },
+      {
+        name: "role",
+        label: "Role",
+        inputType: "select",
+        properties: {},
+      },
+    ];
+
+    const userTableData = [
+      {
+        id: 1,
+        name: "John Doe",
+        email: "john@example.com",
+        role: "Admin",
+        active: true,
+        createdAt: "2024-01-01",
+      },
+      {
+        id: 2,
+        name: "Jane Smith",
+        email: "jane@example.com",
+        role: "User",
+        active: true,
+        createdAt: "2024-01-02",
+      },
+    ];
+
+    const userDetailData = {
+      name: "John Doe",
+      email: "john@example.com",
+      role: "Admin",
+      active: true,
+      createdAt: "2024-01-01",
+      lastLogin: "2024-01-15T10:30:00Z",
+      profile: {
+        avatar: "https://example.com/avatar.jpg",
+        department: "Engineering",
+        phone: "+1-555-0123",
+        bio: "Software engineer with 5 years of experience in web development.",
+      },
+      permissions: ["read", "write", "admin"],
+    };
+
+    it('should build a form Commissar using inherited form builder methods', () => {
+      const formCommissar = CommissarBuilder.create()
+        .path('/user-form')
+        .permission(['admin', 'write'])
+        .form()
+        .addField({
+          name: userFormFields[0].name,
+          label: userFormFields[0].label,
+          inputType: userFormFields[0].inputType as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
+          required: userFormFields[0].required,
+          properties: {}
+        })
+        .addField({
+          name: userFormFields[1].name,
+          label: userFormFields[1].label,
+          inputType: userFormFields[1].inputType as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
+          required: userFormFields[1].required,
+          properties: {}
+        })
+        .addField({
+          name: userFormFields[2].name,
+          label: userFormFields[2].label,
+          inputType: userFormFields[2].inputType as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
+          properties: {}
+        })
+        .action('/submit-user')
+        .build();
+
+      expect(formCommissar.path).toBe('/user-form');
+      expect(formCommissar.permission).toEqual(['admin', 'write']);
+      expect(formCommissar.meta?.component).toBe('FormRenderer');
+      expect((formCommissar.meta?.properties as any).fields).toHaveLength(3);
+      expect((formCommissar.meta?.properties as any).action).toBe('/submit-user');
+    });
+
+    it('should build a table Commissar using inherited table builder methods', () => {
+      const tableCommissar = CommissarBuilder.create()
+        .path('/user-table')
+        .permission(['admin', 'read'])
+        .table()
+        .addColumn({ title: 'ID', dataIndex: 'id', key: 'id' })
+        .addColumn({ title: 'Name', dataIndex: 'name', key: 'name' })
+        .addColumn({ title: 'Email', dataIndex: 'email', key: 'email' })
+        .addColumn({ title: 'Role', dataIndex: 'role', key: 'role' })
+        .data(userTableData)
+        .build();
+
+      expect(tableCommissar.path).toBe('/user-table');
+      expect(tableCommissar.permission).toEqual(['admin', 'read']);
+      expect(tableCommissar.meta?.component).toBe('TableRenderer');
+      expect((tableCommissar.meta?.properties as any).columns).toHaveLength(4);
+      expect((tableCommissar.meta?.properties as any).data).toEqual(userTableData);
+    });
+
+    it('should build a detail view Commissar using inherited detail builder methods', () => {
+      const detailCommissar = CommissarBuilder.create()
+        .path('/user-detail')
+        .permission(['admin', 'read'])
+        .detailRenderer()
+        .addField({ name: 'name', label: 'Name', inputType: 'text', value: userDetailData.name })
+        .addField({ name: 'email', label: 'Email', inputType: 'text', value: userDetailData.email })
+        .addField({ name: 'role', label: 'Role', inputType: 'text', value: userDetailData.role })
+        .addField({ name: 'department', label: 'Department', inputType: 'text', value: userDetailData.profile.department })
+        .build();
+
+      expect(detailCommissar.path).toBe('/user-detail');
+      expect(detailCommissar.permission).toEqual(['admin', 'read']);
+      expect(detailCommissar.meta?.component).toBe('DetailRenderer');
+      expect((detailCommissar.meta?.properties as any).fields).toHaveLength(4);
+    });
+
+    it('should build a chart Commissar using inherited chart builder methods', () => {
+      const chartCommissar = CommissarBuilder.create()
+        .path('/user-chart')
+        .permission(['admin', 'read'])
+        .chart()
+        .addChartConfig({
+          type: 'bar',
+          width: 300,
+          height: 300,
+          title: 'Sales Performance',
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Sales',
+            data: [4000, 3000, 2000, 2780, 1890, 2390]
+          }]
+        })
+        .build();
+
+      expect(chartCommissar.path).toBe('/user-chart');
+      expect(chartCommissar.permission).toEqual(['admin', 'read']);
+      expect(chartCommissar.meta?.component).toBe('ChartRenderer');
+      expect((chartCommissar.meta?.properties as any).charts).toHaveLength(1);
+      expect((chartCommissar.meta?.properties as any).charts?.[0].type).toBe('bar');
+      expect((chartCommissar.meta?.properties as any).charts?.[0].title).toBe('Sales Performance');
+    });
+
+    it('should build complex nested wrapper with multiple components', () => {
+      // Create child components as LayoutComponentDetail (not Commissar)
+      const formComponent = CommissarBuilder.create()
+        .path('/nested-form')
+        .form()
+        .addField({
+          name: 'search',
+          label: 'Search',
+          inputType: 'input' as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
+          properties: {}
+        })
+        .build();
+
+      const buttonComponent = CommissarBuilder.create()
+        .path('/nested-button')
+        .button()
+        .name('actionBtn')
+        .content('Add User')
+        .build();
+
+      const complexCommissar = CommissarBuilder.create()
+        .path('/complex-layout')
+        .permission(['admin'])
+        .wrapper()
+        .content('User Management Dashboard')
+        .addChild(formComponent)
+        .addChild(buttonComponent)
+        .build();
+
+      expect(complexCommissar.path).toBe('/complex-layout');
+      expect(complexCommissar.meta?.component).toBe('WrapperRenderer');
+      expect((complexCommissar.meta?.properties as any).children).toHaveLength(2);
+      expect((complexCommissar.meta?.properties as any).children?.[0].path).toBe('/nested-form');
+      expect((complexCommissar.meta?.properties as any).children?.[1].path).toBe('/nested-button');
+      expect((complexCommissar.meta?.properties as any).children?.[0].meta?.component).toBe('FormRenderer');
+      expect((complexCommissar.meta?.properties as any).children?.[1].meta?.component).toBe('ButtonRenderer');
+    });
+  });
 });
 
 describe('LayoutRenderer with Commissar arrays', () => {
@@ -100,13 +298,16 @@ describe('LayoutRenderer with Commissar arrays', () => {
       const commissar1 = CommissarBuilder.create()
         .path('/route1')
         .permission(['user'])
-        .meta({ component: 'WrapperRenderer', properties: { content: 'Content 1' } })
+        .wrapper()
+        .content('Content 1')
         .build();
 
       const commissar2 = CommissarBuilder.create()
         .path('/route2')
         .permission(['admin'])
-        .meta({ component: 'ButtonRenderer', properties: { content: 'Button' } })
+        .button()
+        .name('testButton')
+        .content('Button')
         .build();
 
       const layout = LayoutRendererBuilder.create()

@@ -273,9 +273,9 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   /**
    * Completes the wrapper configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('WrapperRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -423,9 +423,9 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   /**
    * Completes the button configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('ButtonRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -598,12 +598,12 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   /**
    * Completes the input configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     if (!this.properties.name) {
       throw new Error('Input name is required. Use .name(value) to set it.');
     }
     this.parent.withMeta('InputRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 
   /**
@@ -729,9 +729,9 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
   /**
    * Completes the form configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('FormRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -828,9 +828,9 @@ export class TableRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   /**
    * Completes the table configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('TableRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -920,9 +920,9 @@ export class ChartRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   /**
    * Completes the chart configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('ChartRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -1234,9 +1234,9 @@ export class DetailRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   /**
    * Completes the detail configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('DetailRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -1317,9 +1317,9 @@ export class ConditionalRendererBuilder<P extends BaseComponentDetailBuilder<any
   /**
    * Completes the conditional configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('ConditionalRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -1397,9 +1397,9 @@ export class PopupRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   /**
    * Completes the popup configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta('PopupRenderer', this.properties);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 }
 
@@ -1498,9 +1498,9 @@ export class DynamicRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   /**
    * Completes the dynamic component configuration and returns the built component
    */
-  build(): LayoutComponentDetail {
+  build(): ReturnType<P['build']> {
     this.parent.withMeta(this.componentName as keyof ComponentMetaMap, this.properties as any);
-    return this.parent.build();
+    return this.parent.build() as ReturnType<P['build']>;
   }
 
   /**
