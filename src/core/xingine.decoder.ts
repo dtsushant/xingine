@@ -7,7 +7,7 @@ import {
     ModulePropertyOptions,
     Panel,
     Permission, Renderer, SiderMeta, TabMeta,
-    UIComponent, UIComponentDetail, WrapperMeta,
+    UIComponent, UIComponentDetail, WrapperMeta, Commissar,
 } from "./xingine.type";
 import {
   array, boolean, constant,
@@ -132,6 +132,11 @@ export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object
 
 export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
 
+export const commissarDecoder: Decoder<Commissar> = object({
+  path: string,
+  permission: optional(array(string)),
+  meta: optional(componentMetaDecoder()),
+});
 
 export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   type: string,
@@ -143,7 +148,7 @@ export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   ),
   content: exact({
     style: optional(styleDecoder),
-    meta: layoutComponentDetailDecoder,
+    meta: commissarDecoder,
   }),
   sider: optional(
     exact({

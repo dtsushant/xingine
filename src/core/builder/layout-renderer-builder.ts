@@ -1,4 +1,4 @@
-import { LayoutRenderer, LayoutComponentDetail } from '../xingine.type';
+import { LayoutRenderer, LayoutComponentDetail, Commissar } from '../xingine.type';
 import { StyleMeta } from '../expressions/style';
 import { LayoutComponentDetailBuilder } from './layout-component-detail-builder';
 
@@ -10,7 +10,9 @@ export class LayoutRendererBuilder {
   private layout: LayoutRenderer = {
     type: 'default',
     content: {
-      meta: {}
+      meta: {
+        path: ''
+      }
     }
   };
 
@@ -118,7 +120,7 @@ export class LayoutRendererBuilder {
   /**
    * Sets the content section with pre-built component
    */
-  withContent(meta: LayoutComponentDetail, style?: StyleMeta): LayoutRendererBuilder {
+  withContent(meta: Commissar, style?: StyleMeta): LayoutRendererBuilder {
     this.layout.content = {
       meta,
       style
@@ -151,11 +153,16 @@ export class LayoutRendererBuilder {
   /**
    * Internal method to set a section
    */
-  setSection(section: 'header' | 'content' | 'sider' | 'footer', meta: LayoutComponentDetail, style?: StyleMeta): LayoutRendererBuilder {
+  setSection(section: 'header' | 'content' | 'sider' | 'footer', meta: LayoutComponentDetail | Commissar, style?: StyleMeta): LayoutRendererBuilder {
     if (section === 'content') {
-      this.layout.content = { meta, style };
+      // For content, we need to ensure it's a Commissar with path
+      const commissarMeta = meta as Commissar;
+      if (!commissarMeta.path) {
+        throw new Error('Content section requires a path property. Use a Commissar object with path.');
+      }
+      this.layout.content = { meta: commissarMeta, style };
     } else {
-      this.layout[section] = { meta, style };
+      this.layout[section] = { meta: meta as LayoutComponentDetail, style };
     }
     return this;
   }
@@ -174,6 +181,8 @@ export class LayoutRendererBuilder {
 export class LayoutSectionBuilder {
   private sectionStyle?: StyleMeta;
   private componentBuilder: LayoutComponentDetailBuilder;
+  private pathValue?: string;
+  private permissionValue?: string[];
 
   constructor(
     private parent: LayoutRendererBuilder,
@@ -209,6 +218,22 @@ export class LayoutSectionBuilder {
       this.sectionStyle = {};
     }
     this.sectionStyle.style = style;
+    return this;
+  }
+
+  /**
+   * Sets the path for content section (required for Commissar)
+   */
+  path(path: string): LayoutSectionBuilder {
+    this.pathValue = path;
+    return this;
+  }
+
+  /**
+   * Sets the permissions for content section (optional for Commissar)
+   */
+  permission(permission: string[]): LayoutSectionBuilder {
+    this.permissionValue = permission;
     return this;
   }
 
@@ -258,7 +283,16 @@ export class LayoutSectionBuilder {
    * Sets the component using a pre-built LayoutComponentDetail
    */
   withComponent(meta: LayoutComponentDetail): LayoutRendererBuilder {
-    this.parent.setSection(this.section, meta, this.sectionStyle);
+    if (this.section === 'content') {
+      // For content section, ensure it has path property (convert to Commissar)
+      const commissarMeta: Commissar = {
+        ...meta,
+        path: (meta as any).path || '/default-path'
+      };
+      this.parent.setSection(this.section, commissarMeta, this.sectionStyle);
+    } else {
+      this.parent.setSection(this.section, meta, this.sectionStyle);
+    }
     return this.parent;
   }
 
@@ -267,7 +301,19 @@ export class LayoutSectionBuilder {
    */
   build(): LayoutRendererBuilder {
     const meta = this.componentBuilder.build();
-    this.parent.setSection(this.section, meta, this.sectionStyle);
+    
+    if (this.section === 'content') {
+      // For content section, create Commissar object
+      const commissarMeta: Commissar = {
+        ...meta,
+        path: this.pathValue || '/default-path',
+        ...(this.permissionValue && { permission: this.permissionValue })
+      };
+      this.parent.setSection(this.section, commissarMeta, this.sectionStyle);
+    } else {
+      this.parent.setSection(this.section, meta, this.sectionStyle);
+    }
+    
     return this.parent;
   }
 }
@@ -279,6 +325,8 @@ export class LayoutSectionBuilder {
 export class LayoutSectionComponentBuilder {
   private componentBuilder: LayoutComponentDetailBuilder;
   private currentBuilder: any;
+  private pathValue?: string;
+  private permissionValue?: string[];
 
   constructor(
     private parent: LayoutRendererBuilder,
@@ -410,11 +458,39 @@ export class LayoutSectionComponentBuilder {
   }
 
   /**
+   * Sets the path for content section (required for Commissar)
+   */
+  path(path: string): LayoutSectionComponentBuilder {
+    this.pathValue = path;
+    return this;
+  }
+
+  /**
+   * Sets the permissions for content section (optional for Commissar)
+   */
+  permission(permission: string[]): LayoutSectionComponentBuilder {
+    this.permissionValue = permission;
+    return this;
+  }
+
+  /**
    * Builds and returns to parent
    */
   build(): LayoutRendererBuilder {
     const meta = this.currentBuilder.build();
-    this.parent.setSection(this.section, meta, this.sectionStyle);
+    
+    if (this.section === 'content') {
+      // For content section, create Commissar object
+      const commissarMeta: Commissar = {
+        ...meta,
+        path: this.pathValue || '/default-path',
+        ...(this.permissionValue && { permission: this.permissionValue })
+      };
+      this.parent.setSection(this.section, commissarMeta, this.sectionStyle);
+    } else {
+      this.parent.setSection(this.section, meta, this.sectionStyle);
+    }
+    
     return this.parent;
   }
 }

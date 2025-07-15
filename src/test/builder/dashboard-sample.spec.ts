@@ -168,7 +168,10 @@ describe('Dashboard Layout Sample', () => {
       .withHeader(headerComponent, {
         className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
       })
-      .withContent(dashboardContent, {
+      .withContent({
+        path: '/dashboard',
+        ...dashboardContent
+      }, {
         className: 'pt-16 p-6'
       })
       .build();
@@ -222,7 +225,10 @@ describe('Dashboard Layout Sample', () => {
 
     const deeplyNested = LayoutRendererBuilder.create()
       .type('complex')
-      .withContent(nestedContent)
+      .withContent({
+        path: '/nested-content',
+        ...nestedContent
+      })
       .build();
 
     expect(deeplyNested.type).toBe('complex');
@@ -319,7 +325,10 @@ describe('Dashboard Layout Sample', () => {
       .type('template-based')
       .className('min-h-screen bg-gray-50')
       .withHeader(header)
-      .withContent(customContent)
+      .withContent({
+        path: '/custom-content',
+        ...customContent
+      })
       .withFooter(TemplateBuilders.footerLayout())
       .build();
 

@@ -138,6 +138,7 @@ describe('Builder fromObject Methods', () => {
         content: {
           style: { className: 'content-class' },
           meta: {
+            path: '/main-content',
             meta: {
               component: 'WrapperRenderer',
               properties: { content: 'Main content' }
@@ -159,6 +160,7 @@ describe('Builder fromObject Methods', () => {
         type: 'default',
         content: {
           meta: {
+            path: '/original-content',
             meta: {
               component: 'WrapperRenderer',
               properties: { content: 'Original content' }

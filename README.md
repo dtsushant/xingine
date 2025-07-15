@@ -1065,7 +1065,10 @@ const layout = LayoutRendererBuilder.create()
   .type('tailwind')
   .className('min-h-screen bg-gray-100')
   .withHeader(headerComponent)
-  .withContent(contentComponent)
+  .withContent({
+    path: '/dashboard',
+    meta: contentComponent
+  })
   .withFooter(footerComponent)
   .build();
 
@@ -1079,6 +1082,7 @@ const fluentLayout = LayoutRendererBuilder.create()
   .addChild(navButton)
   .build()
   .content()
+  .path('/main-dashboard')
   .className('main-content')
   .wrapper()
   .className('content-wrapper')
@@ -1198,7 +1202,11 @@ const dashboard = LayoutRendererBuilder.create()
   .type('tailwind')
   .className('min-h-screen')
   .withHeader(headerComponent)
-  .withContent(dashboardContent)
+  .withContent({
+    path: '/dashboard',
+    permission: ['admin', 'user'],
+    meta: dashboardContent
+  })
   .build();
 ```
 
@@ -1210,7 +1218,10 @@ Use pre-built templates for common layouts:
 // Create dashboard using templates
 const dashboardLayout = TemplateBuilders.dashboardLayout()
   .withHeader(TemplateBuilders.defaultHeader())
-  .withContent(TemplateBuilders.gridContentWrapper())
+  .withContent({
+    path: '/dashboard-template',
+    meta: TemplateBuilders.gridContentWrapper()
+  })
   .build();
 
 // Create components using templates
@@ -1264,7 +1275,7 @@ const flexContainer = TemplateBuilders.flexContainer('row', 'center');
 - `sider()` - Configures sidebar section
 - `footer()` - Configures footer section
 - `withHeader(meta, style?)` - Sets header with pre-built component
-- `withContent(meta, style?)` - Sets content with pre-built component
+- `withContent(commissar, style?)` - Sets content with pre-built Commissar component (requires path)
 - `withSider(meta, style?)` - Sets sidebar with pre-built component
 - `withFooter(meta, style?)` - Sets footer with pre-built component
 
@@ -1479,7 +1490,11 @@ const createTailwindDashboardLayout = () => {
     .withHeader(headerComponent, {
       className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
     })
-    .withContent(dashboardContent)
+    .withContent({
+      path: '/dashboard',
+      permission: ['admin'],
+      meta: dashboardContent
+    })
     .build();
 };
 
@@ -1594,6 +1609,277 @@ const enhancedButton = LayoutComponentDetailBuilder.create()
 5. **Rapid Prototyping**: Quick component creation during development
 
 The dynamic component feature leverages the `[K:string]:Record<string, unknown>` addition to `ComponentMetaMap`, allowing any string to be used as a component name while maintaining type safety for the properties.
+
+## Application Overview
+
+Xingine is a comprehensive TypeScript library designed for **rule-based UI rendering in HTML**. The library provides types, decoders, and builders that enable dynamic component rendering based on configuration metadata, making it ideal for building adaptive user interfaces where the UI structure can be defined declaratively.
+
+### What Xingine Does
+
+Xingine transforms configuration metadata into dynamic, interactive user interfaces by:
+
+1. **Declarative UI Definition** - Define UI components and layouts using metadata objects
+2. **Rule-Based Rendering** - Components render conditionally based on defined rules and expressions
+3. **Type-Safe Configuration** - Full TypeScript support with runtime validation
+4. **Modular Component System** - Support for forms, tables, charts, buttons, inputs, and custom components
+5. **Layout Management** - Complete page layout structure with header, sidebar, content, and footer sections
+6. **Route-Based Content** - Dynamic content rendering based on routing paths
+7. **Permission-Based Access** - Component-level permission controls for security
+
+### Core Architecture
+
+#### LayoutRenderer Structure
+
+The `LayoutRenderer` interface defines the overall page layout structure:
+
+```typescript
+export interface LayoutRenderer {
+  type: string;                    // Layout type (e.g., 'tailwind', 'bootstrap')
+  style?: StyleMeta;              // Global layout styling
+  header?: {                      // Fixed header section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+  content: {                      // Main dynamic content area
+    style?: StyleMeta;
+    meta: Commissar;             // Route-based content with permissions
+  };
+  sider?: {                       // Sidebar/navigation section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+  footer?: {                      // Footer section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+}
+```
+
+#### Commissar Interface (Route-Based Content)
+
+The `Commissar` interface extends `LayoutComponentDetail` to handle dynamic routing and permissions:
+
+```typescript
+export interface Commissar extends LayoutComponentDetail {
+  path: string;           // Required: The route path that renders this content
+  permission?: string[];  // Optional: Permissions required to access this content
+}
+```
+
+**Key Features:**
+- **Dynamic Routing**: The `path` property determines which content renders for each route
+- **Permission Control**: Optional `permission` array restricts access based on user permissions
+- **Component Inheritance**: Inherits all capabilities of `LayoutComponentDetail`
+
+#### LayoutComponentDetail Breakdown
+
+The `LayoutComponentDetail` interface supports various component types:
+
+- **WrapperRenderer**: Renders container elements (div, span, section, etc.)
+  - Contains child components
+  - Supports styling and layout properties
+  - Enables nested component hierarchies
+
+- **ConditionalRenderer**: Renders components conditionally
+  - Evaluates conditional expressions
+  - Shows/hides content based on state or data
+  - Supports true/false component branches
+
+- **ButtonRenderer**: Renders interactive buttons
+  - Supports various button types and styles
+  - Event binding for click interactions
+  - Icon and content support
+
+- **InputRenderer**: Renders form input elements
+  - Supports text, number, password, email, etc.
+  - Validation rules and error handling
+  - Placeholder and styling options
+
+- **FormRenderer**: Renders complete forms
+  - Field collection management
+  - Form submission handling
+  - Validation and error display
+
+- **TableRenderer**: Renders data tables
+  - Column definitions and data binding
+  - Sorting and filtering capabilities
+  - Pagination support
+
+- **ChartRenderer**: Renders data visualizations
+  - Support for bar, line, pie, scatter charts
+  - Dataset management and styling
+  - Interactive chart features
+
+- **DetailRenderer**: Renders detail/information views
+  - Field-based data display
+  - Flexible layout options
+  - Label-value pair rendering
+
+#### EventBindings System
+
+The `EventBindings` interface provides comprehensive event handling:
+
+```typescript
+export interface EventBindings {
+  onClick?: ActionExpression;      // Button/element click events
+  onSubmit?: ActionExpression;     // Form submission events
+  onLoad?: ActionExpression;       // Component/page load events
+  onChange?: ActionExpression;     // Input value change events
+  onFocus?: ActionExpression;      // Input focus events
+  onBlur?: ActionExpression;       // Input blur events
+  onHover?: ActionExpression;      // Mouse hover events
+  onDoubleClick?: ActionExpression; // Double-click events
+  // ... additional event types
+}
+```
+
+**Event Types:**
+- **UI Interactions**: Click, hover, focus, blur
+- **Form Events**: Submit, change, validation
+- **Lifecycle Events**: Load, mount, unmount
+- **Data Events**: Fetch, update, delete operations
+
+### Fluent Builder API Updates
+
+With the new `Commissar` interface, content sections require path specification:
+
+```typescript
+// Create layout with route-based content
+const layout = LayoutRendererBuilder.create()
+  .type('spa-application')
+  .withContent({
+    path: '/dashboard',           // Required: Route path
+    permission: ['admin', 'user'], // Optional: Access permissions
+    meta: {
+      component: 'WrapperRenderer',
+      properties: {
+        className: 'dashboard-content',
+        children: [/* dashboard components */]
+      }
+    }
+  })
+  .build();
+
+// Using fluent content builder with path
+const dynamicLayout = LayoutRendererBuilder.create()
+  .content()
+  .path('/users/:id')            // Dynamic route with parameter
+  .permission(['admin'])         // Admin-only access
+  .wrapper()
+  .className('user-detail-page')
+  .addChild(userDetailComponent)
+  .build()
+  .build();
+```
+
+### Application Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Router
+    participant Layout
+    participant Content
+    participant Component
+    participant Event
+
+    User->>Router: Navigate to route
+    Router->>Layout: Request layout for route
+    Layout->>Layout: Evaluate LayoutRenderer config
+    Layout->>Content: Check Commissar.path matches route
+    Content->>Content: Validate user permissions
+    
+    alt Permission granted
+        Content->>Component: Render LayoutComponentDetail
+        Component->>Component: Evaluate conditional expressions
+        Component->>Component: Apply styling and properties
+        
+        alt Component has children
+            Component->>Component: Recursively render children
+        end
+        
+        Component->>Event: Bind event handlers
+        Component->>User: Display rendered component
+        
+        User->>Event: Interact with component
+        Event->>Component: Execute action expressions
+        Component->>Content: Update state/data
+        Content->>Component: Re-render if needed
+    else Permission denied
+        Content->>User: Show access denied
+    end
+```
+
+### Usage for Junior Developers
+
+#### 1. Basic Component Creation
+
+```typescript
+// Start with simple components
+const button = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('saveButton')
+  .content('Save')
+  .className('btn-primary')
+  .build();
+```
+
+#### 2. Building Forms
+
+```typescript
+const loginForm = LayoutComponentDetailBuilder.create()
+  .form()
+  .action('/api/login')
+  .addField({
+    name: 'username',
+    type: 'input',
+    placeholder: 'Username',
+    required: true
+  })
+  .addField({
+    name: 'password',
+    type: 'password',
+    placeholder: 'Password',
+    required: true
+  })
+  .build();
+```
+
+#### 3. Creating Page Layouts
+
+```typescript
+const pageLayout = LayoutRendererBuilder.create()
+  .type('standard')
+  .withHeader(navigationHeader)
+  .withContent({
+    path: '/home',
+    meta: homePageContent
+  })
+  .withFooter(standardFooter)
+  .build();
+```
+
+#### 4. Adding Interactivity
+
+```typescript
+const interactiveButton = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('submitForm')
+  .content('Submit')
+  .withEventBindings()
+  .onClick('handleSubmit')
+  .build()
+  .build();
+```
+
+#### Key Principles for Development
+
+1. **Start Simple**: Begin with basic components before adding complexity
+2. **Use Builders**: Leverage fluent builders for type safety and ease of use
+3. **Plan Routing**: Design your content paths before building components
+4. **Consider Permissions**: Plan access control early in development
+5. **Test Incrementally**: Build and test components individually
+6. **Follow Patterns**: Use consistent naming and structure conventions
 
 ## TypeScript Configuration
 

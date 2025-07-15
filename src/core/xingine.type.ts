@@ -298,6 +298,11 @@ export interface LayoutComponentDetail {
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
+export interface Commissar extends LayoutComponentDetail {
+  path: string;
+  permission?: string[];
+}
+
 export interface LayoutRenderer {
   type: string;
   style?:StyleMeta;
@@ -307,7 +312,7 @@ export interface LayoutRenderer {
   };
   content: {
     style?:StyleMeta;
-    meta: LayoutComponentDetail;
+    meta: Commissar;
   };
   sider?: {
     style?:StyleMeta;

@@ -355,7 +355,10 @@ describe('LayoutRendererBuilder', () => {
     const layout = LayoutRendererBuilder.create()
       .type('basic')
       .className('layout-root')
-      .withContent(content)
+      .withContent({
+        path: '/basic-content',
+        ...content
+      })
       .build();
 
     expect(layout).toEqual({
@@ -364,7 +367,10 @@ describe('LayoutRendererBuilder', () => {
         className: 'layout-root'
       },
       content: {
-        meta: content
+        meta: {
+          path: '/basic-content',
+          ...content
+        }
       }
     });
   });
@@ -398,7 +404,10 @@ describe('LayoutRendererBuilder', () => {
       .type('complete')
       .className('full-layout')
       .withHeader(header, { className: 'header-section' })
-      .withContent(content, { className: 'content-section' })
+      .withContent({
+        path: '/complete-content',
+        ...content
+      }, { className: 'content-section' })
       .withSider(sider, { className: 'sider-section' })
       .withFooter(footer, { className: 'footer-section' })
       .build();
@@ -413,7 +422,10 @@ describe('LayoutRendererBuilder', () => {
         style: { className: 'header-section' }
       },
       content: {
-        meta: content,
+        meta: {
+          path: '/complete-content',
+          ...content
+        },
         style: { className: 'content-section' }
       },
       sider: {
@@ -455,12 +467,13 @@ describe('LayoutRendererBuilder', () => {
     const layout = LayoutRendererBuilder.create()
       .type('styled')
       .inlineStyle({ minHeight: '100vh', backgroundColor: '#f0f0f0' })
-      .withContent(
-        LayoutComponentDetailBuilder.create()
+      .withContent({
+        path: '/styled-content',
+        ...LayoutComponentDetailBuilder.create()
           .wrapper()
           .className('content')
           .build()
-      )
+      })
       .build();
 
     expect(layout.style?.style).toEqual({

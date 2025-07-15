@@ -314,7 +314,10 @@ describe('Issue Sample Dashboard Recreation', () => {
         .withHeader(headerComponent, {
           className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
         })
-        .withContent(dashboardContent)
+        .withContent({
+          path: '/dashboard',
+          ...dashboardContent
+        })
         .build();
     };
 
