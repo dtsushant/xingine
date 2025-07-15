@@ -78,7 +78,7 @@ export class TemplateBuilders {
     // Build main wrapper
     return LayoutComponentDetailBuilder.create()
       .wrapper()
-      .className('flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm')
+      .className('h-16 px-4 flex items-center justify-between bg-white dark:bg-gray-800 shadow-sm')
       .addChild(leftWrapper)
       .addChild(searchWrapper)
       .addChild(rightWrapper)

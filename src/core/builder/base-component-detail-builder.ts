@@ -141,7 +141,7 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   }
 
   /**
-   * Create a builder from an existing WrapperMeta object
+   * Create a builder from an existing WrapperMeta object (static method)
    */
   static fromWrapperMeta<P extends BaseComponentDetailBuilder<any, any>>(
     meta: WrapperMeta, 
@@ -150,6 +150,14 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
     const builder = new WrapperRendererBuilder(parent);
     builder.properties = { ...meta };
     return builder;
+  }
+
+  /**
+   * Set the complete WrapperMeta object (instance method)
+   */
+  fromWrapperMeta(meta: WrapperMeta): WrapperRendererBuilder<P> {
+    this.properties = { ...meta };
+    return this;
   }
 
   /**
@@ -218,7 +226,10 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
    * Sets the className for styling
    */
   className(className: string): WrapperRendererBuilder<P> {
-    this.properties.className = className;
+    if (!this.properties.style) {
+      this.properties.style = {};
+    }
+    this.properties.style.className = className;
     return this;
   }
 
@@ -234,7 +245,10 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
    * Sets inline styles
    */
   style(style: Record<string, unknown>): WrapperRendererBuilder<P> {
-    this.properties.style = style;
+    if (!this.properties.style) {
+      this.properties.style = {};
+    }
+    this.properties.style.style = style;
     return this;
   }
 
@@ -277,7 +291,7 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   }
 
   /**
-   * Create a builder from an existing ButtonMeta object
+   * Create a builder from an existing ButtonMeta object (static method)
    */
   static fromButtonMeta<P extends BaseComponentDetailBuilder<any, any>>(
     meta: ButtonMeta, 
@@ -286,6 +300,14 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
     const builder = new ButtonRendererBuilder(parent);
     builder.properties = { ...meta };
     return builder;
+  }
+
+  /**
+   * Set the complete ButtonMeta object (instance method)
+   */
+  fromButtonMeta(meta: ButtonMeta): ButtonRendererBuilder<P> {
+    this.properties = { ...meta };
+    return this;
   }
 
   /**
@@ -324,7 +346,10 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
    * Sets the button className for styling
    */
   className(className: string): ButtonRendererBuilder<P> {
-    this.properties.className = className;
+    if (!this.properties.style) {
+      this.properties.style = {};
+    }
+    this.properties.style.className = className;
     return this;
   }
 
@@ -371,6 +396,13 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   }
 
   /**
+   * Sets event bindings directly (convenience method for .withEventBindings)
+   */
+  event(bindings: EventBindings): ButtonRendererBuilder<P> {
+    return this.withEventBindings(bindings);
+  }
+
+  /**
    * Adds style meta using the StyleMetaBuilder
    */
   withStyleMeta(style: StyleMeta): ButtonRendererBuilder<P> {
@@ -409,7 +441,7 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
-   * Create a builder from an existing InputMeta object
+   * Create a builder from an existing InputMeta object (static method)
    */
   static fromInputMeta<P extends BaseComponentDetailBuilder<any, any>>(
     meta: InputMeta, 
@@ -418,6 +450,14 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
     const builder = new InputRendererBuilder(parent);
     builder.properties = { ...meta };
     return builder;
+  }
+
+  /**
+   * Set the complete InputMeta object (instance method)
+   */
+  fromInputMeta(meta: InputMeta): InputRendererBuilder<P> {
+    this.properties = { ...meta };
+    return this;
   }
 
   /**
@@ -488,7 +528,10 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
    * Sets the input className for styling
    */
   className(className: string): InputRendererBuilder<P> {
-    this.properties.className = className;
+    if (!this.properties.style) {
+      this.properties.style = {};
+    }
+    this.properties.style.className = className;
     return this;
   }
 
@@ -557,10 +600,21 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
    */
   build(): LayoutComponentDetail {
     if (!this.properties.name) {
-      throw new Error('Input name is required and cannot be empty');
+      throw new Error('Input name is required. Use .name(value) to set it.');
     }
     this.parent.withMeta('InputRenderer', this.properties);
     return this.parent.build();
+  }
+
+  /**
+   * Alias for build() method - completes configuration and returns to parent builder
+   */
+  end(): P {
+    if (!this.properties.name) {
+      throw new Error('Input name is required. Use .name(value) to set it.');
+    }
+    this.parent.withMeta('InputRenderer', this.properties);
+    return this.parent;
   }
 }
 
@@ -579,7 +633,7 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
   }
 
   /**
-   * Create a builder from an existing FormMeta object
+   * Create a builder from an existing FormMeta object (static method)
    */
   static fromFormMeta<P extends BaseComponentDetailBuilder<any, any>>(
     meta: FormMeta, 
@@ -588,6 +642,14 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
     const builder = new FormRendererBuilder(parent);
     builder.properties = { ...meta };
     return builder;
+  }
+
+  /**
+   * Set the complete FormMeta object (instance method)
+   */
+  fromFormMeta(meta: FormMeta): FormRendererBuilder<P> {
+    this.properties = { ...meta };
+    return this;
   }
 
   /**
@@ -679,7 +741,6 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
 export class TableRendererBuilder<P extends BaseComponentDetailBuilder<any, any>> {
   private properties: TableMeta = {
     columns: [],
-    data: [],
     dataSourceUrl: ''
   };
   private parent: P;
@@ -817,6 +878,14 @@ export class ChartRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
+   * Returns a ChartConfigBuilder for building chart configurations
+   * The built chart will be automatically added to this renderer
+   */
+  chartBuilder(): ChartConfigBuilderWithParent<P> {
+    return new ChartConfigBuilderWithParent(this);
+  }
+
+  /**
    * Adds a chart configuration directly
    */
   addChartConfig(config: ChartConfig): ChartRendererBuilder<P> {
@@ -861,8 +930,7 @@ export class ChartRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
  * Builder for ChartConfig objects
  */
 export class ChartConfigBuilder {
-  private config: ChartConfig = {
-    type: 'bar',
+  private config: Partial<ChartConfig> = {
     labels: [],
     datasets: []
   };
@@ -940,6 +1008,22 @@ export class ChartConfigBuilder {
   }
 
   /**
+   * Sets chart width
+   */
+  width(width: number): ChartConfigBuilder {
+    (this.config as any).width = width;
+    return this;
+  }
+
+  /**
+   * Sets chart height
+   */
+  height(height: number): ChartConfigBuilder {
+    (this.config as any).height = height;
+    return this;
+  }
+
+  /**
    * Sets a custom property
    */
   property(key: string, value: unknown): ChartConfigBuilder {
@@ -960,15 +1044,122 @@ export class ChartConfigBuilder {
    */
   build(): ChartConfig {
     if (!this.config.type) {
-      throw new Error('Chart type is required');
+      throw new Error('Chart type is required. Use .type(value) to set it.');
     }
-    return { ...this.config };
+    return { ...this.config } as ChartConfig;
   }
 }
 
 /**
- * Builder for DetailRenderer components
+ * Builder for ChartConfig objects with parent reference
+ * This allows building charts that automatically get added to the parent ChartRenderer
  */
+export class ChartConfigBuilderWithParent<P extends BaseComponentDetailBuilder<any, any>> {
+  private configBuilder: ChartConfigBuilder;
+  private parent: ChartRendererBuilder<P>;
+
+  constructor(parent: ChartRendererBuilder<P>) {
+    this.configBuilder = ChartConfigBuilder.create();
+    this.parent = parent;
+  }
+
+  /**
+   * Sets the chart type (required)
+   */
+  type(type: 'bar' | 'line' | 'pie' | 'scatter'): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.type(type);
+    return this;
+  }
+
+  /**
+   * Sets the chart title
+   */
+  title(title: string): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.title(title);
+    return this;
+  }
+
+  /**
+   * Sets the chart labels
+   */
+  labels(labels: string[]): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.labels(labels);
+    return this;
+  }
+
+  /**
+   * Adds a dataset to the chart
+   */
+  addDataset(dataset: ChartDataset): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.addDataset(dataset);
+    return this;
+  }
+
+  /**
+   * Sets all datasets at once
+   */
+  datasets(datasets: ChartDataset[]): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.datasets(datasets);
+    return this;
+  }
+
+  /**
+   * Sets chart options
+   */
+  options(options: any): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.options(options);
+    return this;
+  }
+
+  /**
+   * Sets chart width
+   */
+  width(width: number): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.width(width);
+    return this;
+  }
+
+  /**
+   * Sets chart height
+   */
+  height(height: number): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.height(height);
+    return this;
+  }
+
+  /**
+   * Sets chart dataSourceUrl (specific to ChartRenderer)
+   */
+  dataSourceUrl(url: string): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.property('dataSourceUrl', url);
+    return this;
+  }
+
+  /**
+   * Sets a custom property
+   */
+  property(key: string, value: unknown): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.property(key, value);
+    return this;
+  }
+
+  /**
+   * Sets multiple properties at once
+   */
+  setProperties(properties: Record<string, unknown>): ChartConfigBuilderWithParent<P> {
+    this.configBuilder.setProperties(properties);
+    return this;
+  }
+
+  /**
+   * Builds the chart config and adds it to the parent renderer, then returns the parent
+   */
+  build(): ChartRendererBuilder<P> {
+    const config = this.configBuilder.build(); // This will throw if type is missing
+    this.parent.addChartConfig(config);
+    return this.parent;
+  }
+}
 export class DetailRendererBuilder<P extends BaseComponentDetailBuilder<any, any>> {
   private properties: DetailMeta = {
     fields: [],
@@ -1226,10 +1417,10 @@ export class DynamicRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   }
 
   /**
-   * Sets the component name
+   * Sets the component name (this goes into properties.name, not the component type)
    */
   name(name: string): DynamicRendererBuilder<P> {
-    this.componentName = name;
+    this.properties.name = name;
     return this;
   }
 
@@ -1245,7 +1436,10 @@ export class DynamicRendererBuilder<P extends BaseComponentDetailBuilder<any, an
    * Sets the className for styling
    */
   className(className: string): DynamicRendererBuilder<P> {
-    this.properties.className = className;
+    if (!this.properties.style) {
+      this.properties.style = {};
+    }
+    (this.properties.style as any).className = className;
     return this;
   }
 
@@ -1307,5 +1501,13 @@ export class DynamicRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   build(): LayoutComponentDetail {
     this.parent.withMeta(this.componentName as keyof ComponentMetaMap, this.properties as any);
     return this.parent.build();
+  }
+
+  /**
+   * Alias for build() method - completes configuration and returns to parent builder
+   */
+  end(): P {
+    this.parent.withMeta(this.componentName as keyof ComponentMetaMap, this.properties as any);
+    return this.parent;
   }
 }

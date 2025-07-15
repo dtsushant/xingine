@@ -595,6 +595,14 @@ export class CommissarBuilder extends BaseComponentDetailBuilder<Commissar, Comm
   }
 
   /**
+   * Sets the meta component for this commissar (legacy method for compatibility)
+   */
+  meta(meta: any): CommissarBuilder {
+    this.layoutDetail.meta = meta;
+    return this;
+  }
+
+  /**
    * Returns typed self reference for method chaining
    */
   protected self(): CommissarBuilder {
