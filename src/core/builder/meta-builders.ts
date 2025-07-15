@@ -1,6 +1,7 @@
 import { 
   ConditionalMeta,
-  WrapperMeta
+  WrapperMeta,
+  Commissar
 } from '../xingine.type';
 import { 
   FormMeta, 
@@ -15,6 +16,7 @@ import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
 import { EventBindings } from '../expressions/action';
 import { ConditionalExpression } from '../expressions/operators';
+import { BaseComponentDetailBuilder } from './base-component-detail-builder';
 
 /**
  * Builder for ConditionalMeta objects
@@ -516,12 +518,17 @@ export class ChartConfigMetaBuilder {
 /**
  * Builder for Commissar objects
  * Commissar extends LayoutComponentDetail and adds path and permission properties
+ * Inherits all component building capabilities from BaseComponentDetailBuilder
  */
-export class CommissarBuilder {
-  private commissar: import('../xingine.type').Commissar = {
-    path: ''
-  };
+export class CommissarBuilder extends BaseComponentDetailBuilder<Commissar, CommissarBuilder> {
+  
+  constructor() {
+    super({ path: '' });
+  }
 
+  /**
+   * Creates a new CommissarBuilder instance
+   */
   static create(): CommissarBuilder {
     return new CommissarBuilder();
   }
@@ -529,17 +536,17 @@ export class CommissarBuilder {
   /**
    * Create a builder from an existing Commissar object
    */
-  static fromCommissar(commissar: import('../xingine.type').Commissar): CommissarBuilder {
+  static fromCommissar(commissar: Commissar): CommissarBuilder {
     const builder = new CommissarBuilder();
-    builder.commissar = { ...commissar };
+    builder.layoutDetail = { ...commissar };
     return builder;
   }
 
   /**
    * Set the complete Commissar object
    */
-  fromObject(commissar: import('../xingine.type').Commissar): CommissarBuilder {
-    this.commissar = { ...commissar };
+  fromObject(commissar: Commissar): CommissarBuilder {
+    this.layoutDetail = { ...commissar };
     return this;
   }
 
@@ -547,7 +554,7 @@ export class CommissarBuilder {
    * Sets the path (required for Commissar)
    */
   path(path: string): CommissarBuilder {
-    this.commissar.path = path;
+    (this.layoutDetail as Commissar).path = path;
     return this;
   }
 
@@ -555,7 +562,7 @@ export class CommissarBuilder {
    * Sets the permission array (optional for Commissar)
    */
   permission(permission: string[]): CommissarBuilder {
-    this.commissar.permission = permission;
+    (this.layoutDetail as Commissar).permission = permission;
     return this;
   }
 
@@ -563,18 +570,11 @@ export class CommissarBuilder {
    * Adds a single permission to the permission array
    */
   addPermission(permission: string): CommissarBuilder {
-    if (!this.commissar.permission) {
-      this.commissar.permission = [];
+    const commissar = this.layoutDetail as Commissar;
+    if (!commissar.permission) {
+      commissar.permission = [];
     }
-    this.commissar.permission.push(permission);
-    return this;
-  }
-
-  /**
-   * Sets the meta (component meta)
-   */
-  meta(meta: any): CommissarBuilder {
-    this.commissar.meta = meta;
+    commissar.permission.push(permission);
     return this;
   }
 
@@ -582,7 +582,7 @@ export class CommissarBuilder {
    * Sets a custom property
    */
   property(key: string, value: unknown): CommissarBuilder {
-    (this.commissar as any)[key] = value;
+    (this.layoutDetail as any)[key] = value;
     return this;
   }
 
@@ -590,17 +590,25 @@ export class CommissarBuilder {
    * Sets multiple properties at once
    */
   setProperties(properties: Record<string, unknown>): CommissarBuilder {
-    Object.assign(this.commissar, properties);
+    Object.assign(this.layoutDetail, properties);
+    return this;
+  }
+
+  /**
+   * Returns typed self reference for method chaining
+   */
+  protected self(): CommissarBuilder {
     return this;
   }
 
   /**
    * Builds and returns the final Commissar object
    */
-  build(): import('../xingine.type').Commissar {
-    if (!this.commissar.path) {
+  build(): Commissar {
+    const commissar = this.layoutDetail as Commissar;
+    if (!commissar.path) {
       throw new Error('Path is required for Commissar');
     }
-    return { ...this.commissar };
+    return { ...commissar };
   }
 }
