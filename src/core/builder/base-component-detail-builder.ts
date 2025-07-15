@@ -257,10 +257,11 @@ export class WrapperRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   }
 
   /**
-   * Completes the wrapper configuration and returns to parent builder
+   * Completes the wrapper configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('WrapperRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('WrapperRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -388,10 +389,11 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   }
 
   /**
-   * Completes the button configuration and returns to parent builder
+   * Completes the button configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('ButtonRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('ButtonRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -551,13 +553,14 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
-   * Completes the input configuration and returns to parent builder
+   * Completes the input configuration and returns the built component
    */
-  build(): P {
+  build(): LayoutComponentDetail {
     if (!this.properties.name) {
       throw new Error('Input name is required and cannot be empty');
     }
-    return this.parent.withMeta('InputRenderer', this.properties);
+    this.parent.withMeta('InputRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -662,10 +665,11 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
   }
 
   /**
-   * Completes the form configuration and returns to parent builder
+   * Completes the form configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('FormRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('FormRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -761,10 +765,11 @@ export class TableRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
-   * Completes the table configuration and returns to parent builder
+   * Completes the table configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('TableRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('TableRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -844,10 +849,11 @@ export class ChartRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
-   * Completes the chart configuration and returns to parent builder
+   * Completes the chart configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('ChartRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('ChartRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -1035,10 +1041,11 @@ export class DetailRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   }
 
   /**
-   * Completes the detail configuration and returns to parent builder
+   * Completes the detail configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('DetailRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('DetailRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -1117,10 +1124,11 @@ export class ConditionalRendererBuilder<P extends BaseComponentDetailBuilder<any
   }
 
   /**
-   * Completes the conditional configuration and returns to parent builder
+   * Completes the conditional configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('ConditionalRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('ConditionalRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -1196,10 +1204,11 @@ export class PopupRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
-   * Completes the popup configuration and returns to parent builder
+   * Completes the popup configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta('PopupRenderer', this.properties);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta('PopupRenderer', this.properties);
+    return this.parent.build();
   }
 }
 
@@ -1293,9 +1302,10 @@ export class DynamicRendererBuilder<P extends BaseComponentDetailBuilder<any, an
   }
 
   /**
-   * Completes the dynamic component configuration and returns to parent builder
+   * Completes the dynamic component configuration and returns the built component
    */
-  build(): P {
-    return this.parent.withMeta(this.componentName as keyof ComponentMetaMap, this.properties as any);
+  build(): LayoutComponentDetail {
+    this.parent.withMeta(this.componentName as keyof ComponentMetaMap, this.properties as any);
+    return this.parent.build();
   }
 }

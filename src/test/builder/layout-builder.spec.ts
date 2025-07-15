@@ -281,7 +281,7 @@ describe('LayoutComponentDetailBuilder', () => {
 
     const result = LayoutComponentDetailBuilder.create()
       .chart()
-      .addChart(chartConfig)
+      .addChartConfig(chartConfig)
       .build();
 
     expect(result).toEqual({
