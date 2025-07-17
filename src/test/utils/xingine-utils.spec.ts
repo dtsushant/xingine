@@ -72,10 +72,10 @@ describe('extrapolate', () => {
     });
 
     // Failing test
-   /* it('nested logical handles logical operators', () => {
+    it('nested logical handles logical operators', () => {
         const result = extrapolate("Admin check: #{user.isAdmin && (balance===150 || user.name=='NAlice') ? 'yes' : 'no'}", context);
         expect(result).toBe('Admin check: yes');
-    });*/
+    });
 
     it('supports exists function', () => {
         const result = extrapolate('Check exists: #{exists(user.profile.email) ? "yes" : "no"}', context);

@@ -59,14 +59,18 @@ export type EventBindings = {
 
 export interface ActionContext {
     navigate: (path: string) => void;
-    setState: (key: string, value: unknown) => void;
+    setState: <T>(key: string, setter: T | ((prev: T) => T)) => void;
     getState: (key: string) => unknown;
+    getAllState:()=>Record<string,unknown>;
     makeApiCall: (params: {
         url: string;
         method?: string;
         body?: unknown;
     }) => Promise<unknown>;
     dynamic?: (name: string, args?:  Record<string, unknown>, event?: unknown) => void;
+    toggleState?: (key: string) => void;
+    /** INTERNAL: Do not use outside ActionContextRegistry */
+    __state?:Record<string, unknown>;
 }
 
 type ActionHandler = (
@@ -75,6 +79,26 @@ type ActionHandler = (
     event?: unknown
 ) => void | Promise<void>;
 
+const contextMap = new Map<string, ActionContext>();
+export const ActionContextRegistry = {
+    get(key: string): ActionContext | undefined {
+        return contextMap.get(key);
+    },
+
+    set(key: string, ctx: ActionContext) {
+        contextMap.set(key, ctx);
+    },
+
+    clear(key?: string) {
+        if (key) contextMap.delete(key);
+        else contextMap.clear();
+    },
+};
+
+export const ActionContextSubscribers = new WeakMap<
+    ActionContext,
+    Map<string, Set<() => void>>
+>();
 
 
 export const actionRegistry: Record<string, ActionHandler> = {
@@ -101,7 +125,16 @@ export const actionRegistry: Record<string, ActionHandler> = {
             method?: string;
             body?: unknown;
         });
-    }
+    },
+
+    toggleState: (args, ctx) => {
+        if (!args || typeof args.key !== 'string') {
+            throw new Error('navigate requires args.path to be a string');
+        }
+        ctx.setState<boolean>(args.key, (prev: boolean) => !prev);
+    },
+
+
 
 
 };

@@ -6,6 +6,7 @@ import { DetailFieldMeta } from "../component/detail-meta-map";
 import { Operator } from "../expressions/operators";
 import {Renderer} from "../xingine.type";
 import {EventBindings} from "../expressions/action";
+import {StyleMeta} from "../expressions";
 
 export type Method = "POST" | "GET";
 export interface ColumnMeta {
@@ -96,6 +97,8 @@ export interface ChartConfig {
   datasets?: ChartDataset[];
   options?: Record<string, unknown>;
   dataSourceUrl?: string;
+  event?:EventBindings;
+  style?:StyleMeta;
   /**
    * Renderer configuration for this specific chart.
    */

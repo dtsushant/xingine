@@ -338,7 +338,7 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
    * Sets the button icon
    */
   icon(icon: IconMeta): ButtonRendererBuilder<P> {
-    this.properties.icon = icon;
+    this.properties.content = icon;
     return this;
   }
 
