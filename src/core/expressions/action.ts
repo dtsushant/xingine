@@ -6,11 +6,6 @@ export type SerializableAction =
     valueFromEvent?: boolean;  // useful for input/change handlers
 };
 
-export type WithActions<T> = {
-    [K in keyof T]: T[K] extends (...args: unknown[]) => unknown
-        ? SerializableAction | undefined
-        : T[K];
-};
 
 type StateSetter<T> = (value: T | ((prev: T) => T)) => void;
 

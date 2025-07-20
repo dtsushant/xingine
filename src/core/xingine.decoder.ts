@@ -7,7 +7,7 @@ import {
     ModulePropertyOptions,
     Panel,
     Permission, Renderer, SiderMeta, TabMeta,
-    UIComponent, UIComponentDetail, WrapperMeta, Commissar,
+    UIComponent, UIComponentDetail, WrapperMeta, Commissar, PathProperties,
 } from "./xingine.type";
 import {
   array, boolean, constant,
@@ -132,8 +132,13 @@ export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object
 
 export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
 
+export const pathPropertiesDecoder:Decoder<PathProperties> = object({
+    path: string,
+    overrideLayout: optional(string),
+})
+
 export const commissarDecoder: Decoder<Commissar> = object({
-  path: string,
+  path: either(string , pathPropertiesDecoder),
   permission: optional(array(string)),
   meta: optional(componentMetaDecoder()),
 });

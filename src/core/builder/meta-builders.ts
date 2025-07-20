@@ -1,7 +1,7 @@
-import { 
+import {
   ConditionalMeta,
   WrapperMeta,
-  Commissar
+  Commissar, PathProperties
 } from '../xingine.type';
 import { 
   FormMeta, 
@@ -555,6 +555,15 @@ export class CommissarBuilder extends BaseComponentDetailBuilder<Commissar, Comm
    */
   path(path: string): CommissarBuilder {
     (this.layoutDetail as Commissar).path = path;
+    return this;
+  }
+
+  pathWithProperties(path: string | PathProperties): CommissarBuilder {
+    if (typeof path === 'string') {
+      (this.layoutDetail as Commissar).path = path;
+    } else {
+      (this.layoutDetail as Commissar).path = { ...path };
+    }
     return this;
   }
 

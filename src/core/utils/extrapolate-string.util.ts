@@ -61,7 +61,14 @@ export function evaluateExpression(expression: string, context: Record<string, u
 
         // Parentheses
         while (expression.includes('(')) {
-            expression = expression.replace(/\(([^()]+)\)/g, (_, inner) => String(evaluateExpression(inner, context)));
+            expression = expression.replace(/\(([^()]+)\)/g, (_, inner) => {
+                const result = evaluateExpression(inner, context);
+                // Preserve boolean values as strings that can be parsed back
+                if (typeof result === 'boolean') {
+                    return result ? 'true' : 'false';
+                }
+                return String(result);
+            });
         }
 
         // Logical OR
@@ -94,6 +101,10 @@ export function evaluateExpression(expression: string, context: Record<string, u
                 }
             }
         }
+
+        // Handle boolean strings from parentheses processing
+        if (expression === 'true') return true;
+        if (expression === 'false') return false;
 
         return resolvePath(context, expression);
     } catch {

@@ -1,5 +1,5 @@
 import { CommissarBuilder, LayoutRendererBuilder, LayoutComponentDetailBuilder } from '../../core/builder';
-import { Commissar } from '../../core/xingine.type';
+import { Commissar, PathProperties } from '../../core/xingine.type';
 
 describe('CommissarBuilder', () => {
   describe('Basic functionality', () => {
@@ -29,6 +29,34 @@ describe('CommissarBuilder', () => {
       expect(() => {
         CommissarBuilder.create().build();
       }).toThrow('Path is required for Commissar');
+    });
+
+    it('should create a Commissar with PathProperties object', () => {
+      const pathProps: PathProperties = {
+        overrideLayout: 'antd',
+        path: '/menu-item'
+      };
+
+      const commissar = CommissarBuilder.create()
+        .pathWithProperties(pathProps)
+        .build();
+
+      expect(commissar.path).toEqual(pathProps);
+      expect(typeof commissar.path).toBe('object');
+      
+      // Validate PathProperties structure
+      const pathObj = commissar.path as PathProperties;
+      expect(pathObj.path).toBe('/menu-item');
+      expect(pathObj.overrideLayout).toBe('antd');
+    });
+
+    it('should create a Commissar with pathWithProperties accepting string', () => {
+      const commissar = CommissarBuilder.create()
+        .pathWithProperties('/string-path')
+        .build();
+
+      expect(commissar.path).toBe('/string-path');
+      expect(typeof commissar.path).toBe('string');
     });
 
     it('should support adding individual permissions', () => {
@@ -164,14 +192,14 @@ describe('CommissarBuilder', () => {
           name: userFormFields[0].name,
           label: userFormFields[0].label,
           inputType: userFormFields[0].inputType as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
-          required: userFormFields[0].required,
+          required: userFormFields[0]['required'],
           properties: {}
         })
         .addField({
           name: userFormFields[1].name,
           label: userFormFields[1].label,
           inputType: userFormFields[1].inputType as keyof import('../../core/component/form-meta-map').FieldInputTypeProperties,
-          required: userFormFields[1].required,
+          required: userFormFields[1]['required'],
           properties: {}
         })
         .addField({

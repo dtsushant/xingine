@@ -298,10 +298,16 @@ export interface LayoutComponentDetail {
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
+export interface PathProperties {
+  path:string;
+  overrideLayout?: string; // If this component should override the layout
+}
+
 export interface Commissar extends LayoutComponentDetail {
-  path: string;
+  path: string | PathProperties;
   permission?: string[];
 }
+
 
 export interface LayoutRenderer {
   type: string;

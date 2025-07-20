@@ -86,6 +86,48 @@ describe('extrapolate', () => {
         const result = extrapolate('Check missing: #{notExists(user.age) ? "missing" : "found"}', context);
         expect(result).toBe('Check missing: missing');
     });
+
+    it('supports multiple ternary string adjusting margin',()=>{
+        /***
+         TODO:-
+         * 1. If no sider, the main content should take full width or margin to 0.
+         * 2. If sider is present, the main content should adjust its margin based on the collapsed state.
+         * */
+        const layout = {
+            sider: true,
+            collapsed: true,
+        };
+        const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
+        expect(result).toBe('Main margin: 20');
+    });
+
+    it('adjusting margin - no sider', () => {
+        const layout = {
+            sider: false,
+            collapsed: false,
+        };
+        const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
+        expect(result).toBe('Main margin: 0');
+    });
+
+    it('adjusting margin - sider undefined', () => {
+        const layout = {
+            collapsed: false,
+        };
+
+        const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
+        expect(result).toBe('Main margin: 0');
+    });
+
+
+    it('adjusting margin - sider not collapsed', () => {
+        const layout = {
+            sider: true,
+            collapsed: false,
+        };
+        const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
+        expect(result).toBe('Main margin: 40');
+    })
 });
 
 describe('getActionRef', () => {
