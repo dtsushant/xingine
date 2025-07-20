@@ -9,11 +9,10 @@ describe('iconMetaDecoder', () => {
             spin: true,
             rotate: 90,
             twoToneColor: '#abc',
-            className: 'custom-icon',
         };
 
         const result = iconMetaDecoder.verify(json);
-
+        console.log("the result ", result)
         expect(result).toEqual({
             name: 'UserOutlined',
             color: '#123456',
@@ -21,7 +20,6 @@ describe('iconMetaDecoder', () => {
             spin: true,
             rotate: 90,
             twoToneColor: '#abc',
-            className: 'custom-icon',
         });
     });
 

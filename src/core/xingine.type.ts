@@ -298,6 +298,17 @@ export interface LayoutComponentDetail {
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
+export interface PathProperties {
+  path:string;
+  overrideLayout?: string; // If this component should override the layout
+}
+
+export interface Commissar extends LayoutComponentDetail {
+  path: string | PathProperties;
+  permission?: string[];
+}
+
+
 export interface LayoutRenderer {
   type: string;
   style?:StyleMeta;
@@ -307,7 +318,7 @@ export interface LayoutRenderer {
   };
   content: {
     style?:StyleMeta;
-    meta: LayoutComponentDetail;
+    meta: Commissar[];
   };
   sider?: {
     style?:StyleMeta;
@@ -327,6 +338,7 @@ export interface TabMeta {
     meta: ComponentMetaMap[keyof ComponentMetaMap];
   }[];
   dispatch?: TabDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface WrapperMeta {
@@ -343,6 +355,7 @@ export interface ConditionalMeta{
     condition: ConditionalExpression;
     trueComponent: LayoutComponentDetail;
     falseComponent?: LayoutComponentDetail;
+    [key: string]: unknown;
 }
 
 export type ComponentMetaMap = {
@@ -373,6 +386,8 @@ export type ComponentMetaMap = {
   TextRenderer: Record<string, unknown>;
   LinkRenderer: Record<string, unknown>;
   PopupRenderer: Record<string, unknown>;
+} & {
+  [K:string]:Record<string, unknown>;
 };
 export interface ComponentMeta<
     T extends keyof ComponentMetaMap = keyof ComponentMetaMap,

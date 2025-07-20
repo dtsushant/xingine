@@ -10,6 +10,7 @@ A powerful TypeScript library that provides decorators, types, and utilities to 
 - 🏗️ **Component Rendering** - FormRenderer, TableRenderer, DetailRenderer, TabRenderer, and ChartRenderer
 - 📝 **Type Safety** - Full TypeScript support with runtime type checking
 - 🔄 **Runtime Decoding** - Robust decoders for runtime validation and type safety
+- 🏗️ **Fluent Builder API** - Intuitive builder pattern for creating complex layouts with recursive nesting support
 
 ## Installation
 
@@ -1020,6 +1021,517 @@ username!: string;
 - `FieldValidationError` - Validation error structure
 - `FormValidationResult` - Validation result structure
 
+## Fluent Builder API
+
+The Xingine library provides powerful fluent builder APIs for creating complex layouts with recursive nesting support. The builder pattern allows you to construct `LayoutComponentDetail` and `LayoutRenderer` instances with intuitive, chainable methods.
+
+### Basic Usage
+
+#### Creating Layout Components
+
+```typescript
+import { LayoutComponentDetailBuilder, LayoutRendererBuilder, TemplateBuilders } from 'xingine';
+
+// Create a simple button
+const button = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('myButton')
+  .content('Click Me')
+  .className('btn btn-primary')
+  .build();
+
+// Create an input field
+const input = LayoutComponentDetailBuilder.create()
+  .input()
+  .name('userInput')
+  .placeholder('Enter your name...')
+  .className('form-control')
+  .build();
+
+// Create a wrapper with children
+const wrapper = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('container')
+  .addChild(button)
+  .addChild(input)
+  .build();
+```
+
+#### Creating Layout Renderers
+
+```typescript
+// Create a complete layout with array of Commissar objects
+const layout = LayoutRendererBuilder.create()
+  .type('tailwind')
+  .className('min-h-screen bg-gray-100')
+  .withHeader(headerComponent)
+  .withContent([{
+    path: '/dashboard',
+    meta: contentComponent
+  }])
+  .withFooter(footerComponent)
+  .build();
+
+// Adding multiple content routes
+const multiRouteLayout = LayoutRendererBuilder.create()
+  .type('multi-route')
+  .withContent([
+    {
+      path: '/dashboard',
+      permission: ['user', 'read'],
+      meta: dashboardComponent
+    },
+    {
+      path: '/admin',
+      permission: ['admin'],
+      meta: adminComponent
+    }
+  ])
+  .build();
+
+// Using fluent section builders
+const fluentLayout = LayoutRendererBuilder.create()
+  .type('dashboard')
+  .header()
+  .className('header-style')
+  .wrapper()
+  .className('nav-wrapper')
+  .addChild(navButton)
+  .build()
+  .content()
+  .path('/main-dashboard')
+  .className('main-content')
+  .wrapper()
+  .className('content-wrapper')
+  .addChildren([contentElements])
+  .build()
+  .build();
+```
+
+### Recursive and Nested Support
+
+The builder supports arbitrary depth and combinations of components:
+
+```typescript
+// Create deeply nested structure
+const complexLayout = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('outer-container')
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('middle-container')
+      .addChild(
+        LayoutComponentDetailBuilder.create()
+          .wrapper()
+          .className('inner-container')
+          .addChild(
+            LayoutComponentDetailBuilder.create()
+              .button()
+              .name('deepButton')
+              .content('Deep Button')
+              .build()
+          )
+          .build()
+      )
+      .build()
+  )
+  .build();
+```
+
+### Dashboard Example
+
+Create a complete dashboard layout with charts, forms, and tables:
+
+```typescript
+// Create chart component
+const chartComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('ChartRenderer', {
+    charts: [
+      {
+        type: 'bar',
+        height: 300,
+        width: 300,
+        title: 'Sales Performance',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Sales',
+            data: [4000, 3000, 2000, 2780, 1890, 2390],
+            backgroundColor: '#1890ff',
+          },
+        ],
+      },
+    ],
+  })
+  .build();
+
+// Create form component
+const formComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('FormRenderer', {
+    action: 'createUser',
+    fields: [
+      {
+        name: 'name',
+        label: 'Name',
+        inputType: 'input',
+        required: true,
+        properties: {}
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        inputType: 'input',
+        required: true,
+        properties: {}
+      }
+    ]
+  })
+  .build();
+
+// Create dashboard content with nested layout
+const dashboardContent = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('grid grid-cols-1 lg:grid-cols-2 gap-6')
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('chart-section')
+      .style({
+        background: 'linear-gradient(135deg, #ff7e5f, #feb47b)',
+        padding: '16px',
+        borderRadius: '8px',
+      })
+      .addChild(chartComponent)
+      .build()
+  )
+  .addChild(
+    LayoutComponentDetailBuilder.create()
+      .wrapper()
+      .className('form-section')
+      .addChild(formComponent)
+      .build()
+  )
+  .build();
+
+// Create complete dashboard
+const dashboard = LayoutRendererBuilder.create()
+  .type('tailwind')
+  .className('min-h-screen')
+  .withHeader(headerComponent)
+  .withContent({
+    path: '/dashboard',
+    permission: ['admin', 'user'],
+    meta: dashboardContent
+  })
+  .build();
+```
+
+### Template Builders
+
+Use pre-built templates for common layouts:
+
+```typescript
+// Create dashboard using templates
+const dashboardLayout = TemplateBuilders.dashboardLayout()
+  .withHeader(TemplateBuilders.defaultHeader())
+  .withContent({
+    path: '/dashboard-template',
+    meta: TemplateBuilders.gridContentWrapper()
+  })
+  .build();
+
+// Create components using templates
+const primaryButton = TemplateBuilders.primaryButton('action', 'Primary Action');
+const secondaryButton = TemplateBuilders.secondaryButton('cancel', 'Cancel');
+const standardInput = TemplateBuilders.standardInput('search', 'Search...');
+const cardWrapper = TemplateBuilders.cardWrapper();
+const alertMessage = TemplateBuilders.alert('success', 'Operation completed!');
+
+// Create responsive grid
+const responsiveGrid = TemplateBuilders.responsiveGrid(3); // 3 columns on large screens
+
+// Create flex container
+const flexContainer = TemplateBuilders.flexContainer('row', 'center');
+```
+
+### Available Builder Methods
+
+#### LayoutComponentDetailBuilder
+
+- `button()` - Creates a ButtonRenderer
+- `input()` - Creates an InputRenderer  
+- `wrapper()` - Creates a WrapperRenderer
+- `form()` - Creates a FormRenderer
+- `table()` - Creates a TableRenderer
+- `chart()` - Creates a ChartRenderer
+- `detailRenderer()` - Creates a DetailRenderer
+- `conditional()` - Creates a ConditionalRenderer
+- `popup()` - Creates a PopupRenderer
+- `dynamic(componentName)` - Creates a dynamic/custom component with user-defined type
+- `withMeta(component, properties)` - Sets custom component metadata
+
+#### WrapperRendererBuilder
+
+- `className(className)` - Sets CSS class
+- `style(styles)` - Sets inline styles
+- `content(content)` - Sets content text
+- `addChild(child)` - Adds a single child component
+- `addChildren(children)` - Adds multiple child components
+- `addWrapper()` - Adds a nested wrapper
+- `addButton()` - Adds a button child
+- `addInput()` - Adds an input child
+
+#### LayoutRendererBuilder
+
+- `type(type)` - Sets layout type
+- `className(className)` - Sets root CSS class
+- `style(style)` - Sets root styles
+- `header()` - Configures header section
+- `content()` - Configures content section
+- `sider()` - Configures sidebar section
+- `footer()` - Configures footer section
+- `withHeader(meta, style?)` - Sets header with pre-built component
+- `withContent(commissar, style?)` - Sets content with pre-built Commissar component (requires path)
+- `withSider(meta, style?)` - Sets sidebar with pre-built component
+- `withFooter(meta, style?)` - Sets footer with pre-built component
+
+#### Template Builders
+
+- `TemplateBuilders.dashboardLayout()` - Creates dashboard layout
+- `TemplateBuilders.defaultHeader()` - Creates default header
+- `TemplateBuilders.primaryButton(name, content)` - Creates primary button
+- `TemplateBuilders.secondaryButton(name, content)` - Creates secondary button
+- `TemplateBuilders.standardInput(name, placeholder?)` - Creates standard input
+- `TemplateBuilders.cardWrapper()` - Creates card wrapper
+- `TemplateBuilders.gridContentWrapper()` - Creates grid wrapper
+- `TemplateBuilders.responsiveGrid(columns)` - Creates responsive grid
+- `TemplateBuilders.flexContainer(direction, justify)` - Creates flex container
+- `TemplateBuilders.alert(type, message)` - Creates alert component
+- `TemplateBuilders.loadingSpinner()` - Creates loading spinner
+
+### Advanced Features
+
+#### Conditional Rendering
+
+```typescript
+const conditionalComponent = LayoutComponentDetailBuilder.create()
+  .withMeta('ConditionalRenderer', {
+    condition: {
+      field: 'user.isAdmin',
+      operator: 'eq',
+      value: true
+    },
+    trueComponent: adminButton,
+    falseComponent: regularButton
+  })
+  .build();
+```
+
+#### Event Handling
+
+```typescript
+const interactiveButton = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('actionButton')
+  .content('Click Me')
+  .event({
+    onClick: 'handleButtonClick',
+    onHover: 'handleHover'
+  })
+  .build();
+```
+
+#### Styling
+
+```typescript
+const styledComponent = LayoutComponentDetailBuilder.create()
+  .wrapper()
+  .className('custom-wrapper')
+  .style({
+    backgroundColor: '#f0f0f0',
+    padding: '16px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  })
+  .build();
+```
+
+### Recreating the Issue Sample Dashboard
+
+Here's how to recreate the exact dashboard layout from the issue using the fluent builder:
+
+```typescript
+import { LayoutComponentDetailBuilder, LayoutRendererBuilder } from 'xingine';
+
+// Create the complete dashboard layout
+const createTailwindDashboardLayout = () => {
+  // Create chart component with multiple charts
+  const chartComponent = LayoutComponentDetailBuilder.create()
+    .chart()
+    .charts([
+      {
+        type: 'bar',
+        height: 300,
+        width: 300,
+        title: 'Sales Performance',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Sales',
+            data: [4000, 3000, 2000, 2780, 1890, 2390],
+            backgroundColor: '#1890ff',
+          },
+        ],
+      },
+      {
+        type: 'line',
+        title: 'User Growth',
+        height: 300,
+        width: 300,
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Users',
+            data: [240, 221, 229, 200, 218, 250],
+            borderColor: '#52c41a',
+          },
+        ],
+      },
+      // ... more charts
+    ])
+    .build();
+
+  // Create form component
+  const formComponent = LayoutComponentDetailBuilder.create()
+    .form()
+    .action('handleUserCreate')
+    .fields([
+      { name: 'name', label: 'Name', inputType: 'input', required: true, properties: {} },
+      { name: 'email', label: 'Email', inputType: 'input', required: true, properties: {} },
+      { name: 'role', label: 'Role', inputType: 'select', required: true, properties: {} }
+    ])
+    .build();
+
+  // Create table component
+  const tableComponent = LayoutComponentDetailBuilder.create()
+    .table()
+    .dataSourceUrl('/api/users')
+    .columns([
+      { title: 'Name', dataIndex: 'name', sortable: true },
+      { title: 'Email', dataIndex: 'email', sortable: true },
+      { title: 'Role', dataIndex: 'role', sortable: true },
+      { title: 'Status', dataIndex: 'active' },
+      { title: 'Created', dataIndex: 'createdAt' },
+    ])
+    .build();
+
+  // Create dashboard content with nested structure
+  const dashboardContent = LayoutComponentDetailBuilder.create()
+    .wrapper()
+    .className('min-h-full max-w-full w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+    .addChild(
+      // Charts Row
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+        .style({
+          background: 'linear-gradient(135deg, #ff7e5f, #feb47b)',
+          color: '#ffffff',
+          padding: '16px',
+          borderRadius: '8px',
+        })
+        .addChild(chartComponent)
+        .build()
+    )
+    .addChild(
+      // Form and Table Row
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8')
+        .addChild(tableComponent)
+        .addChild(formComponent)
+        .build()
+    )
+    .build();
+
+  // Create header with navigation
+  const headerComponent = LayoutComponentDetailBuilder.create()
+    .wrapper()
+    .className('h-16 px-4 flex items-center justify-between')
+    .addChild(
+      // Left section with menu buttons
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('flex items-center space-x-4')
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .button()
+            .name('collapseButton')
+            .content('☰')
+            .event({ onClick: 'headerActionContext.handleToggleCollapsed' })
+            .className('p-2 rounded-md hover:bg-gray-100 transition-colors')
+            .build()
+        )
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .button()
+            .name('HomeButton')
+            .content('🏠')
+            .className('p-2 rounded-md hover:bg-gray-100 transition-colors')
+            .build()
+        )
+        .build()
+    )
+    .addChild(
+      // Search section
+      LayoutComponentDetailBuilder.create()
+        .wrapper()
+        .className('flex-1 max-w-md mx-4')
+        .addChild(
+          LayoutComponentDetailBuilder.create()
+            .input()
+            .name('search')
+            .placeholder('Search with Icon...')
+            .className('w-full h-10 px-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500')
+            .build()
+        )
+        .build()
+    )
+    .build();
+
+  // Create complete layout
+  return LayoutRendererBuilder.create()
+    .type('tailwind')
+    .className('min-h-screen')
+    .withHeader(headerComponent, {
+      className: 'fixed top-0 left-0 right-0 h-16 z-50 shadow-sm'
+    })
+    .withContent({
+      path: '/dashboard',
+      permission: ['admin'],
+      meta: dashboardContent
+    })
+    .build();
+};
+
+// Usage
+const dashboardLayout = createTailwindDashboardLayout();
+console.log('Dashboard created:', dashboardLayout);
+```
+
+This example demonstrates:
+
+- **Complex nesting**: Dashboard > Content > Rows > Sections > Components
+- **Multiple component types**: Charts, Forms, Tables, Buttons, Inputs
+- **Recursive structure**: Wrappers containing wrappers containing components
+- **Flexible positioning**: Adding components at any level of the hierarchy
+- **Rich styling**: CSS classes and inline styles
+- **Event handling**: Button click handlers
+- **Data binding**: Form fields, table columns, chart datasets
+
+The fluent builder makes it easy to construct complex layouts that would otherwise require verbose JSON structures, while maintaining full type safety and IDE support.
+
 ### Component Types
 
 - `FormMeta` - Form component metadata
@@ -1030,6 +1542,426 @@ username!: string;
 - `ChartConfig` - Individual chart configuration with optional renderer
 - `ChartDataset` - Chart dataset structure
 - `ChartType` - Supported chart types ('bar' | 'line' | 'pie' | 'scatter')
+
+### Dynamic Components
+
+The builder now supports creating dynamic/custom components that can be defined by end users. This allows for maximum flexibility in component creation while still maintaining the fluent API benefits.
+
+#### Creating Dynamic Components
+
+```typescript
+import { LayoutComponentDetailBuilder } from 'xingine';
+
+// Create a basic custom component
+const customWidget = LayoutComponentDetailBuilder.create()
+  .dynamic('MyCustomWidget')
+  .name('widget1')
+  .content('Custom Content')
+  .className('custom-widget-style')
+  .build();
+
+// Add custom properties
+const advancedComponent = LayoutComponentDetailBuilder.create()
+  .dynamic('AdvancedDataGrid')
+  .setProperties({
+    columns: ['id', 'name', 'email', 'status'],
+    dataSource: '/api/users',
+    pagination: { pageSize: 20, showSizeChanger: true },
+    sorting: { defaultSort: 'name', direction: 'asc' },
+    filters: [
+      { field: 'status', type: 'select', options: ['active', 'inactive'] },
+      { field: 'name', type: 'text', placeholder: 'Search by name...' }
+    ],
+    customActions: ['export', 'import', 'bulk-edit']
+  })
+  .property('title', 'User Management Grid')
+  .property('height', 600)
+  .build();
+```
+
+#### Reusing Existing Component Types with Custom Properties
+
+```typescript
+// Use ButtonRenderer with additional custom properties
+const enhancedButton = LayoutComponentDetailBuilder.create()
+  .dynamic('ButtonRenderer')
+  .setProperties({
+    name: 'enhancedButton',
+    content: 'Enhanced Click Me',
+    customIcon: 'star',
+    priority: 'high',
+    analytics: {
+      trackingId: 'btn_001',
+      category: 'primary_actions',
+      metadata: { source: 'dashboard', version: '2.1' }
+    },
+    accessibility: {
+      ariaLabel: 'Enhanced action button',
+      tabIndex: 1
+    }
+  })
+  .className('enhanced-button')
+  .build();
+```
+
+#### Dynamic Component Builder Methods
+
+- `dynamic(componentName)` - Creates a dynamic component with the specified name
+- `property(key, value)` - Sets a single property
+- `setProperties(props)` - Sets multiple properties at once
+- `name(name)` - Sets the name property (commonly used)
+- `content(content)` - Sets the content property (commonly used)
+- `className(className)` - Sets CSS class for styling
+- `withEventBindings(eventBindings)` - Sets event bindings object
+- `withStyleMeta(styleMeta)` - Sets style metadata object
+- `eventBuilder()` - Returns EventBindingsBuilder for fluent event creation
+- `styleBuilder()` - Returns StyleMetaBuilder for fluent style creation
+
+#### Use Cases for Dynamic Components
+
+1. **Custom UI Widgets**: Create specialized components not covered by built-in types
+2. **Third-party Integrations**: Wrapper components for external libraries
+3. **Business-specific Components**: Domain-specific components with custom properties
+4. **Extended Built-ins**: Enhance existing component types with additional metadata
+5. **Rapid Prototyping**: Quick component creation during development
+
+The dynamic component feature leverages the `[K:string]:Record<string, unknown>` addition to `ComponentMetaMap`, allowing any string to be used as a component name while maintaining type safety for the properties.
+
+## Application Overview
+
+Xingine is a comprehensive TypeScript library designed for **rule-based UI rendering in HTML**. The library provides types, decoders, and builders that enable dynamic component rendering based on configuration metadata, making it ideal for building adaptive user interfaces where the UI structure can be defined declaratively.
+
+### What Xingine Does
+
+Xingine transforms configuration metadata into dynamic, interactive user interfaces by:
+
+1. **Declarative UI Definition** - Define UI components and layouts using metadata objects
+2. **Rule-Based Rendering** - Components render conditionally based on defined rules and expressions
+3. **Type-Safe Configuration** - Full TypeScript support with runtime validation
+4. **Modular Component System** - Support for forms, tables, charts, buttons, inputs, and custom components
+5. **Layout Management** - Complete page layout structure with header, sidebar, content, and footer sections
+6. **Route-Based Content** - Dynamic content rendering based on routing paths
+7. **Permission-Based Access** - Component-level permission controls for security
+
+### Core Architecture
+
+#### LayoutRenderer Structure
+
+The `LayoutRenderer` interface defines the overall page layout structure:
+
+```typescript
+export interface LayoutRenderer {
+  type: string;                    // Layout type (e.g., 'tailwind', 'bootstrap')
+  style?: StyleMeta;              // Global layout styling
+  header?: {                      // Fixed header section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+  content: {                      // Main dynamic content area
+    style?: StyleMeta;
+    meta: Commissar;             // Route-based content with permissions
+  };
+  sider?: {                       // Sidebar/navigation section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+  footer?: {                      // Footer section
+    style?: StyleMeta;
+    meta?: LayoutComponentDetail;
+  };
+}
+```
+
+#### Commissar Interface (Route-Based Content)
+
+The `Commissar` interface extends `LayoutComponentDetail` to handle dynamic routing and permissions:
+
+```typescript
+export interface Commissar extends LayoutComponentDetail {
+  path: string;           // Required: The route path that renders this content
+  permission?: string[];  // Optional: Permissions required to access this content
+}
+```
+
+**Key Features:**
+- **Dynamic Routing**: The `path` property determines which content renders for each route
+- **Permission Control**: Optional `permission` array restricts access based on user permissions
+- **Component Inheritance**: Inherits all capabilities of `LayoutComponentDetail`
+
+#### LayoutComponentDetail Breakdown
+
+The `LayoutComponentDetail` interface supports various component types:
+
+- **WrapperRenderer**: Renders container elements (div, span, section, etc.)
+  - Contains child components
+  - Supports styling and layout properties
+  - Enables nested component hierarchies
+
+- **ConditionalRenderer**: Renders components conditionally
+  - Evaluates conditional expressions
+  - Shows/hides content based on state or data
+  - Supports true/false component branches
+
+- **ButtonRenderer**: Renders interactive buttons
+  - Supports various button types and styles
+  - Event binding for click interactions
+  - Icon and content support
+
+- **InputRenderer**: Renders form input elements
+  - Supports text, number, password, email, etc.
+  - Validation rules and error handling
+  - Placeholder and styling options
+
+- **FormRenderer**: Renders complete forms
+  - Field collection management
+  - Form submission handling
+  - Validation and error display
+
+- **TableRenderer**: Renders data tables
+  - Column definitions and data binding
+  - Sorting and filtering capabilities
+  - Pagination support
+
+- **ChartRenderer**: Renders data visualizations
+  - Support for bar, line, pie, scatter charts
+  - Dataset management and styling
+  - Interactive chart features
+
+- **DetailRenderer**: Renders detail/information views
+  - Field-based data display
+  - Flexible layout options
+  - Label-value pair rendering
+
+#### EventBindings System
+
+The `EventBindings` interface provides comprehensive event handling:
+
+```typescript
+export interface EventBindings {
+  onClick?: ActionExpression;      // Button/element click events
+  onSubmit?: ActionExpression;     // Form submission events
+  onLoad?: ActionExpression;       // Component/page load events
+  onChange?: ActionExpression;     // Input value change events
+  onFocus?: ActionExpression;      // Input focus events
+  onBlur?: ActionExpression;       // Input blur events
+  onHover?: ActionExpression;      // Mouse hover events
+  onDoubleClick?: ActionExpression; // Double-click events
+  // ... additional event types
+}
+```
+
+**Event Types:**
+- **UI Interactions**: Click, hover, focus, blur
+- **Form Events**: Submit, change, validation
+- **Lifecycle Events**: Load, mount, unmount
+- **Data Events**: Fetch, update, delete operations
+
+### Fluent Builder API Updates
+
+With the new `Commissar` interface, content sections now support arrays of route-based content:
+
+#### CommissarBuilder
+
+Create individual route-based content components:
+
+```typescript
+import { CommissarBuilder } from 'xingine';
+
+// Create a simple commissar with path
+const dashboardRoute = CommissarBuilder.create()
+  .path('/dashboard')
+  .permission(['user', 'read'])
+  .meta({
+    component: 'WrapperRenderer',
+    properties: {
+      className: 'dashboard-content',
+      children: [/* dashboard components */]
+    }
+  })
+  .build();
+
+// Create multiple routes
+const adminRoute = CommissarBuilder.create()
+  .path('/admin')
+  .addPermission('admin')
+  .addPermission('write')
+  .meta(adminComponent)
+  .build();
+
+// Using fromObject for existing data
+const existingRoute = CommissarBuilder.create()
+  .fromObject({
+    path: '/settings',
+    permission: ['user']
+  })
+  .addPermission('settings')
+  .build();
+```
+
+#### LayoutRenderer with Multiple Routes
+
+The content section now accepts arrays of `Commissar` objects:
+
+```typescript
+// Create layout with multiple route-based content
+const layout = LayoutRendererBuilder.create()
+  .type('spa-application')
+  .withContent([
+    {
+      path: '/dashboard',           // Required: Route path
+      permission: ['admin', 'user'], // Optional: Access permissions
+      meta: {
+        component: 'WrapperRenderer',
+        properties: {
+          className: 'dashboard-content',
+          children: [/* dashboard components */]
+        }
+      }
+    },
+    {
+      path: '/settings',
+      permission: ['user'],
+      meta: settingsComponent
+    }
+  ])
+  .build();
+
+// Adding routes incrementally
+const incrementalLayout = LayoutRendererBuilder.create()
+  .type('dynamic-routes')
+  .addContentCommissar(dashboardRoute)
+  .addContentCommissar(adminRoute)
+  .contentStyle({ className: 'main-content' })
+  .build();
+
+// Using fluent content builder with multiple routes
+const dynamicLayout = LayoutRendererBuilder.create()
+  .type('multi-route-app')
+  .content()
+  .path('/users/:id')            // Dynamic route with parameter
+  .permission(['admin'])         // Admin-only access
+  .wrapper()
+  .className('user-detail-page')
+  .addChild(userDetailComponent)
+  .build()
+  .content()                     // Add another route
+  .path('/dashboard')
+  .permission(['user', 'read'])
+  .wrapper()
+  .className('dashboard-page')
+  .addChild(dashboardComponent)
+  .build()
+  .build();
+```
+
+### Application Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Router
+    participant Layout
+    participant Content
+    participant Component
+    participant Event
+
+    User->>Router: Navigate to route
+    Router->>Layout: Request layout for route
+    Layout->>Layout: Evaluate LayoutRenderer config
+    Layout->>Content: Check Commissar.path matches route
+    Content->>Content: Validate user permissions
+    
+    alt Permission granted
+        Content->>Component: Render LayoutComponentDetail
+        Component->>Component: Evaluate conditional expressions
+        Component->>Component: Apply styling and properties
+        
+        alt Component has children
+            Component->>Component: Recursively render children
+        end
+        
+        Component->>Event: Bind event handlers
+        Component->>User: Display rendered component
+        
+        User->>Event: Interact with component
+        Event->>Component: Execute action expressions
+        Component->>Content: Update state/data
+        Content->>Component: Re-render if needed
+    else Permission denied
+        Content->>User: Show access denied
+    end
+```
+
+### Usage for Junior Developers
+
+#### 1. Basic Component Creation
+
+```typescript
+// Start with simple components
+const button = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('saveButton')
+  .content('Save')
+  .className('btn-primary')
+  .build();
+```
+
+#### 2. Building Forms
+
+```typescript
+const loginForm = LayoutComponentDetailBuilder.create()
+  .form()
+  .action('/api/login')
+  .addField({
+    name: 'username',
+    type: 'input',
+    placeholder: 'Username',
+    required: true
+  })
+  .addField({
+    name: 'password',
+    type: 'password',
+    placeholder: 'Password',
+    required: true
+  })
+  .build();
+```
+
+#### 3. Creating Page Layouts
+
+```typescript
+const pageLayout = LayoutRendererBuilder.create()
+  .type('standard')
+  .withHeader(navigationHeader)
+  .withContent({
+    path: '/home',
+    meta: homePageContent
+  })
+  .withFooter(standardFooter)
+  .build();
+```
+
+#### 4. Adding Interactivity
+
+```typescript
+const interactiveButton = LayoutComponentDetailBuilder.create()
+  .button()
+  .name('submitForm')
+  .content('Submit')
+  .withEventBindings()
+  .onClick('handleSubmit')
+  .build()
+  .build();
+```
+
+#### Key Principles for Development
+
+1. **Start Simple**: Begin with basic components before adding complexity
+2. **Use Builders**: Leverage fluent builders for type safety and ease of use
+3. **Plan Routing**: Design your content paths before building components
+4. **Consider Permissions**: Plan access control early in development
+5. **Test Incrementally**: Build and test components individually
+6. **Follow Patterns**: Use consistent naming and structure conventions
 
 ## TypeScript Configuration
 

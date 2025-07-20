@@ -19,4 +19,5 @@ export interface SvgMeta {
      */
     alt?: string;
 
+    [key: string]: unknown;
 }

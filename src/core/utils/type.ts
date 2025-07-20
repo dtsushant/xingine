@@ -174,6 +174,31 @@ export function evaluateCondition(
   }
 }
 
+export function extractFieldsFromCondition(
+    condition?: SearchCondition
+): string[] {
+  const fields = new Set<string>();
+
+  const walk = (cond?: SearchCondition) => {
+    if (!cond) return;
+
+    if ('field' in cond && typeof cond.field === 'string') {
+      fields.add(cond.field);
+    }
+
+    if ('and' in cond && Array.isArray(cond.and)) {
+      cond.and.forEach(walk);
+    }
+
+    if ('or' in cond && Array.isArray(cond.or)) {
+      cond.or.forEach(walk);
+    }
+  };
+
+  walk(condition);
+  return [...fields];
+}
+
 /**
  * Safely retrieves a typed value from an object by key.
  * @param obj The object to retrieve the value from.

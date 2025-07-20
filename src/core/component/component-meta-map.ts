@@ -6,6 +6,7 @@ import { DetailFieldMeta } from "../component/detail-meta-map";
 import { Operator } from "../expressions/operators";
 import {Renderer} from "../xingine.type";
 import {EventBindings} from "../expressions/action";
+import {StyleMeta} from "../expressions";
 
 export type Method = "POST" | "GET";
 export interface ColumnMeta {
@@ -52,6 +53,7 @@ export interface FormMeta {
   action: string;
   event?:EventBindings;
   dispatch?: FormDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface DetailMeta {
@@ -59,6 +61,7 @@ export interface DetailMeta {
   event?:EventBindings;
   action: string;
   dispatch?: DetailDispatchProperties;
+  [key: string]: unknown;
 }
 
 export interface TableMeta {
@@ -67,6 +70,7 @@ export interface TableMeta {
   rowKey?: string;
   event?:EventBindings;
   dispatch?: TableDispatchProperties;
+  [key: string]: unknown;
 }
 
 
@@ -93,6 +97,8 @@ export interface ChartConfig {
   datasets?: ChartDataset[];
   options?: Record<string, unknown>;
   dataSourceUrl?: string;
+  event?:EventBindings;
+  style?:StyleMeta;
   /**
    * Renderer configuration for this specific chart.
    */
@@ -107,6 +113,7 @@ export interface ChartMeta {
    * Individual chart renderers will override these settings.
    */
   renderer?: Renderer;
+  [key: string]: unknown;
 }
 
 

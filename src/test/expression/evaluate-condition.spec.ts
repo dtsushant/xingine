@@ -1,4 +1,4 @@
-import {evaluateCondition} from "../../core/utils/type";
+import {evaluateCondition, extractFieldsFromCondition} from "../../core/utils/type";
 import {SearchCondition} from "../../core/expressions/operators";
 
 
@@ -90,5 +90,59 @@ describe('evaluateCondition', () => {
             ],
         };
         expect(evaluateCondition(cond, context)).toBe(false);
+    });
+});
+
+describe('extractFieldsFromCondition', () => {
+    it('should return a single field from a basic condition', () => {
+        const cond: SearchCondition = {
+            field: 'status',
+            operator: 'eq',
+            value: 'active'
+        };
+
+        expect(extractFieldsFromCondition(cond)).toEqual(['status']);
+    });
+
+    it('should return multiple fields from AND group', () => {
+        const cond: SearchCondition = {
+            and: [
+                { field: 'status', operator: 'eq', value: 'active' },
+                { field: 'age', operator: 'gte', value: 18 }
+            ]
+        };
+
+        expect(extractFieldsFromCondition(cond).sort()).toEqual(['age', 'status']);
+    });
+
+    it('should return multiple fields from nested AND/OR groups', () => {
+        const cond: SearchCondition = {
+            and: [
+                {
+                    or: [
+                        { field: 'country', operator: 'eq', value: 'US' },
+                        { field: 'country', operator: 'eq', value: 'UK' }
+                    ]
+                },
+                { field: 'age', operator: 'gt', value: 21 }
+            ]
+        };
+
+        expect(extractFieldsFromCondition(cond).sort()).toEqual(['age', 'country']);
+    });
+
+    it('should deduplicate fields', () => {
+        const cond: SearchCondition = {
+            or: [
+                { field: 'role', operator: 'eq', value: 'admin' },
+                { field: 'role', operator: 'eq', value: 'user' }
+            ]
+        };
+
+        expect(extractFieldsFromCondition(cond)).toEqual(['role']);
+    });
+
+    it('should return empty array for undefined condition', () => {
+        expect(extractFieldsFromCondition(undefined)).toEqual([]);
     });
 });

@@ -15,6 +15,7 @@ import {
   ChartType,
 } from "../component/component-meta-map";
 import {eventBindingsDecoder} from "./action.decoder";
+import {styleDecoder} from "./style.decoder";
 
 const chartDatasetDecoderBase = object({
   label: string,
@@ -44,6 +45,8 @@ export const chartConfigDecoder: Decoder<ChartConfig> = object({
   datasets: optional(array(chartDatasetDecoder())),
   dataSourceUrl: optional(string),
   options: optional(object({})),
+  event: optional(eventBindingsDecoder),
+  style:optional(styleDecoder)
 });
 
 export const chartMetaDecoder: Decoder<ChartMeta> = object({

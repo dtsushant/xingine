@@ -7,7 +7,7 @@ import {
     ModulePropertyOptions,
     Panel,
     Permission, Renderer, SiderMeta, TabMeta,
-    UIComponent, UIComponentDetail, WrapperMeta,
+    UIComponent, UIComponentDetail, WrapperMeta, Commissar, PathProperties,
 } from "./xingine.type";
 import {
   array, boolean, constant,
@@ -103,11 +103,8 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return record(dynamicShapeDecoder).verify(input);
     case "PopupRenderer":
         return record(dynamicShapeDecoder).verify(input);
-
     default:
-      throw new Error(
-        `Unknown component type '${component}' for meta decoding`,
-      );
+      return record(dynamicShapeDecoder).verify(input);
   }
 }
 
@@ -135,6 +132,16 @@ export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object
 
 export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
 
+export const pathPropertiesDecoder:Decoder<PathProperties> = object({
+    path: string,
+    overrideLayout: optional(string),
+})
+
+export const commissarDecoder: Decoder<Commissar> = object({
+  path: either(string , pathPropertiesDecoder),
+  permission: optional(array(string)),
+  meta: optional(componentMetaDecoder()),
+});
 
 export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   type: string,
@@ -146,7 +153,7 @@ export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   ),
   content: exact({
     style: optional(styleDecoder),
-    meta: layoutComponentDetailDecoder,
+    meta: array(commissarDecoder),
   }),
   sider: optional(
     exact({

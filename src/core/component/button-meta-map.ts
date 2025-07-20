@@ -6,5 +6,6 @@ export interface ButtonMeta{
     name: string;
     content?: string | IconMeta;
     event?:EventBindings;
-    style?:StyleMeta
+    style?:StyleMeta;
+    [key: string]: unknown;
 }
