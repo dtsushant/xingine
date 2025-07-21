@@ -22,6 +22,7 @@ import {
 import {
   getAllClassProperties,
   inferInputTypeFromPropertyType,
+  inferInputTypeFromProperty,
   isEnumType,
   extractEnumOptions,
   capitalize,
@@ -223,6 +224,19 @@ function inferFormField(
 ): FieldMeta {
   const propertyType = Reflect.getMetadata('design:type', classType.prototype, propertyName);
   
+  // Try to get a sample instance to analyze the actual value
+  let sampleValue: any;
+  try {
+    const instance = new classType();
+    sampleValue = (instance as any)[propertyName];
+  } catch {
+    // If we can't instantiate, proceed without sample value
+    sampleValue = undefined;
+  }
+  
+  // Enhanced type detection using both metadata and sample value
+  const inferredInputType = inferInputTypeFromProperty(propertyType, sampleValue, propertyName);
+  
   // Handle enums -> single select
   if (isEnumType(propertyType)) {
     return {
@@ -237,7 +251,7 @@ function inferFormField(
   }
   
   // Handle arrays
-  if (propertyType === Array) {
+  if (propertyType === Array || Array.isArray(sampleValue)) {
     const itemType = Reflect.getMetadata('design:itemtype', classType.prototype, propertyName);
     
     if (isEnumType(itemType)) {
@@ -304,15 +318,13 @@ function inferFormField(
     }
   }
   
-  // Handle primitives
-  const inputType = inferInputTypeFromPropertyType(propertyType);
-  
+  // Handle primitives with enhanced detection
   return {
     name: propertyName,
     label: capitalize(propertyName),
-    inputType: inputType,
+    inputType: inferredInputType,
     required: false,
-    properties: getDefaultPropertiesForInputType(inputType)
+    properties: getDefaultPropertiesForInputType(inferredInputType)
   };
 }
 
@@ -336,12 +348,24 @@ function inferTableColumn(propertyName: string, classType: ClassConstructor): Co
 function inferDetailField(propertyName: string, classType: ClassConstructor): DetailFieldMeta {
   const propertyType = Reflect.getMetadata('design:type', classType.prototype, propertyName);
   
+  // Try to get a sample instance to analyze the actual value
+  let sampleValue: any;
+  try {
+    const instance = new classType();
+    sampleValue = (instance as any)[propertyName];
+  } catch {
+    sampleValue = undefined;
+  }
+  
   let inputType: DetailFieldMeta['inputType'] = 'text';
   
-  if (propertyType === Date) {
+  // Enhanced type detection
+  if (propertyType === Date || sampleValue instanceof Date) {
     inputType = 'date';
-  } else if (propertyType === Boolean) {
+  } else if (propertyType === Boolean || typeof sampleValue === 'boolean') {
     inputType = 'badge';
+  } else if (propertyType === Number || typeof sampleValue === 'number') {
+    inputType = 'number';
   }
   
   return {

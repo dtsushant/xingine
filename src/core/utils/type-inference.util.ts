@@ -10,16 +10,20 @@ export function getAllClassProperties(classType: ClassConstructor): string[] {
   
   // Get own properties
   Object.getOwnPropertyNames(instance).forEach(prop => {
-    if (typeof (instance as any)[prop] !== 'function') {
+    if (typeof (instance as any)[prop] !== 'function' && 
+        !prop.startsWith('_') && 
+        prop !== 'constructor') {
       properties.add(prop);
     }
   });
   
-  // Get properties from prototype chain
+  // Get properties from prototype chain (but not Object.prototype)
   let currentProto = Object.getPrototypeOf(instance);
   while (currentProto && currentProto !== Object.prototype) {
     Object.getOwnPropertyNames(currentProto).forEach(prop => {
-      if (prop !== 'constructor' && typeof currentProto[prop] !== 'function') {
+      if (prop !== 'constructor' && 
+          typeof currentProto[prop] !== 'function' && 
+          !prop.startsWith('_')) {
         properties.add(prop);
       }
     });
@@ -46,6 +50,57 @@ export function inferInputTypeFromPropertyType(propertyType: any): keyof FieldIn
   if (typeof propertyType === 'function' && propertyType.prototype) {
     return 'object'; // Use xingine's object type for nested classes
   }
+  
+  // Default fallback
+  return 'input';
+}
+
+/**
+ * Enhanced type inference that uses both metadata and sample values
+ */
+export function inferInputTypeFromProperty(
+  propertyType: any, 
+  sampleValue: any, 
+  propertyName: string
+): keyof FieldInputTypeProperties {
+  // Check if it's an enum first using metadata
+  if (isEnumType(propertyType)) {
+    return 'select';
+  }
+  
+  // First try the metadata-based approach
+  if (propertyType) {
+    if (propertyType === String) return 'input';
+    if (propertyType === Number) return 'number';
+    if (propertyType === Boolean) return 'switch';
+    if (propertyType === Date) return 'date';
+    if (propertyType === Array) return 'input';
+    if (typeof propertyType === 'function' && propertyType.prototype) {
+      return 'object';
+    }
+  }
+  
+  // Fallback to sample value analysis
+  if (sampleValue !== undefined && sampleValue !== null) {
+    const valueType = typeof sampleValue;
+    
+    if (valueType === 'string') return 'input';
+    if (valueType === 'number') return 'number';
+    if (valueType === 'boolean') return 'switch';
+    if (sampleValue instanceof Date) return 'date';
+    if (Array.isArray(sampleValue)) return 'input'; // Will be handled by array logic
+    if (valueType === 'object') return 'object';
+  }
+  
+  // Property name-based heuristics as last resort
+  const lowerName = propertyName.toLowerCase();
+  
+  if (lowerName.includes('email')) return 'input';
+  if (lowerName.includes('password')) return 'password';
+  if (lowerName.includes('date') || lowerName.includes('time')) return 'date';
+  if (lowerName.includes('count') || lowerName.includes('age') || lowerName.includes('id')) return 'number';
+  if (lowerName.includes('active') || lowerName.includes('enabled') || lowerName.includes('is')) return 'switch';
+  if (lowerName.includes('description') || lowerName.includes('comment') || lowerName.includes('note')) return 'textarea';
   
   // Default fallback
   return 'input';
