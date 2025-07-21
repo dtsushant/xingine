@@ -11,4 +11,17 @@ export * from "./core/component"
 export * from "./core/decoders"
 export * from "./core/expressions"
 export * from "./core/builder"
+// Export class decorators and utilities with new names to avoid conflicts
+export { 
+  FormClass, 
+  TableClass, 
+  DetailClass, 
+  ChartClass,
+  FormField as FormFieldDecorator,
+  TableColumn,
+  DetailField as DetailFieldDecorator,
+  ChartSeries
+} from "./core/decorators"
+export * from "./core/utils/class-to-component.util"
+export * from "./core/utils/type-inference.util"
 
