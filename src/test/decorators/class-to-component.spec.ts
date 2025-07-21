@@ -166,6 +166,19 @@ class SimpleUserDto {
   profile: AddressDto = new AddressDto();
 }
 
+// Test class for optional array issue
+@FormClass({ title: 'Optional Array Test' })
+class OptionalArrayTestDto {
+  @FormField()
+  simpleInput?: SimpleUserDto[];
+  
+  @FormField()
+  optionalUsers?: ContactDto[];
+  
+  // For comparison with default value
+  defaultUsers: ContactDto[] = [];
+}
+
 describe('Class Decorators', () => {
   describe('@FormClass', () => {
     it('should extract form metadata from decorated class', () => {
@@ -411,6 +424,37 @@ describe('Builder Integration', () => {
       expect(component).toBeDefined();
       expect(component.meta?.component).toBe('FormRenderer');
     });
+  });
+});
+
+describe('Optional array property handling', () => {
+  it('should correctly identify optional array of objects with empty @FormField decorator', () => {
+    const formMeta = extractFormMetaFromClass(OptionalArrayTestDto);
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    
+    const simpleInputField = fieldsMap.get('simpleInput');
+    expect(simpleInputField?.inputType).toBe('object[]');
+    expect(simpleInputField?.properties).toHaveProperty('itemFields');
+    
+    const optionalUsersField = fieldsMap.get('optionalUsers');
+    expect(optionalUsersField?.inputType).toBe('object[]');
+    expect(optionalUsersField?.properties).toHaveProperty('itemFields');
+  });
+
+  it('should handle both optional and default value arrays consistently', () => {
+    const formMeta = extractFormMetaFromClass(OptionalArrayTestDto);
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    
+    const optionalField = fieldsMap.get('simpleInput');
+    const defaultField = fieldsMap.get('defaultUsers');
+    
+    // Both should be object[] type
+    expect(optionalField?.inputType).toBe('object[]');
+    expect(defaultField?.inputType).toBe('object[]');
+    
+    // Both should have itemFields
+    expect(optionalField?.properties).toHaveProperty('itemFields');
+    expect(defaultField?.properties).toHaveProperty('itemFields');
   });
 });
 

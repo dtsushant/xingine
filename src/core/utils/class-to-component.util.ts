@@ -145,18 +145,26 @@ function mergeFormFields(
         sampleValue = undefined;
       }
       
-      inputType = inferInputTypeFromProperty(propertyType, sampleValue, field.name);
-      
-      // For object types, we need to extract the nested fields
-      if (inputType === 'object' && typeof propertyType === 'function' && propertyType.prototype) {
-        if (visited.has(propertyType)) {
-          properties = { fields: [] }; // Prevent infinite recursion
-        } else {
-          const nestedFields = extractFormMetaFromClass(propertyType, depth + 1, visited);
-          properties = { fields: nestedFields.fields };
-        }
+      // Special handling for array types with empty decorators
+      if (propertyType === Array) {
+        // For arrays, default to object[] if we can't determine the exact type
+        // This handles cases like: @FormField() simpleInput?: SimpleUserDto[];
+        inputType = 'object[]';
+        properties = { itemFields: [] }; // Empty for now
       } else {
-        properties = properties || getDefaultPropertiesForInputType(inputType);
+        inputType = inferInputTypeFromProperty(propertyType, sampleValue, field.name);
+        
+        // For object types, we need to extract the nested fields
+        if (inputType === 'object' && typeof propertyType === 'function' && propertyType.prototype) {
+          if (visited.has(propertyType)) {
+            properties = { fields: [] }; // Prevent infinite recursion
+          } else {
+            const nestedFields = extractFormMetaFromClass(propertyType, depth + 1, visited);
+            properties = { fields: nestedFields.fields };
+          }
+        } else {
+          properties = properties || getDefaultPropertiesForInputType(inputType);
+        }
       }
     }
     
@@ -298,6 +306,35 @@ function inferFormField(
       const firstItem = sampleValue[0];
       if (firstItem && typeof firstItem === 'object' && firstItem.constructor && firstItem.constructor !== Object) {
         itemType = firstItem.constructor;
+      }
+    }
+    
+    // Special handling for empty @FormField() decorators on optional array properties
+    // Check if this property has an empty @FormField decorator
+    const decoratedFields = Reflect.getMetadata(FORM_FIELD_METADATA, classType) || [];
+    const hasEmptyDecorator = decoratedFields.some((field: any) => 
+      field.name === propertyName && !field.inputType
+    );
+    
+    // If we have an empty decorator and no clear item type, try property name heuristics
+    if (!itemType && hasEmptyDecorator) {
+      const lowerName = propertyName.toLowerCase();
+      
+      // Check for common patterns that suggest object arrays
+      if (lowerName.includes('user') || lowerName.includes('contact') || lowerName.includes('item') || 
+          lowerName.includes('object') || lowerName.includes('dto') || lowerName.includes('entity') ||
+          lowerName.includes('model') || lowerName.includes('data') || lowerName.includes('record')) {
+        
+        // For optional arrays with empty decorators, default to object[] for complex-sounding names
+        return {
+          name: propertyName,
+          label: capitalize(propertyName),
+          inputType: 'object[]',
+          required: false,
+          properties: {
+            itemFields: [] // Empty since we don't know the exact type
+          }
+        };
       }
     }
     
