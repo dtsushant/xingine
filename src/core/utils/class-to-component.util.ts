@@ -41,11 +41,15 @@ export function extractFormMetaFromClass<T extends {}>(
   const classOptions = Reflect.getMetadata(FORM_CLASS_METADATA, classType) || {};
   const decoratedFields = Reflect.getMetadata(FORM_FIELD_METADATA, classType) || [];
   
+  // Add current class to visited set to prevent infinite recursion
+  const visitedWithCurrent = new Set(visited);
+  visitedWithCurrent.add(classType);
+  
   // Get all properties from class
   const allProperties = getAllClassProperties(classType);
   
   // Merge decorated fields with auto-inferred fields
-  const fields = mergeFormFields(decoratedFields, allProperties, classType, depth, visited);
+  const fields = mergeFormFields(decoratedFields, allProperties, classType, depth, visitedWithCurrent);
   
   return {
     fields: fields,
@@ -126,14 +130,45 @@ function mergeFormFields(
   
   // Add explicitly decorated fields first
   decoratedFields.forEach(field => {
+    let inputType = field.inputType;
+    let properties = field.properties;
+    
+    // If decorator is empty (just @FormField()), infer the type
+    if (!inputType) {
+      const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
+      
+      let sampleValue: any;
+      try {
+        const instance = new classType();
+        sampleValue = (instance as any)[field.name];
+      } catch {
+        sampleValue = undefined;
+      }
+      
+      inputType = inferInputTypeFromProperty(propertyType, sampleValue, field.name);
+      
+      // For object types, we need to extract the nested fields
+      if (inputType === 'object' && typeof propertyType === 'function' && propertyType.prototype) {
+        if (visited.has(propertyType)) {
+          properties = { fields: [] }; // Prevent infinite recursion
+        } else {
+          const nestedFields = extractFormMetaFromClass(propertyType, depth + 1, visited);
+          properties = { fields: nestedFields.fields };
+        }
+      } else {
+        properties = properties || getDefaultPropertiesForInputType(inputType);
+      }
+    }
+    
     const fieldMeta: FieldMeta = {
       name: field.name,
       label: field.label || capitalize(field.name),
-      inputType: field.inputType || 'input',
+      inputType: inputType || 'input',
       required: field.required || false,
-      properties: field.properties || getDefaultPropertiesForInputType(field.inputType || 'input'),
+      properties: properties || getDefaultPropertiesForInputType(inputType || 'input'),
       ...field
     };
+    
     fieldMap.set(field.name, fieldMeta);
   });
   
@@ -234,6 +269,10 @@ function inferFormField(
     sampleValue = undefined;
   }
   
+  // Check if this property has an empty @FormField decorator
+  const decoratedFields = Reflect.getMetadata(FORM_FIELD_METADATA, classType) || [];
+  const emptyDecorator = decoratedFields.find((field: any) => field.name === propertyName && !field.inputType);
+  
   // Enhanced type detection using both metadata and sample value
   const inferredInputType = inferInputTypeFromProperty(propertyType, sampleValue, propertyName);
   
@@ -252,7 +291,33 @@ function inferFormField(
   
   // Handle arrays
   if (propertyType === Array || Array.isArray(sampleValue)) {
-    const itemType = Reflect.getMetadata('design:itemtype', classType.prototype, propertyName);
+    let itemType = Reflect.getMetadata('design:itemtype', classType.prototype, propertyName);
+    
+    // If no itemtype metadata, try to infer from sample value
+    if (!itemType && Array.isArray(sampleValue) && sampleValue.length > 0) {
+      const firstItem = sampleValue[0];
+      if (firstItem && typeof firstItem === 'object' && firstItem.constructor && firstItem.constructor !== Object) {
+        itemType = firstItem.constructor;
+      }
+    }
+    
+    // Try to infer from property name patterns for common array types
+    if (!itemType) {
+      const lowerName = propertyName.toLowerCase();
+      if (lowerName.includes('categories') || lowerName.includes('users') || lowerName.includes('items')) {
+        // Assume these are object arrays, but we'll need the type elsewhere
+        // For now, provide a generic object[] structure
+        return {
+          name: propertyName,
+          label: capitalize(propertyName),
+          inputType: 'object[]',
+          required: false,
+          properties: {
+            itemFields: [] // Will be populated if type is known
+          }
+        };
+      }
+    }
     
     if (isEnumType(itemType)) {
       // Array of enums -> select with multiple
@@ -278,14 +343,14 @@ function inferFormField(
         }
       };
     } else {
-      // Array of primitives -> use checkbox for multiple selection
+      // Array of primitives (string[], number[], etc.) -> use appropriate input
       return {
         name: propertyName,
         label: capitalize(propertyName),
-        inputType: 'checkbox',
+        inputType: 'input', // Changed from checkbox to input for array of primitives
         required: false,
         properties: {
-          options: [] // To be populated dynamically
+          placeholder: `Enter ${propertyName} (comma-separated)`
         }
       };
     }
@@ -306,25 +371,80 @@ function inferFormField(
       };
     } else {
       // Regular nested object -> use xingine's object type
+      // Check if already visited to prevent infinite recursion
+      if (visited.has(propertyType)) {
+        return {
+          name: propertyName,
+          label: capitalize(propertyName),
+          inputType: 'object',
+          required: false,
+          properties: {
+            fields: [] // Empty to prevent infinite recursion
+          }
+        };
+      }
+      
       return {
         name: propertyName,
         label: capitalize(propertyName),
         inputType: 'object',
         required: false,
         properties: {
-          fields: visited.has(propertyType) ? [] : extractFormMetaFromClass(propertyType, depth + 1, visited).fields
+          fields: extractFormMetaFromClass(propertyType, depth + 1, visited).fields
         }
       };
     }
   }
   
+  // Enhanced object detection for cases where propertyType might not be properly detected
+  if (sampleValue && typeof sampleValue === 'object' && !Array.isArray(sampleValue) && !(sampleValue instanceof Date)) {
+    const objectType = sampleValue.constructor;
+    if (objectType && objectType !== Object) {
+      if (isRecursiveType(objectType, classType)) {
+        return {
+          name: propertyName,
+          label: capitalize(propertyName),
+          inputType: 'input',
+          required: false,
+          properties: {
+            placeholder: `Enter ${objectType.name} ID or reference`
+          }
+        };
+      } else {
+        if (visited.has(objectType)) {
+          return {
+            name: propertyName,
+            label: capitalize(propertyName),
+            inputType: 'object',
+            required: false,
+            properties: {
+              fields: [] // Empty to prevent infinite recursion
+            }
+          };
+        }
+        
+        return {
+          name: propertyName,
+          label: capitalize(propertyName),
+          inputType: 'object',
+          required: false,
+          properties: {
+            fields: extractFormMetaFromClass(objectType, depth + 1, visited).fields
+          }
+        };
+      }
+    }
+  }
+  
   // Handle primitives with enhanced detection
+  const finalInputType = emptyDecorator ? inferredInputType : inferredInputType;
+  
   return {
     name: propertyName,
     label: capitalize(propertyName),
-    inputType: inferredInputType,
+    inputType: finalInputType,
     required: false,
-    properties: getDefaultPropertiesForInputType(inferredInputType)
+    properties: getDefaultPropertiesForInputType(finalInputType)
   };
 }
 

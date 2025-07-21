@@ -397,8 +397,95 @@ Existing code will continue to work unchanged. To adopt the new functionality:
    const form = LayoutComponentDetailBuilder.fromClass(MyDto).build();
    ```
 
+## Enhanced Features in v1.0.9
+
+### Optional Properties Support
+
+The system now fully supports optional properties, including those without default values:
+
+```typescript
+@FormClass({ title: 'Sample Form', action: 'sample' })
+class NewForm {
+  @FormField() // Empty decorator identifies optional field
+  title?: string; // Optional field without default value
+  
+  @FormField() // Empty decorator for complex object
+  simpleUser?: SimpleUserDto; // Optional complex object
+  
+  description: string = ''; // Regular field with default
+  categories: Category[] = []; // Array properly inferred as object[]
+}
+```
+
+### Recursive Type Handling
+
+Recursive types are automatically detected and handled safely:
+
+```typescript
+class Category {
+  @FormField({ inputType: 'input', required: true })
+  name: string = '';
+  
+  label: string = '';
+  
+  @FormField() // Safe recursive reference
+  category?: Category; // Handled as input for ID/reference
+}
+```
+
+### Enhanced Object Type Detection
+
+Complex objects are now properly categorized:
+
+- **Single objects**: `SimpleUserDto` → `inputType: 'object'` with nested fields
+- **Object arrays**: `Category[]` → `inputType: 'object[]'` with item fields  
+- **Primitive arrays**: `string[]` → `inputType: 'input'` with comma-separated input
+
+### Empty Decorator Support
+
+Use `@FormField()` without parameters to enable type inference for optional properties:
+
+```typescript
+class MyForm {
+  @FormField() // Enables detection of optional property
+  optionalField?: string;
+  
+  @FormField() // Enables nested object extraction
+  complexObject?: MyObjectDto;
+}
+```
+
+### TypeScript Limitations
+
+**Enum Detection**: Due to TypeScript reflection limitations, enum properties with default values cannot be automatically detected:
+
+```typescript
+// ❌ Not auto-detectable (will be inferred as primitive)
+role: UserRole = UserRole.USER;
+
+// ✅ Use explicit decorator for enums with defaults
+@FormField({ 
+  inputType: 'select', 
+  options: [
+    { label: 'Admin', value: 'admin' },
+    { label: 'User', value: 'user' }
+  ]
+})
+role: UserRole = UserRole.USER;
+
+// ✅ Or without default value (auto-detectable)
+role: UserRole; // Will be auto-detected as select
+```
+
 ## Conclusion
 
 The class-to-component conversion system significantly reduces boilerplate code while maintaining full flexibility through decorators. It provides intelligent defaults through type inference while allowing fine-grained control when needed.
+
+**Key improvements in v1.0.9:**
+- ✅ Optional properties now work with `@FormField()` decorator
+- ✅ Complex objects properly categorized as `object`/`object[]`
+- ✅ Recursive types handled safely
+- ✅ Enhanced property discovery using prototype inspection
+- ✅ Backward compatibility maintained
 
 This feature makes xingine more powerful and developer-friendly, enabling rapid UI development from existing TypeScript DTOs and models.

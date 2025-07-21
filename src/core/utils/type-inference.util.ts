@@ -2,33 +2,68 @@ import { FieldInputTypeProperties } from '../component/form-meta-map';
 import { ClassConstructor } from '../decorators/decorator-types';
 
 /**
- * Utility to get all property names from a class, including inherited ones
+ * Utility to get all property names from a class, including inherited ones and optional properties
  */
 export function getAllClassProperties(classType: ClassConstructor): string[] {
-  const instance = new classType();
   const properties = new Set<string>();
   
-  // Get own properties
-  Object.getOwnPropertyNames(instance).forEach(prop => {
-    if (typeof (instance as any)[prop] !== 'function' && 
-        !prop.startsWith('_') && 
-        prop !== 'constructor') {
-      properties.add(prop);
-    }
-  });
+  // Try to create an instance to get initialized properties
+  let instance: any;
+  try {
+    instance = new classType();
+  } catch {
+    // If instantiation fails, we'll rely only on prototype inspection
+    instance = null;
+  }
   
-  // Get properties from prototype chain (but not Object.prototype)
-  let currentProto = Object.getPrototypeOf(instance);
-  while (currentProto && currentProto !== Object.prototype) {
-    Object.getOwnPropertyNames(currentProto).forEach(prop => {
-      if (prop !== 'constructor' && 
-          typeof currentProto[prop] !== 'function' && 
-          !prop.startsWith('_')) {
+  // Get properties from instance (initialized properties with default values)
+  if (instance) {
+    Object.getOwnPropertyNames(instance).forEach(prop => {
+      if (typeof (instance as any)[prop] !== 'function' && 
+          !prop.startsWith('_') && 
+          prop !== 'constructor') {
         properties.add(prop);
       }
     });
-    currentProto = Object.getPrototypeOf(currentProto);
   }
+  
+  // Get properties from TypeScript design metadata (includes optional properties)
+  const metadataKeys = Reflect.getMetadataKeys(classType.prototype) || [];
+  metadataKeys.forEach(key => {
+    if (typeof key === 'string' && key.startsWith('design:type:')) {
+      const propName = key.replace('design:type:', '');
+      if (propName && !propName.startsWith('_') && propName !== 'constructor') {
+        properties.add(propName);
+      }
+    }
+  });
+  
+  // Alternative approach: scan for properties that have design:type metadata
+  const protoKeys = Object.getOwnPropertyNames(classType.prototype);
+  protoKeys.forEach(prop => {
+    if (prop !== 'constructor' && !prop.startsWith('_')) {
+      const propType = Reflect.getMetadata('design:type', classType.prototype, prop);
+      if (propType) {
+        properties.add(prop);
+      }
+    }
+  });
+  
+  // Additional check: look for properties defined with decorators
+  const decoratorKeys = Reflect.getOwnMetadataKeys(classType.prototype) || [];
+  decoratorKeys.forEach(key => {
+    if (typeof key === 'string' && key.includes('field')) {
+      // Get decorated field metadata and extract property names
+      const decoratedFields = Reflect.getMetadata(key, classType.prototype) || [];
+      if (Array.isArray(decoratedFields)) {
+        decoratedFields.forEach((field: any) => {
+          if (field.name) {
+            properties.add(field.name);
+          }
+        });
+      }
+    }
+  });
   
   return Array.from(properties);
 }
