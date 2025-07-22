@@ -54,6 +54,7 @@ export interface FormFieldOptions<T extends keyof FieldInputTypeProperties = key
   // For object/object[] fields (xingine's nested structure)
   fields?: FieldMeta[];
   itemFields?: FieldMeta[];
+  itemType?: ClassConstructor; // Explicit item type for arrays
 }
 
 /**

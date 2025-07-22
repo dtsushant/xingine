@@ -150,7 +150,21 @@ function mergeFormFields(
         // For arrays, determine the item type and populate itemFields
         // This handles cases like: @FormField() simpleInput?: SimpleUserDto[];
         inputType = 'object[]';
-        properties = { itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
+        
+        // Check if explicit itemType is provided in the decorator
+        let explicitItemType = field.itemType;
+        if (explicitItemType) {
+          // Use the explicitly provided item type
+          if (visited.has(explicitItemType)) {
+            properties = { itemFields: [] }; // Prevent infinite recursion
+          } else {
+            const itemFields = extractFormMetaFromClass(explicitItemType, depth + 1, visited);
+            properties = { itemFields: itemFields.fields };
+          }
+        } else {
+          // Fall back to heuristic-based extraction
+          properties = { itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
+        }
       } else {
         inputType = inferInputTypeFromProperty(propertyType, sampleValue, field.name);
         
