@@ -216,6 +216,53 @@ export function capitalize(str: string): string {
 }
 
 /**
+ * Converts camelCase string to proper label with spaces
+ * e.g., "fullName" -> "Full Name", "firstName" -> "First Name", "id" -> "ID"
+ */
+export function camelCaseToLabel(str: string): string {
+  // Handle special cases for common abbreviations
+  const specialCases: { [key: string]: string } = {
+    'id': 'ID',
+    'url': 'URL',
+    'api': 'API',
+    'http': 'HTTP',
+    'html': 'HTML',
+    'css': 'CSS',
+    'js': 'JS',
+    'json': 'JSON',
+    'xml': 'XML',
+    'ui': 'UI',
+    'ux': 'UX'
+  };
+  
+  // Check if the entire string is a special case
+  const lowerStr = str.toLowerCase();
+  if (specialCases[lowerStr]) {
+    return specialCases[lowerStr];
+  }
+  
+  // Split camelCase and PascalCase strings
+  const words = str
+    // Insert space before uppercase letters that follow lowercase letters
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    // Insert space before uppercase letters that are followed by lowercase letters (for sequences like "XMLHttp")
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    // Split the string by spaces
+    .split(' ')
+    .map(word => {
+      const lowerWord = word.toLowerCase();
+      // Check if this word is a special case
+      if (specialCases[lowerWord]) {
+        return specialCases[lowerWord];
+      }
+      // Otherwise capitalize normally
+      return capitalize(word);
+    });
+  
+  return words.join(' ');
+}
+
+/**
  * Checks if a type is recursive (self-referencing)
  */
 export function isRecursiveType(type: any, rootType: any): boolean {

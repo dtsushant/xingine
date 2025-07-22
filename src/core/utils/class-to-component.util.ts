@@ -26,6 +26,7 @@ import {
   isEnumType,
   extractEnumOptions,
   capitalize,
+  camelCaseToLabel,
   isRecursiveType,
   getDefaultPropertiesForInputType
 } from './type-inference.util';
@@ -106,7 +107,7 @@ export function extractChartMetaFromClass<T extends {}>(classType: ClassConstruc
       type: classOptions.type || 'line',
       title: classOptions.title,
       datasets: decoratedSeries.map((series: any) => ({
-        label: series.label || capitalize(series.name),
+        label: series.label || camelCaseToLabel(series.name),
         data: [],
         backgroundColor: series.color,
         borderColor: series.color
@@ -184,7 +185,7 @@ function mergeFormFields(
     
     const fieldMeta: FieldMeta = {
       name: field.name,
-      label: field.label || capitalize(field.name),
+      label: field.label || camelCaseToLabel(field.name),
       inputType: inputType || 'input',
       required: field.required || false,
       properties: properties || getDefaultPropertiesForInputType(inputType || 'input'),
@@ -218,7 +219,7 @@ function mergeTableColumns(
   // Add explicitly decorated columns first
   decoratedColumns.forEach(column => {
     const columnMeta: ColumnMeta = {
-      title: column.title || capitalize(column.dataIndex || column.key),
+      title: column.title || camelCaseToLabel(column.dataIndex || column.key),
       dataIndex: column.dataIndex,
       key: column.key,
       sortable: column.sortable,
@@ -250,10 +251,28 @@ function mergeDetailFields(
   
   // Add explicitly decorated fields first
   decoratedFields.forEach(field => {
+    let inputType = field.inputType;
+    
+    // If decorator is empty (just @DetailField()), infer the type
+    if (!inputType) {
+      const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
+      
+      let sampleValue: any;
+      try {
+        const instance = new classType();
+        sampleValue = (instance as any)[field.name];
+      } catch {
+        sampleValue = undefined;
+      }
+      
+      // Infer the detail field type based on property type and sample value
+      inputType = inferDetailFieldType(propertyType, sampleValue, field.name);
+    }
+    
     const fieldMeta: DetailFieldMeta = {
       name: field.name,
-      label: field.label || capitalize(field.name),
-      inputType: field.inputType || 'text',
+      label: field.label || camelCaseToLabel(field.name),
+      inputType: inputType || 'text',
       ...field
     };
     fieldMap.set(field.name, fieldMeta);
@@ -268,6 +287,27 @@ function mergeDetailFields(
   });
   
   return Array.from(fieldMap.values());
+}
+
+/**
+ * Infers the detail field type based on property type and sample value
+ */
+function inferDetailFieldType(
+  propertyType: any, 
+  sampleValue: any, 
+  propertyName: string
+): DetailFieldMeta['inputType'] {
+  // Enhanced type detection
+  if (propertyType === Date || sampleValue instanceof Date) {
+    return 'date';
+  } else if (propertyType === Boolean || typeof sampleValue === 'boolean') {
+    return 'badge';
+  } else if (propertyType === Number || typeof sampleValue === 'number') {
+    return 'number';
+  }
+  
+  // Default fallback
+  return 'text';
 }
 
 /**
@@ -302,7 +342,7 @@ function inferFormField(
   if (isEnumType(propertyType)) {
     return {
       name: propertyName,
-      label: capitalize(propertyName),
+      label: camelCaseToLabel(propertyName),
       inputType: 'select',
       required: false,
       properties: {
@@ -342,7 +382,7 @@ function inferFormField(
         // For optional arrays with empty decorators, default to object[] for complex-sounding names
         return {
           name: propertyName,
-          label: capitalize(propertyName),
+          label: camelCaseToLabel(propertyName),
           inputType: 'object[]',
           required: false,
           properties: {
@@ -360,7 +400,7 @@ function inferFormField(
         // For now, provide a generic object[] structure
         return {
           name: propertyName,
-          label: capitalize(propertyName),
+          label: camelCaseToLabel(propertyName),
           inputType: 'object[]',
           required: false,
           properties: {
@@ -374,7 +414,7 @@ function inferFormField(
       // Array of enums -> select with multiple
       return {
         name: propertyName,
-        label: capitalize(propertyName),
+        label: camelCaseToLabel(propertyName),
         inputType: 'select',
         required: false,
         properties: {
@@ -386,7 +426,7 @@ function inferFormField(
       // Array of objects -> use xingine's object[] type
       return {
         name: propertyName,
-        label: capitalize(propertyName),
+        label: camelCaseToLabel(propertyName),
         inputType: 'object[]',
         required: false,
         properties: {
@@ -397,7 +437,7 @@ function inferFormField(
       // Array of primitives (string[], number[], etc.) -> use appropriate input
       return {
         name: propertyName,
-        label: capitalize(propertyName),
+        label: camelCaseToLabel(propertyName),
         inputType: 'input', // Changed from checkbox to input for array of primitives
         required: false,
         properties: {
@@ -413,7 +453,7 @@ function inferFormField(
       // Recursive reference -> use simple input for ID/reference
       return {
         name: propertyName,
-        label: capitalize(propertyName),
+        label: camelCaseToLabel(propertyName),
         inputType: 'input',
         required: false,
         properties: {
@@ -426,7 +466,7 @@ function inferFormField(
       if (visited.has(propertyType)) {
         return {
           name: propertyName,
-          label: capitalize(propertyName),
+          label: camelCaseToLabel(propertyName),
           inputType: 'object',
           required: false,
           properties: {
@@ -437,7 +477,7 @@ function inferFormField(
       
       return {
         name: propertyName,
-        label: capitalize(propertyName),
+        label: camelCaseToLabel(propertyName),
         inputType: 'object',
         required: false,
         properties: {
@@ -454,7 +494,7 @@ function inferFormField(
       if (isRecursiveType(objectType, classType)) {
         return {
           name: propertyName,
-          label: capitalize(propertyName),
+          label: camelCaseToLabel(propertyName),
           inputType: 'input',
           required: false,
           properties: {
@@ -465,7 +505,7 @@ function inferFormField(
         if (visited.has(objectType)) {
           return {
             name: propertyName,
-            label: capitalize(propertyName),
+            label: camelCaseToLabel(propertyName),
             inputType: 'object',
             required: false,
             properties: {
@@ -476,7 +516,7 @@ function inferFormField(
         
         return {
           name: propertyName,
-          label: capitalize(propertyName),
+          label: camelCaseToLabel(propertyName),
           inputType: 'object',
           required: false,
           properties: {
@@ -492,7 +532,7 @@ function inferFormField(
   
   return {
     name: propertyName,
-    label: capitalize(propertyName),
+    label: camelCaseToLabel(propertyName),
     inputType: finalInputType,
     required: false,
     properties: getDefaultPropertiesForInputType(finalInputType)
@@ -506,7 +546,7 @@ function inferTableColumn(propertyName: string, classType: ClassConstructor): Co
   const propertyType = Reflect.getMetadata('design:type', classType.prototype, propertyName);
   
   return {
-    title: capitalize(propertyName),
+    title: camelCaseToLabel(propertyName),
     dataIndex: propertyName,
     key: propertyName,
     sortable: propertyType === Number || propertyType === Date || propertyType === String
@@ -541,7 +581,7 @@ function inferDetailField(propertyName: string, classType: ClassConstructor): De
   
   return {
     name: propertyName,
-    label: capitalize(propertyName),
+    label: camelCaseToLabel(propertyName),
     inputType: inputType
   };
 }

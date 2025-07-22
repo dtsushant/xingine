@@ -609,3 +609,110 @@ describe('Complex scenarios', () => {
     expect(children[1].meta?.component).toBe('TableRenderer');
   });
 });
+
+describe('Optional fields and label generation improvements', () => {
+  // Test case for the user's specific scenario
+  @DetailClass({
+    title: 'Role Details',
+    layout: 'horizontal'
+  })
+  class RoleDetailDto {
+    @DetailField()
+    id!: number;
+
+    @DetailField({
+      label: 'Role Name'
+    })
+    roleName: string = '';
+
+    // Auto-inferred fields
+    @DetailField()
+    email?: string;
+    
+    @DetailField()
+    fullName?: string;
+  }
+
+  @FormClass({
+    title: 'Test Form'
+  })
+  class TestFormDto {
+    @FormField()
+    id!: number;
+    
+    @FormField()
+    email?: string;
+    
+    name: string = '';
+  }
+
+  @TableClass({
+    title: 'Test Table'
+  })
+  class TestTableDto {
+    @TableColumn()
+    id!: number;
+    
+    @TableColumn()
+    email?: string;
+    
+    name: string = '';
+  }
+
+  it('should handle optional fields and fields without default values for Detail classes', () => {
+    const detailMeta = extractDetailMetaFromClass(RoleDetailDto);
+    const fieldNames = detailMeta.fields.map((f: DetailFieldMeta) => f.name);
+    
+    // Should include all fields, including optional ones and those without default values
+    expect(fieldNames).toContain('id');
+    expect(fieldNames).toContain('email');
+    expect(fieldNames).toContain('fullName');
+    expect(fieldNames).toContain('roleName');
+    
+    const fieldsMap = new Map(detailMeta.fields.map((f: DetailFieldMeta) => [f.name, f]));
+    
+    // Should correctly infer types for empty @DetailField decorators
+    expect(fieldsMap.get('id')?.inputType).toBe('number');
+    expect(fieldsMap.get('email')?.inputType).toBe('text');
+    expect(fieldsMap.get('fullName')?.inputType).toBe('text');
+  });
+
+  it('should handle optional fields and fields without default values for Table classes', () => {
+    const tableMeta = extractTableMetaFromClass(TestTableDto);
+    const columnKeys = tableMeta.columns.map((c: ColumnMeta) => c.key);
+    
+    // Should include all fields, including optional ones and those without default values
+    expect(columnKeys).toContain('id');
+    expect(columnKeys).toContain('email');
+    expect(columnKeys).toContain('name');
+  });
+
+  it('should handle optional fields and fields without default values for Form classes', () => {
+    const formMeta = extractFormMetaFromClass(TestFormDto);
+    const fieldNames = formMeta.fields.map((f: FieldMeta) => f.name);
+    
+    // Should include all fields, including optional ones and those without default values
+    expect(fieldNames).toContain('id');
+    expect(fieldNames).toContain('email');
+    expect(fieldNames).toContain('name');
+    
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    
+    // Should correctly infer types for empty @FormField decorators
+    expect(fieldsMap.get('id')?.inputType).toBe('number');
+    expect(fieldsMap.get('email')?.inputType).toBe('input');
+  });
+
+  it('should generate proper labels from camelCase property names', () => {
+    const detailMeta = extractDetailMetaFromClass(RoleDetailDto);
+    const fieldsMap = new Map(detailMeta.fields.map((f: DetailFieldMeta) => [f.name, f]));
+    
+    // Should convert camelCase to proper labels
+    expect(fieldsMap.get('id')?.label).toBe('ID');
+    expect(fieldsMap.get('fullName')?.label).toBe('Full Name');
+    expect(fieldsMap.get('email')?.label).toBe('Email');
+    
+    // Custom label should be preserved
+    expect(fieldsMap.get('roleName')?.label).toBe('Role Name');
+  });
+});
