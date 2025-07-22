@@ -147,10 +147,10 @@ function mergeFormFields(
       
       // Special handling for array types with empty decorators
       if (propertyType === Array) {
-        // For arrays, default to object[] if we can't determine the exact type
+        // For arrays, determine the item type and populate itemFields
         // This handles cases like: @FormField() simpleInput?: SimpleUserDto[];
         inputType = 'object[]';
-        properties = { itemFields: [] }; // Empty for now
+        properties = { itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
       } else {
         inputType = inferInputTypeFromProperty(propertyType, sampleValue, field.name);
         
@@ -530,4 +530,183 @@ function inferDetailField(propertyName: string, classType: ClassConstructor): De
     label: capitalize(propertyName),
     inputType: inputType
   };
+}
+
+/**
+ * Extracts item fields for array properties
+ */
+function extractArrayItemFields(
+  propertyName: string,
+  classType: ClassConstructor,
+  depth: number = 0,
+  visited: Set<ClassConstructor> = new Set()
+): FieldMeta[] {
+  // Try to get item type from reflection metadata
+  let itemType = Reflect.getMetadata('design:itemtype', classType.prototype, propertyName);
+  
+  // Try to get a sample instance to analyze the actual array value
+  let sampleArray: any;
+  try {
+    const instance = new classType();
+    sampleArray = (instance as any)[propertyName];
+  } catch {
+    sampleArray = undefined;
+  }
+  
+  // If no itemtype metadata, try to infer from sample value
+  if (!itemType && Array.isArray(sampleArray) && sampleArray.length > 0) {
+    const firstItem = sampleArray[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem.constructor && firstItem.constructor !== Object) {
+      itemType = firstItem.constructor;
+    }
+  }
+  
+  // If we still don't have item type, try to infer from property name patterns
+  if (!itemType) {
+    const lowerName = propertyName.toLowerCase();
+    
+    // Check for patterns that suggest primitive arrays FIRST (more specific patterns)
+    if (lowerName.includes('tag') || lowerName.includes('name') || lowerName.includes('label') ||
+        lowerName.includes('string') || lowerName.includes('text') || lowerName.includes('comment') ||
+        lowerName.includes('note') || lowerName.includes('description') || lowerName.includes('primitive')) {
+      // String array
+      return [{
+        name: 'value',
+        label: 'Value',
+        inputType: 'input',
+        required: false,
+        properties: { placeholder: 'Enter text value' }
+      }];
+    }
+    
+    if (lowerName.includes('id') || lowerName.includes('number') || lowerName.includes('count') ||
+        lowerName.includes('amount') || lowerName.includes('value') || lowerName.includes('price') ||
+        lowerName.includes('age') || lowerName.includes('score')) {
+      // Number array
+      return [{
+        name: 'value',
+        label: 'Value',
+        inputType: 'number',
+        required: false,
+        properties: { step: 1 }
+      }];
+    }
+    
+    if (lowerName.includes('flag') || lowerName.includes('status') || lowerName.includes('enabled') ||
+        lowerName.includes('active') || lowerName.includes('checked')) {
+      // Boolean array
+      return [{
+        name: 'value',
+        label: 'Value',
+        inputType: 'switch',
+        required: false,
+        properties: { defaultChecked: false }
+      }];
+    }
+    
+    // Then check for common patterns that suggest specific object types
+    if (lowerName.includes('user') || lowerName.includes('contact') || lowerName.includes('person') ||
+        lowerName.includes('dto') || lowerName.includes('entity') || lowerName.includes('model') ||
+        lowerName.includes('item') || lowerName.includes('record') || lowerName.includes('data') ||
+        lowerName.includes('object') || lowerName.includes('input')) {
+      
+      // For object-sounding arrays, we'll return empty for now since we can't know the exact type
+      // This is the limitation - without generic type info, we can't extract the actual fields
+      // The user would need to either:
+      // 1. Provide a default value: simpleInput: SimpleUserDto[] = [];
+      // 2. Use explicit decorator: @FormField({ itemType: SimpleUserDto })
+      // 3. Use more specific naming that matches our patterns
+      return [];
+    }
+    
+    // Default: assume it might be an object array if name suggests complexity,
+    // otherwise primitive string array
+    if (lowerName.length > 8 || lowerName.includes('_') || lowerName.includes('-')) {
+      // Complex names likely refer to object arrays
+      return [];
+    }
+    
+    // Simple names default to string array
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'input',
+      required: false,
+      properties: { placeholder: 'Enter value' }
+    }];
+  }
+  
+  // Handle enum arrays
+  if (isEnumType(itemType)) {
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'select',
+      required: false,
+      properties: {
+        options: extractEnumOptions(itemType)
+      }
+    }];
+  }
+  
+  // Handle object arrays
+  if (itemType && typeof itemType === 'function' && itemType.prototype) {
+    // Check for recursion
+    if (visited.has(itemType)) {
+      return []; // Prevent infinite recursion
+    }
+    
+    // Extract fields from the item type
+    return extractFormMetaFromClass(itemType, depth + 1, visited).fields;
+  }
+  
+  // Handle primitive types
+  if (itemType === String) {
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'input',
+      required: false,
+      properties: { placeholder: 'Enter text' }
+    }];
+  }
+  
+  if (itemType === Number) {
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'number',
+      required: false,
+      properties: { step: 1 }
+    }];
+  }
+  
+  if (itemType === Boolean) {
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'switch',
+      required: false,
+      properties: { defaultChecked: false }
+    }];
+  }
+  
+  if (itemType === Date) {
+    return [{
+      name: 'value',
+      label: 'Value',
+      inputType: 'date',
+      required: false,
+      properties: { format: 'YYYY-MM-DD' }
+    }];
+  }
+  
+  // Default fallback for unknown types
+  return [{
+    name: 'value',
+    label: 'Value',
+    inputType: 'input',
+    required: false,
+    properties: { placeholder: 'Enter value' }
+  }];
 }

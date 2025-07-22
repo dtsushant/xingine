@@ -166,7 +166,7 @@ class SimpleUserDto {
   profile: AddressDto = new AddressDto();
 }
 
-// Test class for optional array issue
+// Test class for optional array issue with detailed item field inspection
 @FormClass({ title: 'Optional Array Test' })
 class OptionalArrayTestDto {
   @FormField()
@@ -175,8 +175,14 @@ class OptionalArrayTestDto {
   @FormField()
   optionalUsers?: ContactDto[];
   
+  @FormField()
+  primitiveArray?: string[];
+  
   // For comparison with default value
   defaultUsers: ContactDto[] = [];
+  
+  // Test with non-empty default value
+  populatedUsers: ContactDto[] = [new ContactDto()];
 }
 
 describe('Class Decorators', () => {
@@ -447,14 +453,67 @@ describe('Optional array property handling', () => {
     
     const optionalField = fieldsMap.get('simpleInput');
     const defaultField = fieldsMap.get('defaultUsers');
+    const populatedField = fieldsMap.get('populatedUsers');
+    
+    console.log('Optional field (simpleInput):', JSON.stringify(optionalField, null, 2));
+    console.log('Default field (defaultUsers):', JSON.stringify(defaultField, null, 2));
+    console.log('Populated field (populatedUsers):', JSON.stringify(populatedField, null, 2));
     
     // Both should be object[] type
     expect(optionalField?.inputType).toBe('object[]');
     expect(defaultField?.inputType).toBe('object[]');
+    expect(populatedField?.inputType).toBe('object[]');
     
     // Both should have itemFields
     expect(optionalField?.properties).toHaveProperty('itemFields');
     expect(defaultField?.properties).toHaveProperty('itemFields');
+    expect(populatedField?.properties).toHaveProperty('itemFields');
+  });
+  
+  it('should populate itemFields for object arrays with proper field definitions', () => {
+    const formMeta = extractFormMetaFromClass(OptionalArrayTestDto);
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    
+    const simpleInputField = fieldsMap.get('simpleInput');
+    console.log('simpleInput field:', JSON.stringify(simpleInputField, null, 2));
+    
+    expect(simpleInputField?.inputType).toBe('object[]');
+    expect(simpleInputField?.properties).toHaveProperty('itemFields');
+    
+    // Cast to proper type to access itemFields
+    const objectListProps = simpleInputField?.properties as any;
+    expect(Array.isArray(objectListProps?.itemFields)).toBe(true);
+    
+    // The issue: itemFields should not be empty for object arrays!
+    expect(objectListProps?.itemFields?.length).toBeGreaterThan(0);
+    
+    // Check if the item fields have the expected properties from SimpleUserDto
+    const itemFields = objectListProps?.itemFields || [];
+    const itemFieldNames = itemFields.map((f: FieldMeta) => f.name);
+    expect(itemFieldNames).toContain('id');
+    expect(itemFieldNames).toContain('name'); 
+    expect(itemFieldNames).toContain('email');
+  });
+  
+  it('should handle primitive arrays with appropriate structure', () => {
+    const formMeta = extractFormMetaFromClass(OptionalArrayTestDto);
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    
+    const primitiveArrayField = fieldsMap.get('primitiveArray');
+    console.log('primitiveArray field:', JSON.stringify(primitiveArrayField, null, 2));
+    
+    expect(primitiveArrayField?.inputType).toBe('object[]');
+    expect(primitiveArrayField?.properties).toHaveProperty('itemFields');
+    
+    // Cast to proper type to access itemFields
+    const objectListProps = primitiveArrayField?.properties as any;
+    
+    // For primitive arrays, should have one field representing the primitive type
+    const itemFields = objectListProps?.itemFields || [];
+    expect(itemFields.length).toBeGreaterThan(0);
+    
+    // Should have a field that represents the string type
+    expect(itemFields[0].inputType).toBe('input');
   });
 });
 
