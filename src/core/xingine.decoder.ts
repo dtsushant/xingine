@@ -169,6 +169,8 @@ export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
   ),
 });
 
+export const layoutRendererListDecoder: Decoder<LayoutRenderer[]> = array(layoutRendererDecoder);
+
 export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
     unknown.transform((input) => {
         const base = dict(unknown).verify(input);

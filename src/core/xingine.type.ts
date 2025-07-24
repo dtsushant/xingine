@@ -79,7 +79,7 @@ export interface Panel {
 
 export interface LayoutMandate {
   layout: string;
-  structure: Panel;
+  structure?: Panel;
   clearanceRequired?: string[];
 }
 
