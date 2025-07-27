@@ -4,8 +4,19 @@ import { ColumnMeta } from '../component/component-meta-map';
 
 /**
  * Base constructor type for class decorators
+ * More flexible to handle DTO classes with readonly properties
  */
 export type ClassConstructor<T = {}> = new (...args: any[]) => T;
+
+/**
+ * Alternative constructor type that's more permissive for DTO classes
+ */
+export type AnyClassConstructor = abstract new (...args: any[]) => any;
+
+/**
+ * Function type that works with both regular classes and DTO classes
+ */
+export type ClassType<T = any> = Function & { prototype: T };
 
 /**
  * Configuration options for @FormClass decorator
