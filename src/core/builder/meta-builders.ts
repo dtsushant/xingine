@@ -502,11 +502,6 @@ export class ChartConfigMetaBuilder {
     return this;
   }
 
-  renderer(renderer: ChartConfig['renderer']): ChartConfigMetaBuilder {
-    this.config.renderer = renderer;
-    return this;
-  }
-
   build(): ChartConfig {
     if (!this.config.type) {
       throw new Error('Chart type is required');

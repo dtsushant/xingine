@@ -4,7 +4,7 @@ import {
 import { 
   BaseComponentDetailBuilder
 } from './base-component-detail-builder';
-import { ClassConstructor } from '../decorators/decorator-types';
+import { ClassConstructor, ClassType } from '../decorators/decorator-types';
 import {
   extractFormMetaFromClass,
   extractTableMetaFromClass,

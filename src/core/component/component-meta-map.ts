@@ -4,7 +4,6 @@ import {
 } from "../component/form-meta-map";
 import { DetailFieldMeta } from "../component/detail-meta-map";
 import { Operator } from "../expressions/operators";
-import {Renderer} from "../xingine.type";
 import {EventBindings} from "../expressions/action";
 import {StyleMeta} from "../expressions";
 
@@ -99,20 +98,11 @@ export interface ChartConfig {
   dataSourceUrl?: string;
   event?:EventBindings;
   style?:StyleMeta;
-  /**
-   * Renderer configuration for this specific chart.
-   */
-  renderer?: Renderer;
 }
 
 export interface ChartMeta {
   charts: ChartConfig[];
   event?:EventBindings;
-  /**
-   * Global renderer configuration for all charts in this meta.
-   * Individual chart renderers will override these settings.
-   */
-  renderer?: Renderer;
   [key: string]: unknown;
 }
 
