@@ -442,7 +442,7 @@ async function processConditionalChains(
     for (const chain of chains) {
         try {
             // Evaluate the condition
-            const conditionMet = evaluateCondition(chain.condition, mainResult);
+            const conditionMet = evaluateCondition(chain.condition, evaluationContext);
             console.log("has the condition met", conditionMet)
             if (conditionMet) {
                 // Create SerializableAction from chain
