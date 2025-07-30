@@ -286,9 +286,9 @@ export interface FieldMeta<
   T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties,
 > {
   name?: string;
-  label: string;
+  label?: string;
   event?:EventBindings;
-  inputType: T;
+  inputType?: T;
   value?: string;
   required?: boolean;
   order?:number;

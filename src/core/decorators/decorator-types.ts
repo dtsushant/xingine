@@ -1,6 +1,7 @@
 import { FieldInputTypeProperties, FieldMeta } from '../component/form-meta-map';
 import { DetailFieldMeta } from '../component/detail-meta-map';
 import { ColumnMeta } from '../component/component-meta-map';
+import {EventBindings} from "../expressions";
 
 /**
  * Base constructor type for class decorators
@@ -25,6 +26,7 @@ export interface FormClassOptions {
   title?: string;
   submitLabel?: string;
   resetLabel?: string;
+  event?:EventBindings;
   layout?: 'vertical' | 'horizontal' | 'inline';
   validation?: {
     validateOnBlur?: boolean;
@@ -39,11 +41,16 @@ export interface FormClassOptions {
 /**
  * Configuration options for @FormField decorator
  */
-export interface FormFieldOptions<T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties> {
-  inputType?: T;
+export interface FormFieldOptions<
+    T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties,
+> extends FieldMeta{
+  placeholder?: string;
+  options?: FieldInputTypeProperties[T] extends { options: infer O } ? O | 'auto' : never;
+
+
+  /*inputType?: T;
   label?: string;
   required?: boolean;
-  placeholder?: string;
   helpText?: string;
   validation?: {
     required?: boolean;
@@ -64,7 +71,7 @@ export interface FormFieldOptions<T extends keyof FieldInputTypeProperties = key
   order?: number;
   // For object/object[] fields (xingine's nested structure)
   fields?: FieldMeta[];
-  itemFields?: FieldMeta[];
+  itemFields?: FieldMeta[];*/
   itemType?: ClassConstructor; // Explicit item type for arrays
 }
 

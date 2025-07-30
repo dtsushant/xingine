@@ -192,7 +192,57 @@ class OptionalArrayTestDto {
   populatedUsers: ContactDto[] = [new ContactDto()];
 }
 
+@FormClass({
+  title: 'User Login',
+  submitLabel: 'Login',
+  action: 'login',
+  event:{
+    onSubmit: {
+      action:'makeApiCall',
+      args:{
+        url:'/api/login',
+        method: 'POST'
+      }
+    }
+  }
+})
+export class UserLoginDto {
+  @FormField({
+    label: 'Email Address',
+    inputType: 'input',
+    required: true,
+    properties: { placeholder: 'Enter email' },
+  })
+
+  readonly email!: string;
+
+  @FormField({
+    label: 'Password',
+    inputType: 'password',
+    required: true,
+ //   properties: { placeholder: 'Enter password' },
+  })
+  readonly password!: string;
+
+  @FormField({
+    label: 'Remember Me',
+    inputType: 'checkbox',
+   // properties: { label: 'Remember Me' },
+  })
+
+  readonly rememberMe?: boolean = false;
+}
+
+
 describe('Class Decorators', () => {
+  it('@FormField for login', () => {
+    const formComponent = LayoutComponentDetailBuilder.create()
+        .form()
+        .fromClass(UserLoginDto)
+        .build();
+    console.log(JSON.stringify(formComponent, null, 2));
+  });
+
   describe('@FormClass', () => {
     it('should extract form metadata from decorated class', () => {
       const formMeta = extractFormMetaFromClass(UserRegistrationDto);
@@ -382,7 +432,8 @@ describe('Builder Integration', () => {
   describe('LayoutComponentDetailBuilder', () => {
     it('should create form from class using formFromClass', () => {
       const component = LayoutComponentDetailBuilder.create()
-        .formFromClass(UserRegistrationDto)
+        .form()
+        .fromClass(UserRegistrationDto)
         .build();
       
       expect(component.meta?.component).toBe('FormRenderer');
@@ -392,7 +443,8 @@ describe('Builder Integration', () => {
 
     it('should create table from class using tableFromClass', () => {
       const component = LayoutComponentDetailBuilder.create()
-        .tableFromClass(UserTableDto)
+        .table()
+        .fromClass(UserTableDto)
         .build();
       
       expect(component.meta?.component).toBe('TableRenderer');
@@ -402,7 +454,8 @@ describe('Builder Integration', () => {
 
     it('should create detail from class using detailFromClass', () => {
       const component = LayoutComponentDetailBuilder.create()
-        .detailFromClass(UserDetailDto)
+          .detailRenderer()
+        .fromClass(UserDetailDto)
         .build();
       
       expect(component.meta?.component).toBe('DetailRenderer');
@@ -412,26 +465,22 @@ describe('Builder Integration', () => {
 
     it('should create chart from class using chartFromClass', () => {
       const component = LayoutComponentDetailBuilder.create()
-        .chartFromClass(SalesChartDto)
+        .chart()
+        .fromClass(SalesChartDto)
         .build();
       
       expect(component.meta?.component).toBe('ChartRenderer');
       expect(component.meta?.properties).toHaveProperty('charts');
     });
 
-    it('should create form from class using static fromClass method', () => {
-      const component = LayoutComponentDetailBuilder.fromClass(UserRegistrationDto)
-        .build();
-      
-      expect(component.meta?.component).toBe('FormRenderer');
-      expect(component.meta?.properties).toHaveProperty('fields');
-    });
+
   });
 
   describe('Method chaining', () => {
     it('should support method chaining with formFromClass', () => {
       const component = LayoutComponentDetailBuilder.create()
-        .formFromClass(UserRegistrationDto)
+          .form()
+        .fromClass(UserRegistrationDto)
         .build();
       
       expect(component).toBeDefined();
@@ -568,15 +617,18 @@ describe('Complex scenarios', () => {
   it('should handle dashboard with multiple class-based components', () => {
     // Create a dashboard with form, table, and detail components
     const formComponent = LayoutComponentDetailBuilder.create()
-      .formFromClass(SimpleUserDto)
+        .form()
+      .fromClass(SimpleUserDto)
       .build();
 
     const tableComponent = LayoutComponentDetailBuilder.create()
-      .tableFromClass(UserTableDto)
+        .table()
+      .fromClass(UserTableDto)
       .build();
 
     const detailComponent = LayoutComponentDetailBuilder.create()
-      .detailFromClass(UserDetailDto)
+        .detailRenderer()
+      .fromClass(UserDetailDto)
       .build();
 
     expect(formComponent.meta?.component).toBe('FormRenderer');
@@ -590,12 +642,14 @@ describe('Complex scenarios', () => {
       .className('dashboard-grid')
       .addChild(
         LayoutComponentDetailBuilder.create()
-          .formFromClass(UserRegistrationDto)
+            .form()
+          .fromClass(UserRegistrationDto)
           .build()
       )
       .addChild(
         LayoutComponentDetailBuilder.create()
-          .tableFromClass(UserTableDto)
+            .table()
+          .fromClass(UserTableDto)
           .build()
       )
       .build();

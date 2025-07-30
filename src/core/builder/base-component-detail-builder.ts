@@ -20,6 +20,13 @@ import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
 import { EventBindings } from '../expressions/action';
 import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
+import {
+  extractChartMetaFromClass,
+  extractDetailMetaFromClass,
+  extractFormMetaFromClass,
+  extractTableMetaFromClass
+} from "../utils";
+import {ClassConstructor} from "../decorators";
 
 /**
  * Base builder class for LayoutComponentDetail and related types
@@ -653,6 +660,16 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
   }
 
   /**
+   * Create form component from decorated class
+   */
+  fromClass<T extends {}>(classType: ClassConstructor<T>): FormRendererBuilder<P> {
+    const formMeta = extractFormMetaFromClass(classType);
+    return this.fromFormMeta(formMeta)
+  }
+
+
+
+  /**
    * Set the complete FormMeta object
    */
   fromObject(meta: FormMeta): FormRendererBuilder<P> {
@@ -770,6 +787,14 @@ export class TableRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
   }
 
   /**
+   * Create table component from decorated class
+   */
+  fromClass<T extends {}>(classType: ClassConstructor<T>): TableRendererBuilder<P> {
+    const tableMeta = extractTableMetaFromClass(classType);
+    return this.fromObject(tableMeta);
+  }
+
+  /**
    * Adds a column to the table
    */
   addColumn(column: ColumnMeta): TableRendererBuilder<P> {
@@ -867,6 +892,13 @@ export class ChartRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
     return this;
   }
 
+  /**
+   * Create chart component from decorated class
+   */
+  fromClass<T extends {}>(classType: ClassConstructor<T>): ChartRendererBuilder<P> {
+    const chartMeta = extractChartMetaFromClass(classType);
+    return this.fromObject(chartMeta);
+  }
   /**
    * Adds a chart configuration using ChartConfigBuilder
    */
@@ -1189,6 +1221,14 @@ export class DetailRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   fromObject(meta: DetailMeta): DetailRendererBuilder<P> {
     this.properties = { ...meta };
     return this;
+  }
+
+  /**
+   * Create detail component from decorated class
+   */
+  fromClass<T extends {}>(classType: ClassConstructor<T>): DetailRendererBuilder<P> {
+    const detailMeta = extractDetailMetaFromClass(classType);
+    return this.fromObject(detailMeta);
   }
 
   /**

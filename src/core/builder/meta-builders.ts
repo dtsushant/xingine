@@ -3,14 +3,14 @@ import {
   WrapperMeta,
   Commissar, PathProperties
 } from '../xingine.type';
-import { 
-  FormMeta, 
-  DetailMeta, 
-  TableMeta, 
+import {
+  FormMeta,
+  DetailMeta,
+  TableMeta,
   ChartMeta,
   ChartConfig,
   ChartDataset,
-  ColumnMeta
+  ColumnMeta, FieldMeta
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
@@ -265,12 +265,12 @@ export class FormMetaBuilder {
     return new FormMetaBuilder();
   }
 
-  fields(fields: FormMeta['fields']): FormMetaBuilder {
+  fields(fields: FieldMeta[]): FormMetaBuilder {
     this.meta.fields = fields;
     return this;
   }
 
-  addField(field: FormMeta['fields'][0]): FormMetaBuilder {
+  addField(field: FieldMeta): FormMetaBuilder {
     this.meta.fields.push(field);
     return this;
   }
