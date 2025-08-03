@@ -181,10 +181,10 @@ export class EventBuilder {
                             { field: '__result.token', operator: 'eq', value: '' }
                         ]
                     },
-                    action: {
+                    action: [{
                         action: 'showToast',
                         args: { message: 'Login failed. Please check your credentials.', type: 'error' }
-                    }
+                    }]
                 }
             ]
         };
@@ -200,19 +200,19 @@ export class EventBuilder {
             chains: [
                 {
                     condition: { field: '__success', operator: 'eq', value: true },
-                    action: {
+                    action: [{
                         action: 'showToast',
                         args: { message: 'Logged out successfully', type: 'info' },
                         chains: [
                             {
                                 condition: { field: '__success', operator: 'eq', value: true },
-                                action: {
+                                action: [{
                                     action: 'navigate',
                                     args: { path: '/login' }
-                                }
+                                }]
                             }
                         ]
-                    }
+                    }]
                 }
             ]
         };
@@ -229,26 +229,26 @@ export class EventBuilder {
             chains: [
                 {
                     condition: { field: '__success', operator: 'eq', value: true },
-                    action: {
+                    action: [{
                         action: 'showToast',
                         args: { message: 'Form submitted successfully!', type: 'success' },
                         chains: successRedirect ? [
                             {
                                 condition: { field: '__success', operator: 'eq', value: true },
-                                action: {
+                                action: [{
                                     action: 'navigate',
                                     args: { path: successRedirect }
-                                }
+                                }]
                             }
                         ] : undefined
-                    }
+                    }]
                 },
                 {
                     condition: { field: '__success', operator: 'eq', value: false },
-                    action: {
+                    action: [{
                         action: 'showToast',
                         args: { message: 'Form submission failed', type: 'error' }
-                    }
+                    }]
                 }
             ]
         };
@@ -265,14 +265,14 @@ export class EventBuilder {
         const chains = [
             {
                 condition,
-                action: onTrue
+                action: [onTrue]
             }
         ];
 
         if (onFalse) {
             chains.push({
                 condition: { field: '__success', operator: 'eq', value: true }, // This will be overridden by the opposite condition logic
-                action: onFalse
+                action: [onFalse]
             });
         }
 
@@ -331,10 +331,10 @@ export const login: SerializableAction = {
     chains: [
         {
             condition: { field: '__success', operator: 'eq', value: false },
-            action: {
+            action: [{
                 action: 'showToast',
                 args: { message: 'Login failed. Please check your credentials.', type: 'error' }
-            }
+            }]
         }
     ]
 };

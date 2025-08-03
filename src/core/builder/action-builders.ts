@@ -174,7 +174,10 @@ export class ActionBuilder {
      * Add a single conditional chain
      */
     withChain(condition: ConditionalExpression, action: string | SerializableAction, args?: Record<string, unknown>): ActionBuilder {
-        const chain: ConditionalChain = { condition, action, args };
+        const chainAction = typeof action === 'string' 
+            ? { action, args } 
+            : action;
+        const chain: ConditionalChain = { condition, action: [chainAction] };
         return this.withChains(chain);
     }
 
@@ -240,8 +243,15 @@ export class ChainBuilder {
      * Set the action (string form)
      */
     thenAction(action: string, args?: Record<string, unknown>): ChainBuilder {
-        this.chain.action = action;
-        this.chain.args = args;
+        this.chain.action = [{ action, args }];
+        return this;
+    }
+
+    /**
+     * Set multiple actions (string forms)
+     */
+    thenActions(...actions: string[]): ChainBuilder {
+        this.chain.action = actions.map(action => ({ action }));
         return this;
     }
 
@@ -249,7 +259,15 @@ export class ChainBuilder {
      * Set the action (SerializableAction form)
      */
     thenSerializableAction(action: SerializableAction): ChainBuilder {
-        this.chain.action = action;
+        this.chain.action = [action];
+        return this;
+    }
+
+    /**
+     * Set multiple actions (SerializableAction forms)
+     */
+    thenSerializableActions(...actions: SerializableAction[]): ChainBuilder {
+        this.chain.action = actions;
         return this;
     }
 
@@ -257,7 +275,15 @@ export class ChainBuilder {
      * Set the action using ActionBuilder
      */
     thenActionBuilder(actionBuilder: ActionBuilder): ChainBuilder {
-        this.chain.action = actionBuilder.build();
+        this.chain.action = [actionBuilder.build()];
+        return this;
+    }
+
+    /**
+     * Set multiple actions using ActionBuilders
+     */
+    thenActionBuilders(...actionBuilders: ActionBuilder[]): ChainBuilder {
+        this.chain.action = actionBuilders.map(builder => builder.build());
         return this;
     }
 

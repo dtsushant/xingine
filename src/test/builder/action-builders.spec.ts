@@ -335,11 +335,11 @@ describe('ActionBuilders', () => {
             it('should add conditional chains', () => {
                 const chain1: ConditionalChain = {
                     condition: { field: 'test', operator: 'eq', value: 'value' },
-                    action: 'chainAction1'
+                    action: [{ action: 'chainAction1' }]
                 };
                 const chain2: ConditionalChain = {
                     condition: { field: 'test2', operator: 'ne', value: 'value2' },
-                    action: 'chainAction2'
+                    action: [{ action: 'chainAction2' }]
                 };
                 
                 const result = ActionBuilder
@@ -367,8 +367,10 @@ describe('ActionBuilders', () => {
                     action: 'testAction',
                     chains: [{
                         condition,
-                        action: 'chainAction',
-                        args: { arg: 'value' }
+                        action: [{
+                            action: 'chainAction',
+                            args: { arg: 'value' }
+                        }]
                     }]
                 });
             });
@@ -380,7 +382,7 @@ describe('ActionBuilders', () => {
                 const mappedAction: SerializableAction = { action: 'mappedAction' };
                 const chain: ConditionalChain = {
                     condition: { field: 'error', operator: 'ne', value: null },
-                    action: 'errorHandler'
+                    action: [{ action: 'errorHandler' }]
                 };
                 
                 const result = ActionBuilder
@@ -456,8 +458,10 @@ describe('ActionBuilders', () => {
                 
                 expect(result).toEqual({
                     condition,
-                    action: 'testAction',
-                    args: undefined
+                    action: [{
+                        action: 'testAction',
+                        args: undefined
+                    }]
                 });
             });
 
@@ -473,8 +477,10 @@ describe('ActionBuilders', () => {
                 
                 expect(result).toEqual({
                     condition,
-                    action: 'testAction',
-                    args
+                    action: [{
+                        action: 'testAction',
+                        args
+                    }]
                 });
             });
         });
@@ -495,7 +501,7 @@ describe('ActionBuilders', () => {
                 
                 expect(result).toEqual({
                     condition,
-                    action
+                    action: [action]
                 });
             });
         });
@@ -515,10 +521,9 @@ describe('ActionBuilders', () => {
                 
                 expect(result).toEqual({
                     condition,
-                    action: {
-                        action: 'builderAction',
+                    action: [{ action: 'builderAction',
                         args: { builderArg: 'builderValue' }
-                    }
+                     }]
                 });
             });
         });
@@ -777,7 +782,7 @@ describe('ActionBuilders', () => {
                 chains: [
                     {
                         condition: { field: '__result.user.token', operator: 'ne', value: null },
-                        action: {
+                        action: [{ 
                             action: 'setLocalStorage',
                             args: { key: 'token', value: '__result.user.token' },
                             then: [
@@ -785,12 +790,14 @@ describe('ActionBuilders', () => {
                                 { action: 'showToast', args: { message: 'Login successful!', type: 'success' } },
                                 { action: 'navigate', args: { path: '/dashboard' } }
                             ]
-                        }
+                        }]
                     },
                     {
                         condition: { field: '__hasError', operator: 'eq', value: true },
-                        action: 'showToast',
-                        args: { message: 'Login failed', type: 'error' }
+                        action: [{
+                            action: 'showToast',
+                            args: { message: 'Login failed', type: 'error' }
+                        }]
                     }
                 ]
             });

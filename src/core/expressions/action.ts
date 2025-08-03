@@ -4,8 +4,7 @@ import {resolvePath} from "../utils/type";
 
 export type ConditionalChain = {
     condition: ConditionalExpression;
-    action: string | SerializableAction; // can be string or full action object
-    args?: Record<string, unknown>; // optional args when action is string
+    action: SerializableAction[]; // Array of actions to execute when condition is met
 };
 
 export type ActionResult = {
@@ -46,59 +45,143 @@ export type EventBindings = {
 };
 
 export interface ActionContext {
-    navigate: (path: string) => void;
-    setState: <T>(key: string, setter: T | ((prev: T) => T)) => void;
+    // Global state - available everywhere (header, sidebar, content, footer)
+    getAllState: () => Record<string, unknown>;
     getState: (key: string) => unknown;
-    getAllState:()=>Record<string,unknown>;
+    setState: (key: string, value: unknown) => void;
+    navigate: (path: string) => void;
+    
+    // Storage methods 
+    setLocalStorage?: (key: string, value: unknown) => void;
+    getLocalStorage?: (key: string) => string | null;
+    removeLocalStorage?: (key: string) => void;
+    clearLocalStorage?: () => void;
+    
+    // API calls - always global
     makeApiCall: (params: {
         url: string;
         method?: string;
         body?: unknown;
     }) => Promise<unknown>;
-    dynamic?: (name: string, args?:  Record<string, unknown>, event?: unknown) => void;
-    toggleState?: (key: string) => void;
-    // UI/Auth control methods - provided by xingine-react
-    login?: (credentials: { username: string; password: string }) => Promise<{ success: boolean; user?: any; error?: string }>;
-    logout?: () => Promise<void>;
-    error?: (message: string, details?: unknown) => void;
-    // Storage methods
-    setLocalStorage?: (key: string, value: unknown) => void;
-    getLocalStorage?: (key: string) => string | null;
-    removeLocalStorage?: (key: string) => void;
-    clearLocalStorage?:()=>void;
+    
     // Toast/notification methods
     showToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
-    /** INTERNAL: Do not use outside ActionContextRegistry */
-    __state?:Record<string, unknown>;
+    
+    // Error handling
+    error?: (message: string, details?: unknown) => void;
+    
+    // Dynamic action handler
+    dynamic?: (name: string, args: any, event?: any) => void;
+    
+    // Auth methods
+    logout?: () => Promise<void>;
 }
 
-type ActionHandler = (
+export interface ComponentStateStore {
+    // Component-local state - scoped to specific component instance
+    getState: (key: string) => unknown;
+    setState: (key: string, value: unknown) => void;
+    getAllState: () => Record<string, unknown>;
+    
+    // Component ID for debugging/tracking
+    componentId: string;
+}
+
+export interface ActiveContentContext {
+    event?: unknown;
+    chainContext?: { error?: unknown; result?: unknown; success?: boolean };
+    
+    // Content-specific state management
+    getComponentStateStore: (componentId: string) => ComponentStateStore;
+    
+    // Content-level state - shared within content area but not global
+    getContentState?: (key: string) => unknown;
+    setContentState?: (key: string, value: unknown) => void;
+    getAllContentState?: () => Record<string, unknown>;
+}
+
+export interface ActionExecutionContext {
+    global: ActionContext;
+    content: ActiveContentContext;
+}
+
+export type ActionHandler = (
     args: Record<string, unknown> | undefined,
-    ctx: ActionContext,
-    event?: unknown,
-    chainContext?: { error?: unknown; result?: unknown; success?: boolean }
+    context: ActionExecutionContext
 ) => ActionResult | Promise<ActionResult | void> | void;
-
-const contextMap = new Map<string, ActionContext>();
-export const ActionContextRegistry = {
-    get(key: string): ActionContext | undefined {
-        return contextMap.get(key);
-    },
-
-    set(key: string, ctx: ActionContext) {
-        contextMap.set(key, ctx);
-    },
-
-    clear(key?: string) {
-        if (key) contextMap.delete(key);
-        else contextMap.clear();
-    },
-};
 
 export const ActionContextSubscribers = new WeakMap<
     ActionContext,
     Map<string, Set<() => void>>
 >();
+
+// Helper functions for path resolution with new context structure
+function resolveContextValue(path: string, context: ActionExecutionContext, chainContext?: { result?: unknown }, componentId?: string): unknown {
+    if (path.startsWith('__global.')) {
+        const globalPath = path.substring('__global.'.length);
+        return resolvePath(context.global.getAllState(), globalPath);
+    } else if (path.startsWith('GLOBAL.')) {
+        // Special keyword to access global state from component context
+        const globalPath = path.substring('GLOBAL.'.length);
+        return resolvePath(context.global.getAllState(), globalPath);
+    } else if (path.startsWith('__current.')) {
+        const currentPath = path.substring('__current.'.length);
+        // Use the provided componentId, or fall back to 'default'
+        const targetComponentId = componentId || 'default';
+        const componentStore = context.content.getComponentStateStore(targetComponentId);
+        return resolvePath(componentStore?.getAllState() || {}, currentPath);
+    } else if (path.startsWith('__result.')) {
+        const resultPath = path.substring('__result.'.length);
+        return resolvePath(chainContext?.result || {}, resultPath);
+    } else if (path.startsWith('result.')) {
+        // Handle legacy result paths like 'result.user.name'
+        const resultPath = path.substring('result.'.length);
+        return resolvePath(chainContext?.result || {}, resultPath);
+    } else {
+        // Default behavior - try result first (for backward compatibility), then global
+        // Only fallback if chainContext doesn't exist, not if resolvePath returns undefined
+        if (chainContext?.result !== undefined) {
+            return resolvePath(chainContext.result, path);
+        } else {
+            return resolvePath(context.global.getAllState(), path);
+        }
+    }
+}
+
+function getStateStore(context: ActionExecutionContext, args: Record<string, unknown> | undefined): ComponentStateStore | ActionContext {
+    const componentId = args?.componentId as string;
+    const key = args?.key as string;
+    
+    // Check if key starts with GLOBAL to force global state access
+    if (key?.startsWith('GLOBAL.')) {
+        return context.global;
+    }
+    
+    // Check if key starts with CONTENT to force content-level state access
+    if (key?.startsWith('CONTENT.')) {
+        // Create a wrapper that implements ComponentStateStore interface for content state
+        return {
+            componentId: 'content',
+            getState: (k: string) => context.content.getContentState?.(k),
+            setState: (k: string, v: unknown) => context.content.setContentState?.(k, v),
+            getAllState: () => context.content.getAllContentState?.() || {}
+        };
+    }
+    
+    // Use component state if componentId is specified
+    if (componentId) {
+        return context.content.getComponentStateStore(componentId);
+    }
+    
+    // Default to component state (component-first approach)
+    // If no componentId is provided, try to use default component context
+    try {
+        return context.content.getComponentStateStore('default');
+    } catch {
+        // Fallback to global context if no component context available
+        return context.global;
+    }
+}
 
 
 export const actionRegistry: Record<string, ActionHandler> = {
@@ -106,25 +189,89 @@ export const actionRegistry: Record<string, ActionHandler> = {
         if (!args || typeof args.path !== 'string') {
             throw new Error('navigate requires args.path to be a string');
         }
-        ctx.navigate(args.path);
+        ctx.global.navigate(args.path);
     },
 
-    setState: (args, ctx,event,result): ActionResult => {
+    setState: (args, ctx): ActionResult => {
         if (!args || typeof args.key !== 'string') {
             return { success: false, error: new Error('Invalid setState args') };
-        }
-        if(result === undefined || result === null) {
-            ctx.setState(args.key, args.value);
-            return { success: true, result: { key: args.key, value: args.value } };
         }
 
         try {
             let value = args.value;
-            // If value is a string that contains path expressions, resolve it
-            const resolvedValue = resolvePath(result, String(value));
+            let key = args.key;
             
-            ctx.setState(args.key, resolvedValue);
-            return { success: true, result: { key: args.key, value: resolvedValue } };
+            // Only attempt path resolution if it's a string and we have chainContext
+            if (typeof value === 'string' && ctx.content.chainContext) {
+                // Check if the string looks like a path
+                const startsWithPathPrefix = value.startsWith('__') || value.startsWith('result.') || value.startsWith('GLOBAL.');
+                const containsDots = value.includes('.');
+                const looksLikeComplexPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)+/.test(value);
+                
+                const looksLikePath = startsWithPathPrefix || containsDots || looksLikeComplexPath;
+                
+                if (looksLikePath) {
+                    try {
+                        const resolvedValue = resolveContextValue(String(value), ctx, ctx.content.chainContext, args.componentId as string);
+                        value = resolvedValue;
+                    } catch (error) {
+                        console.warn('Path resolution failed for:', value, error);
+                    }
+                }
+            }
+            
+            // Get the appropriate state store (component-level, content-level, or global)
+            const stateStore = getStateStore(ctx, args);
+            
+            // Strip prefixes from the key for actual storage
+            if (key.startsWith('GLOBAL.')) {
+                key = key.substring('GLOBAL.'.length);
+            } else if (key.startsWith('CONTENT.')) {
+                key = key.substring('CONTENT.'.length);
+            }
+            
+            stateStore.setState(key, value);
+            
+            return { success: true, result: { key: args.key, value } }; // Return original key for reference
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    getState: (args, ctx): ActionResult => {
+        if (!args || typeof args.key !== 'string') {
+            return { success: false, error: new Error('Invalid getState args') };
+        }
+
+        try {
+            let key = args.key;
+            
+            // Get the appropriate state store (component-level, content-level, or global)
+            const stateStore = getStateStore(ctx, args);
+            
+            // Strip prefixes from the key for actual storage
+            if (key.startsWith('GLOBAL.')) {
+                key = key.substring('GLOBAL.'.length);
+            } else if (key.startsWith('CONTENT.')) {
+                key = key.substring('CONTENT.'.length);
+            }
+            
+            const value = stateStore.getState(key);
+            
+            // Optionally store result in another state key
+            const stateKey = args.stateKey as string;
+            if (stateKey) {
+                const targetStore = getStateStore(ctx, { ...args, key: stateKey });
+                let targetKey = stateKey;
+                if (targetKey.startsWith('GLOBAL.')) {
+                    targetKey = targetKey.substring('GLOBAL.'.length);
+                } else if (targetKey.startsWith('CONTENT.')) {
+                    targetKey = targetKey.substring('CONTENT.'.length);
+                }
+                targetStore.setState(targetKey, value);
+            }
+            
+            return { success: true, result: value };
         } catch (error) {
             return { success: false, error };
         }
@@ -136,7 +283,13 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            const result = await ctx.makeApiCall(params as {
+            // Always use global context for API calls - simplified architecture
+            const globalCtx = ctx.global as any;
+            if (!globalCtx.makeApiCall) {
+                return { success: false, error: new Error('makeApiCall not available in global context') };
+            }
+            
+            const result = await globalCtx.makeApiCall(params as {
                 url: string;
                 method?: string;
                 body?: unknown;
@@ -154,10 +307,23 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            const currentValue = ctx.getState(args.key) as boolean;
+            let key = args.key;
+            
+            // Get the appropriate state store (component-level, content-level, or global)
+            const stateStore = getStateStore(ctx, args);
+            
+            // Strip prefixes from the key for actual storage
+            if (key.startsWith('GLOBAL.')) {
+                key = key.substring('GLOBAL.'.length);
+            } else if (key.startsWith('CONTENT.')) {
+                key = key.substring('CONTENT.'.length);
+            }
+            
+            const currentValue = stateStore.getState(key) as boolean;
             const newValue = !currentValue;
-            ctx.setState<boolean>(args.key, newValue);
-            return { success: true, result: { key: args.key, value: newValue } };
+            stateStore.setState(key, newValue);
+            
+            return { success: true, result: { key: args.key, value: newValue } }; // Return original key for reference
         } catch (error) {
             return { success: false, error };
         }
@@ -165,8 +331,10 @@ export const actionRegistry: Record<string, ActionHandler> = {
 
     // UI/Auth control actions - delegate to context methods
     login: async (args, ctx): Promise<ActionResult> => {
-        if (!ctx.login) {
-            return { success: false, error: new Error('Login action requires login method to be provided in ActionContext') };
+        // These auth methods should be available on global context
+        const globalCtx = ctx.global as any;
+        if (!globalCtx.login) {
+            return { success: false, error: new Error('Login action requires login method to be provided in global ActionContext') };
         }
         const { username, password } = (args as any) || {};
         if (!username || !password) {
@@ -174,7 +342,7 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            const result = await ctx.login({ username, password });
+            const result = await globalCtx.login({ username, password });
             return { success: result.success, result, error: result.success ? undefined : new Error(result.error || 'Login failed') };
         } catch (error) {
             return { success: false, error };
@@ -182,21 +350,23 @@ export const actionRegistry: Record<string, ActionHandler> = {
     },
 
     logout: async (args, ctx): Promise<ActionResult> => {
-        if (!ctx.logout) {
-            return { success: false, error: new Error('Logout action requires logout method to be provided in ActionContext') };
+        const globalCtx = ctx.global as any;
+        if (!globalCtx.logout) {
+            return { success: false, error: new Error('Logout action requires logout method to be provided in global ActionContext') };
         }
         
         try {
-            await ctx.logout();
+            await globalCtx.logout();
             return { success: true, result: { success: true } };
         } catch (error) {
             return { success: false, error };
         }
     },
 
-    error: (args, ctx, event, chainContext?: { error?: unknown }): ActionResult => {
+    error: (args, ctx): ActionResult => {
         const providedMessage = (args as any)?.message;
         const details = (args as any)?.details;
+        const chainContext = ctx.content.chainContext;
         
         // Use provided message, or extract from chain context, or default
         let message = providedMessage;
@@ -209,13 +379,15 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            if (!ctx.error) {
+            const globalCtx = ctx.global as any;
+            if (!globalCtx.error) {
                 // Fallback implementation if no error method provided
-                ctx.setState('errorMessage', message);
-                ctx.setState('hasError', true);
+                const stateStore = getStateStore(ctx, args);
+                stateStore.setState('errorMessage', message);
+                stateStore.setState('hasError', true);
                 console.error('Action error:', message);
             } else {
-                ctx.error(message, details || chainContext?.error);
+                globalCtx.error(message, details || chainContext?.error);
             }
             return { success: true, result: { message, details } };
         } catch (error) {
@@ -224,9 +396,9 @@ export const actionRegistry: Record<string, ActionHandler> = {
     },
 
     // Storage actions
-    setLocalStorage: (args, ctx,event,result): ActionResult => {
-        if (!ctx.setLocalStorage) {
-            return { success: false, error: new Error('setLocalStorage action requires setLocalStorage method to be provided in ActionContext') };
+    setLocalStorage: (args, ctx): ActionResult => {
+        if (!ctx.global.setLocalStorage) {
+            return { success: false, error: new Error('setLocalStorage action requires setLocalStorage method to be provided in global ActionContext') };
         }
         const { key, value } = (args as any) || {};
         if (!key || value === undefined) {
@@ -234,9 +406,28 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            // Resolve value using current state context
-            const resolvedValue = resolvePath(result, value);
-            ctx.setLocalStorage(key, resolvedValue);
+            // Only attempt path resolution if it's a string and we have chainContext
+            let resolvedValue = value;
+            if (typeof value === 'string' && ctx.content.chainContext) {
+                try {
+                    // Check if the string looks like a path
+                    const startsWithPathPrefix = value.startsWith('__') || value.startsWith('result.');
+                    const containsDots = value.includes('.');
+                    const looksLikeComplexPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)+/.test(value);
+                    
+                    const looksLikePath = startsWithPathPrefix || containsDots || looksLikeComplexPath;
+                    
+                    if (looksLikePath) {
+                        const pathResolvedValue = resolveContextValue(String(value), ctx, ctx.content.chainContext, (args as any)?.componentId);
+                        resolvedValue = pathResolvedValue;
+                    }
+                } catch (error) {
+                    // If path resolution fails, keep original value
+                    console.warn('Path resolution failed for localStorage value:', value, error);
+                }
+            }
+            
+            ctx.global.setLocalStorage(key, resolvedValue);
             return { success: true, result: { key, value: resolvedValue } };
         } catch (error) {
             return { success: false, error };
@@ -244,8 +435,8 @@ export const actionRegistry: Record<string, ActionHandler> = {
     },
 
     getLocalStorage: (args, ctx): ActionResult => {
-        if (!ctx.getLocalStorage) {
-            return { success: false, error: new Error('getLocalStorage action requires getLocalStorage method to be provided in ActionContext') };
+        if (!ctx.global.getLocalStorage) {
+            return { success: false, error: new Error('getLocalStorage action requires getLocalStorage method to be provided in global ActionContext') };
         }
         const { key, stateKey } = (args as any) || {};
         if (!key) {
@@ -253,11 +444,12 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            const value = ctx.getLocalStorage(key);
+            const value = ctx.global.getLocalStorage(key);
             
             // Store result in state if stateKey provided
             if (stateKey) {
-                ctx.setState(stateKey, value);
+                const stateStore = getStateStore(ctx, args);
+                stateStore.setState(stateKey, value);
             }
             
             return { success: true, result: value };
@@ -267,8 +459,8 @@ export const actionRegistry: Record<string, ActionHandler> = {
     },
 
     removeLocalStorage: (args, ctx): ActionResult => {
-        if (!ctx.removeLocalStorage) {
-            return { success: false, error: new Error('removeLocalStorage action requires removeLocalStorage method to be provided in ActionContext') };
+        if (!ctx.global.removeLocalStorage) {
+            return { success: false, error: new Error('removeLocalStorage action requires removeLocalStorage method to be provided in global ActionContext') };
         }
         const { key } = (args as any) || {};
         if (!key) {
@@ -276,18 +468,24 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            ctx.removeLocalStorage(key);
+            ctx.global.removeLocalStorage(key);
             return { success: true, result: { key } };
         } catch (error) {
             return { success: false, error };
         }
     },
 
-    clearLocalStorage:(args,ctx)=>{
-        if(!ctx.clearLocalStorage){
-            throw new Error('clearLocalStorage action requires clearLocalStorage method to be provided in ActionContext');
+    clearLocalStorage: (args, ctx): ActionResult => {
+        if (!ctx.global.clearLocalStorage) {
+            return { success: false, error: new Error('clearLocalStorage action requires clearLocalStorage method to be provided in global ActionContext') };
         }
-        ctx.clearLocalStorage();
+        
+        try {
+            ctx.global.clearLocalStorage();
+            return { success: true, result: { cleared: true } };
+        } catch (error) {
+            return { success: false, error };
+        }
     },
 
     // Toast/notification actions
@@ -298,14 +496,15 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            if (!ctx.showToast) {
+            if (!ctx.global.showToast) {
                 // Fallback: use setState for basic toast handling
-                ctx.setState('toastMessage', message);
-                ctx.setState('toastType', type);
-                ctx.setState('showToast', true);
+                const stateStore = getStateStore(ctx, args);
+                stateStore.setState('toastMessage', message);
+                stateStore.setState('toastType', type);
+                stateStore.setState('showToast', true);
                 console.log(`Toast [${type}]:`, message);
             } else {
-                ctx.showToast(message, type);
+                ctx.global.showToast(message, type);
             }
             return { success: true, result: { message, type } };
         } catch (error) {
@@ -316,7 +515,7 @@ export const actionRegistry: Record<string, ActionHandler> = {
 
 export async function runAction(
     action: SerializableAction | undefined,
-    context: ActionContext,
+    context: ActionExecutionContext,
     event?: unknown,
     chainContext?: { error?: unknown; result?: unknown; success?: boolean }
 ): Promise<ActionResult | void> {
@@ -341,35 +540,49 @@ export async function runAction(
     const chains = typeof action === 'string' ? undefined : action.chains;
     const thenActions = typeof action === 'string' ? undefined : action.then;
 
+    // Update content context with current chain context
+    const executionContext: ActionExecutionContext = {
+        ...context,
+        content: {
+            ...context.content,
+            event,
+            chainContext
+        }
+    };
+
     try {
         const handler = actionRegistry[name];
         let result: ActionResult ;
         
         if (handler) {
-            const res = await handler(args, context, event, chainContext);
+            const res = await handler(args, executionContext);
             if(res)
                 result = res as ActionResult;
             else
                 result = { success: true };
-        } else if (context.dynamic) {
-            try {
-                await context.dynamic(name, args, event);
-                result = { success: true, result: { action: name, args } };
-            } catch (error) {
-                result = { success: false, error };
-            }
         } else {
-            result = { success: false, error: new Error(`Unknown action: ${name}`) };
+            // Check if global context has dynamic method
+            const globalCtx = context.global as any;
+            if (globalCtx.dynamic) {
+                try {
+                    await globalCtx.dynamic(name, args, event);
+                    result = { success: true, result: { action: name, args } };
+                } catch (error) {
+                    result = { success: false, error };
+                }
+            } else {
+                result = { success: false, error: new Error(`Unknown action: ${name}`) };
+            }
         }
 
         // Execute mapped actions unconditionally after main action (success or failure)
         if (thenActions && thenActions.length > 0) {
-            await processThenActions(thenActions, context, result, event);
+            await processThenActions(thenActions, executionContext, result, event);
         }
 
         // Process conditional chains if present
         if (chains && chains.length > 0) {
-            await processConditionalChains(chains, context, result, event);
+            await processConditionalChains(chains, executionContext, result, event);
         }
 
         return result;
@@ -378,7 +591,7 @@ export async function runAction(
         
         // Process conditional chains even on error - let conditions decide
         if (chains && chains.length > 0) {
-            await processConditionalChains(chains, context, errorResult, event);
+            await processConditionalChains(chains, executionContext, errorResult, event);
         }
         
         return errorResult;
@@ -387,28 +600,39 @@ export async function runAction(
 
 async function processThenActions(
     mappedActions: SerializableAction[],
-    context: ActionContext,
+    context: ActionExecutionContext,
     mainResult: ActionResult,
     event?: unknown
 ): Promise<void> {
     // Create context for value resolution including main action result
-    const valueContext = {
-        ...context.getAllState(),
+    const valueContext:Record<string, unknown> = {
+        ...context.global.getAllState(),
         __result: mainResult.result,
         __error: mainResult.error,
         __hasError: !mainResult.success,
         __success: mainResult.success
     };
 
-    // Update resolveValue context temporarily
-    const originalGetAllState = context.getAllState;
-    context.getAllState = () => valueContext;
+    // Create updated execution context for chain context
+    const chainContext = {
+        error: mainResult.error,
+        result: mainResult.result,
+        success: mainResult.success
+    };
 
     try {
         // Execute mapped actions in sequence
         for (const mappedAction of mappedActions) {
             try {
-                const result = await runAction(mappedAction, context, event,mainResult);
+                const executionContext: ActionExecutionContext = {
+                    ...context,
+                    content: {
+                        ...context.content,
+                        chainContext
+                    }
+                };
+                
+                const result = await runAction(mappedAction, executionContext, event, chainContext);
                 // Don't overwrite the original __result from the main action
                 // The mapped actions should only use the original result for resolution
                 // Each mapped action's result is not part of the chain context
@@ -418,20 +642,19 @@ async function processThenActions(
             }
         }
     } finally {
-        // Restore original getAllState
-        context.getAllState = originalGetAllState;
+        // No cleanup needed as we're not modifying the original context
     }
 }
 
 async function processConditionalChains(
     chains: ConditionalChain[],
-    context: ActionContext,
+    context: ActionExecutionContext,
     mainResult: ActionResult,
     event?: unknown
 ): Promise<void> {
     // Create evaluation context from current state and main action result
     const evaluationContext = {
-        ...context.getAllState(),
+        ...context.global.getAllState(),
         __result: mainResult.result,
         __error: mainResult.error,
         __hasError: !mainResult.success,
@@ -441,41 +664,36 @@ async function processConditionalChains(
     // Process each chain in order
     for (const chain of chains) {
         try {
-            // Evaluate the condition
+            // Evaluate the condition using new path resolution
             const conditionMet = evaluateCondition(chain.condition, evaluationContext);
-            console.log("has the condition met", conditionMet)
             if (conditionMet) {
-                // Create SerializableAction from chain
-                let chainAction: SerializableAction;
-                
-                if (typeof chain.action === 'string') {
-                    // Action is a string, use args from chain
-                    chainAction = {
-                        action: chain.action,
-                        args: chain.args
+                // Execute each action in the chain sequentially
+                for (const chainAction of chain.action) {
+                    const chainContext = {
+                        error: mainResult.error,
+                        result: mainResult.result,
+                        success: mainResult.success
                     };
-                } else {
-                    // Action is already a SerializableAction object
-                    chainAction = chain.action;
-                }
-                
-                // Execute the chained action
-                const chainContext = {
-                    error: mainResult.error,
-                    result: mainResult.result,
-                    success: mainResult.success
-                };
-                
-                const chainResult = await runAction(chainAction, context, event, mainResult);
-                // Update evaluation context with new results for subsequent chains
-                if(chainResult){
-                    evaluationContext.__result = chainResult.result;
-                    evaluationContext.__error = chainResult.error;
-                    evaluationContext.__hasError = !chainResult.success;
-                    evaluationContext.__success = chainResult.success;
+                    
+                    const executionContext: ActionExecutionContext = {
+                        ...context,
+                        content: {
+                            ...context.content,
+                            chainContext
+                        }
+                    };
+                    
+                    const chainResult = await runAction(chainAction, executionContext, event, chainContext);
+                    // Update evaluation context with new results for subsequent actions in this chain
+                    if(chainResult){
+                        evaluationContext.__result = chainResult.result;
+                        evaluationContext.__error = chainResult.error;
+                        evaluationContext.__hasError = !chainResult.success;
+                        evaluationContext.__success = chainResult.success;
 
-                    // Update actual state context for subsequent chains
-                    Object.assign(evaluationContext, context.getAllState());
+                        // Update actual state context for subsequent actions
+                        Object.assign(evaluationContext, context.global.getAllState());
+                    }
                 }
 
             }

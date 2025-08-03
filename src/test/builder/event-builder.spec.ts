@@ -123,9 +123,9 @@ describe('EventBuilder', () => {
             expect(chain.condition).toEqual({
                 field: '__success', operator: 'eq', value: true
             });
-            expect((chain.action as any).action).toBe('showToast');
-            expect((chain.action as any).chains).toHaveLength(1);
-            expect(((chain.action as any).chains![0].action as any).action).toBe('navigate');
+            expect((chain.action as any)[0].action).toBe('showToast');
+            expect((chain.action as any)[0].chains).toHaveLength(1);
+            expect(((chain.action as any)[0].chains![0].action as any)[0].action).toBe('navigate');
         });
 
         it('should create form submission flow', () => {
@@ -142,16 +142,16 @@ describe('EventBuilder', () => {
             expect(successChain.condition).toEqual({
                 field: '__success', operator: 'eq', value: true
             });
-            expect((successChain.action as any).action).toBe('showToast');
-            expect((successChain.action as any).chains).toHaveLength(1);
-            expect(((successChain.action as any).chains![0].action as any).action).toBe('navigate');
+            expect((successChain.action as any)[0].action).toBe('showToast');
+            expect((successChain.action as any)[0].chains).toHaveLength(1);
+            expect(((successChain.action as any)[0].chains![0].action as any)[0].action).toBe('navigate');
 
             // Error chain
             const errorChain = complexAction.chains![1];
             expect(errorChain.condition).toEqual({
                 field: '__success', operator: 'eq', value: false
             });
-            expect((errorChain.action as any).action).toBe('showToast');
+            expect((errorChain.action as any)[0].action).toBe('showToast');
         });
 
         it('should create form submission without redirect', () => {
@@ -220,7 +220,7 @@ describe('EventBuilder', () => {
                     chains: [
                         {
                             condition: { field: '__result.key', operator: 'eq', value: 'Enter' },
-                            action: EventBuilder.loginFlow('${formData.username}', '${formData.password}')
+                            action: [EventBuilder.loginFlow('${formData.username}', '${formData.password}')]
                         }
                     ]
                 })
@@ -240,17 +240,15 @@ describe('EventBuilder', () => {
                     chains: [
                         {
                             condition: { field: '__success', operator: 'eq', value: true },
-                            action: {
-                                action: 'setState',
+                            action: [{ action: 'setState',
                                 args: { key: 'liked', value: true }
-                            }
+                             }]
                         },
                         {
                             condition: { field: '__success', operator: 'eq', value: false },
-                            action: {
-                                action: 'showToast',
+                            action: [{ action: 'showToast',
                                 args: { message: 'Failed to like', type: 'error' }
-                            }
+                             }]
                         }
                     ]
                 })
