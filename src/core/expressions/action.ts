@@ -511,6 +511,292 @@ export const actionRegistry: Record<string, ActionHandler> = {
             return { success: false, error };
         }
     },
+
+    // Counter actions for state management demos
+    incrementCounter: (args, ctx): ActionResult => {
+        try {
+            console.log('🔧 incrementCounter called with args:', args, 'ctx:', ctx);
+            const stateStore = getStateStore(ctx, args);
+            console.log('🔧 getStateStore returned:', stateStore);
+            const componentId = (args as any)?.componentId || 'default';
+            console.log('🔧 componentId:', componentId);
+            
+            // Strip componentId from args when getting state store to avoid confusion
+            const currentValue = stateStore.getState(componentId) as number || 0;
+            console.log('🔧 currentValue:', currentValue);
+            const newValue = currentValue + 1;
+            console.log('🔧 newValue:', newValue);
+            stateStore.setState(componentId, newValue);
+            console.log('🔧 setState called with:', componentId, newValue);
+            
+            console.log(`📈 Counter incremented: ${componentId} = ${newValue}`);
+            return { success: true, result: { key: componentId, value: newValue } };
+        } catch (error) {
+            console.error('🚨 incrementCounter error:', error);
+            return { success: false, error };
+        }
+    },
+
+    decrementCounter: (args, ctx): ActionResult => {
+        try {
+            const stateStore = getStateStore(ctx, args);
+            const componentId = (args as any)?.componentId || 'default';
+            
+            // Strip componentId from args when getting state store to avoid confusion
+            const currentValue = stateStore.getState(componentId) as number || 0;
+            const newValue = Math.max(0, currentValue - 1); // Don't go below 0
+            stateStore.setState(componentId, newValue);
+            
+            console.log(`📉 Counter decremented: ${componentId} = ${newValue}`);
+            return { success: true, result: { key: componentId, value: newValue } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    // Content state actions
+    updateContentState: (args, ctx): ActionResult => {
+        if (!args || typeof (args as any).key !== 'string') {
+            return { success: false, error: new Error('updateContentState requires args.key to be a string') };
+        }
+        
+        try {
+            const { key, value } = args as any;
+            
+            // Force content-level state by using CONTENT prefix
+            const contentStore = getStateStore(ctx, { ...args, key: `CONTENT.${key}` });
+            contentStore.setState(key, value);
+            
+            console.log(`📄 Content state updated: ${key} = ${value}`);
+            return { success: true, result: { key, value } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    // Component input update action
+    updateComponentInput: (args, ctx): ActionResult => {
+        try {
+            const componentId = (args as any)?.componentId || 'default';
+            const value = (args as any)?.value || '';
+            
+            const stateStore = getStateStore(ctx, args);
+            stateStore.setState(componentId, value);
+            
+            console.log(`⌨️ Component input updated: ${componentId} = "${value}"`);
+            return { success: true, result: { key: componentId, value } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    // Toggle component state action
+    toggleComponent: (args, ctx): ActionResult => {
+        try {
+            const componentId = (args as any)?.componentId || 'default';
+            
+            const stateStore = getStateStore(ctx, args);
+            const currentValue = stateStore.getState(componentId) as boolean || false;
+            const newValue = !currentValue;
+            stateStore.setState(componentId, newValue);
+            
+            console.log(`🔄 Component toggled: ${componentId} = ${newValue}`);
+            return { success: true, result: { key: componentId, value: newValue } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    // Toggle content filter action
+    toggleContentFilter: (args, ctx): ActionResult => {
+        try {
+            const { key } = args as any || { key: 'filterActive' };
+            
+            // Force content-level state
+            const contentStore = getStateStore(ctx, { ...args, key: `CONTENT.${key}` });
+            const currentValue = contentStore.getState(key) as boolean || false;
+            const newValue = !currentValue;
+            contentStore.setState(key, newValue);
+            
+            console.log(`🔍 Content filter toggled: ${key} = ${newValue}`);
+            return { success: true, result: { key, value: newValue } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    // Login action
+    loginUser: async (args, ctx): Promise<ActionResult> => {
+        const { username, password } = args as any || {};
+        
+        console.log('🔐 Login attempt:', { username });
+        
+        try {
+            // Use makeApiCall for real API request
+            if (ctx.global.makeApiCall) {
+                const result = await ctx.global.makeApiCall({
+                    url: 'auth/login',
+                    method: 'POST',
+                    body: { username, password }
+                }) as any;
+
+                console.log('🌐 API Response:', result);
+
+                if (result?.success) {
+                    // Store auth data from API response
+                    if (ctx.global.setLocalStorage && result.token) {
+                        ctx.global.setLocalStorage('auth_token', result.token);
+                        ctx.global.setLocalStorage('user_data', JSON.stringify(result.user));
+                    }
+                    
+                    // Update global state
+                    ctx.global.setState('isAuthenticated', true);
+                    ctx.global.setState('currentUser', result.user);
+                    
+                    console.log('✅ Login successful via API');
+                    
+                    // Show success toast and redirect
+                    if (ctx.global.showToast) {
+                        ctx.global.showToast(`Welcome back, ${result.user?.username || username}!`, 'success');
+                    }
+                    
+                    setTimeout(() => {
+                        if (ctx.global.navigate) {
+                            ctx.global.navigate('/');
+                        }
+                    }, 1500);
+                    
+                    return { success: true, result: result };
+                } else {
+                    // API returned error
+                    if (ctx.global.showToast) {
+                        ctx.global.showToast(result?.message || 'Login failed', 'error');
+                    }
+                    console.log('❌ Login failed via API:', result?.message);
+                    return { success: false, error: new Error(result?.message || 'Login failed') };
+                }
+            } else {
+                // Fallback to mock validation when makeApiCall is not available
+                console.log('⚠️ API not available, using mock validation');
+                
+                if (username === 'admin' && password === 'password') {
+                    // Store auth data
+                    if (ctx.global.setLocalStorage) {
+                        ctx.global.setLocalStorage('auth_token', 'mock-jwt-token-12345');
+                        ctx.global.setLocalStorage('user_data', JSON.stringify({
+                            id: '1',
+                            username: username,
+                            email: 'admin@example.com',
+                            role: 'admin'
+                        }));
+                    }
+                    
+                    // Update global state
+                    ctx.global.setState('isAuthenticated', true);
+                    ctx.global.setState('currentUser', {
+                        id: '1',
+                        username: username,
+                        email: 'admin@example.com',
+                        role: 'admin'
+                    });
+                    
+                    console.log('✅ Mock login successful');
+                    
+                    // Show success toast and redirect
+                    if (ctx.global.showToast) {
+                        ctx.global.showToast(`Welcome back, ${username}!`, 'success');
+                    }
+                    
+                    setTimeout(() => {
+                        if (ctx.global.navigate) {
+                            ctx.global.navigate('/');
+                        }
+                    }, 1500);
+                    
+                    return { success: true, result: { message: 'Login successful' } };
+                } else if (username === 'user' && password === 'user123') {
+                    // Store auth data for regular user
+                    if (ctx.global.setLocalStorage) {
+                        ctx.global.setLocalStorage('auth_token', 'mock-jwt-token-67890');
+                        ctx.global.setLocalStorage('user_data', JSON.stringify({
+                            id: '2',
+                            username: username,
+                            email: 'user@example.com',
+                            role: 'user'
+                        }));
+                    }
+                    
+                    // Update global state
+                    ctx.global.setState('isAuthenticated', true);
+                    ctx.global.setState('currentUser', {
+                        id: '2',
+                        username: username,
+                        email: 'user@example.com',
+                        role: 'user'
+                    });
+                    
+                    console.log('✅ Mock login successful');
+                    
+                    // Show success toast and redirect
+                    if (ctx.global.showToast) {
+                        ctx.global.showToast(`Welcome back, ${username}!`, 'success');
+                    }
+                    
+                    setTimeout(() => {
+                        if (ctx.global.navigate) {
+                            ctx.global.navigate('/');
+                        }
+                    }, 1500);
+                    
+                    return { success: true, result: { message: 'Login successful' } };
+                } else {
+                    // Show error toast
+                    if (ctx.global.showToast) {
+                        ctx.global.showToast('Invalid username or password', 'error');
+                    }
+                    console.log('❌ Mock login failed: Invalid credentials');
+                    return { success: false, error: new Error('Invalid username or password') };
+                }
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
+            if (ctx.global.showToast) {
+                ctx.global.showToast(errorMessage, 'error');
+            }
+            console.error('💥 Login error:', error);
+            return { success: false, error };
+        }
+    },
+
+    // Logout action
+    logoutUser: async (args, ctx): Promise<ActionResult> => {
+        try {
+            // Clear auth data
+            if (ctx.global.removeLocalStorage) {
+                ctx.global.removeLocalStorage('auth_token');
+                ctx.global.removeLocalStorage('user_data');
+            }
+            
+            // Update global state
+            ctx.global.setState('isAuthenticated', false);
+            ctx.global.setState('currentUser', null);
+            
+            if (ctx.global.showToast) {
+                ctx.global.showToast('You have been logged out', 'info');
+            }
+            
+            // Redirect to login
+            setTimeout(() => {
+                if (ctx.global.navigate) {
+                    ctx.global.navigate('/login');
+                }
+            }, 1000);
+            
+            return { success: true, result: { message: 'Logout successful' } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
 };
 
 export async function runAction(
