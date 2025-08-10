@@ -18,7 +18,7 @@ import {
 import { DetailFieldMeta } from '../component/detail-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
-import { EventBindings } from '../expressions/action';
+import { EventBindings, SerializableAction } from '../expressions';
 import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
 import {
   extractChartMetaFromClass,
@@ -742,6 +742,33 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
     this.properties.event = result.build();
     return this;
   }
+
+    /**
+     * Adds if form has JsonEditor
+     */
+    showJsonEditor(enabled: boolean = true): FormRendererBuilder<P> {
+        this.properties.showJsonEditor = enabled;
+        return this;
+    }
+
+    /**
+     * Sets onLoad actions that will be executed when the form initializes
+     * These actions are registered to the onInit event with action 'onLoad'
+     */
+    onLoad(actions: SerializableAction[]): FormRendererBuilder<P> {
+        // Initialize event bindings if not present
+        if (!this.properties.event) {
+          this.properties.event = {};
+        }
+
+        // Register the onLoad action to onInit event
+        this.properties.event.onInit = {
+          action: 'onLoad',
+          then: actions
+        };
+
+        return this;
+      }
 
   /**
    * Completes the form configuration and returns the built component

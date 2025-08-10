@@ -1,30 +1,10 @@
-import {ConditionalExpression} from "./operators";
 import {evaluateCondition} from "../utils/type";
 import {resolvePath} from "../utils/type";
-
-export type ConditionalChain = {
-    condition: ConditionalExpression;
-    action: SerializableAction[]; // Array of actions to execute when condition is met
-};
-
-export type ActionResult = {
-    success: boolean;
-    result?: unknown;
-    error?: unknown;
-};
-
-export type SerializableAction =
-    | string // shorthand: "toggleDarkMode"
-    | {
-    action: string;            // e.g., "setState", "navigate"
-    args?: Record<string, unknown>; // optional arguments
-    valueFromEvent?: boolean;  // useful for input/change handlers
-    chains?: ConditionalChain[]; // conditional chains based on result
-    then?: SerializableAction[]; // unconditional action sequence - executes after main action
-};
+import {serializableActionDecoder, serializableActionDecoderList} from "../decoders";
+import {FormActionContext, formActionRegistry} from "./context/FormContextHolder";
+import {ActionResult,SerializableAction,ConditionalChain} from "./operators";
 
 
-type StateSetter<T> = (value: T | ((prev: T) => T)) => void;
 
 export interface EventActionContext {
     onClick?: (...args: unknown[]) => void;
@@ -103,6 +83,7 @@ export interface ActiveContentContext {
 export interface ActionExecutionContext {
     global: ActionContext;
     content: ActiveContentContext;
+    formActionContext?:FormActionContext;
 }
 
 export type ActionHandler = (
@@ -168,19 +149,14 @@ function getStateStore(context: ActionExecutionContext, args: Record<string, unk
         };
     }
     
-    // Use component state if componentId is specified
+    // Use component state if componentId is explicitly specified
     if (componentId) {
         return context.content.getComponentStateStore(componentId);
     }
     
-    // Default to component state (component-first approach)
-    // If no componentId is provided, try to use default component context
-    try {
-        return context.content.getComponentStateStore('default');
-    } catch {
-        // Fallback to global context if no component context available
-        return context.global;
-    }
+    // Default behavior: use global context
+    // This is the expected behavior for most general actions
+    return context.global;
 }
 
 
@@ -283,7 +259,27 @@ export const actionRegistry: Record<string, ActionHandler> = {
         }
         
         try {
-            // Always use global context for API calls - simplified architecture
+            const componentId = (params as any).componentId as string;
+            
+            // If componentId is provided, try to use component-level API call
+            if (componentId) {
+                try {
+                    const componentStore = ctx.content.getComponentStateStore(componentId) as any;
+                    if (componentStore && componentStore.makeApiCall) {
+                        const result = await componentStore.makeApiCall(params as {
+                            url: string;
+                            method?: string;
+                            body?: unknown;
+                        });
+                        return { success: true, result };
+                    }
+                } catch (error) {
+                    // Component-level API call failed, return the error
+                    return { success: false, error };
+                }
+            }
+            
+            // Fallback to global context for API calls
             const globalCtx = ctx.global as any;
             if (!globalCtx.makeApiCall) {
                 return { success: false, error: new Error('makeApiCall not available in global context') };
@@ -797,7 +793,233 @@ export const actionRegistry: Record<string, ActionHandler> = {
             return { success: false, error };
         }
     },
+
+    runEvents: async (args, ctx): Promise<ActionResult> => {
+        const { actions } = args as any || {};
+
+        try{
+            const listOfActions = serializableActionDecoderList
+                .verify(actions);
+
+            const results = await Promise.all(
+                listOfActions.map((action) => runAction(action, ctx))
+            );
+
+            return {success: true, result: results};
+        }catch (error) {
+            return { success: false, error };
+        }
+    },
+
+        /**
+     * Show/Hide action for conditional field rendering
+     * Evaluates a condition using the provided data provider and returns visibility status
+     */
+    showHide: (args, ctx): ActionResult => {
+        try {
+            const { condition, provider, data } = args as any || {};
+            
+            if (!condition) {
+                return { success: false, error: new Error('showHide requires condition parameter') };
+            }
+            
+            let evaluationData: Record<string, unknown> = {};
+
+            if(ctx.formActionContext)
+            {
+                // If formActionContext is available, use its data
+                evaluationData = ctx.formActionContext.getFormData() || {};
+            }
+            
+            // If a data provider is specified, use its data
+            if (provider && typeof provider.getData === 'function') {
+                evaluationData = {...evaluationData, ...provider.getData()};
+            } 
+            // If direct data is provided, use it
+            else if (data && typeof data === 'object') {
+                evaluationData = {...evaluationData,...data as Record<string, unknown>};
+            }
+            // Fallback to global state
+            else {
+                evaluationData = ctx.global.getAllState();
+            }
+            
+            // Evaluate the condition
+            const shouldShow = evaluateCondition(condition, evaluationData);
+            
+            console.log(`🔍 showHide evaluated:`, {
+                condition,
+                data: evaluationData,
+                result: shouldShow
+            });
+            
+            return { success: true, result: shouldShow };
+        } catch (error) {
+            console.error('❌ showHide error:', error);
+            return { success: false, error, result: false }; // Default to hidden on error
+        }
+    },
+
+    /**
+     * Evaluate conditional expression for form field visibility
+     * Specifically designed for form field conditional rendering
+     */
+    evaluateFieldCondition: (args, ctx): ActionResult => {
+        try {
+            const { condition, formData, fieldName } = args as any || {};
+            
+            if (!condition) {
+                return { success: false, error: new Error('evaluateFieldCondition requires condition parameter') };
+            }
+            
+            // Get evaluation data from form data or global state
+            const evaluationData = formData || ctx.global.getAllState();
+            
+            // Evaluate the condition
+            const shouldShow = evaluateCondition(condition, evaluationData);
+            
+            console.log(`📝 Field condition evaluated for ${fieldName}:`, {
+                condition,
+                data: evaluationData,
+                result: shouldShow
+            });
+            
+            return { success: true, result: shouldShow };
+        } catch (error) {
+            console.error('❌ evaluateFieldCondition error:', error);
+            return { success: false, error, result: true }; // Default to visible on error
+        }
+    },
+
+    // Performance Demo Actions
+    startHighFrequencyTest: (args, ctx): ActionResult => {
+        try {
+            const globalStore = getStateStore(ctx, { key: 'GLOBAL.highFrequencyTest' });
+            
+            // Clear any existing interval
+            const existingInterval = globalStore.getState('highFrequencyInterval');
+            if (existingInterval) {
+                clearInterval(existingInterval as any);
+            }
+            
+            // Start new high-frequency updates
+            let counter = 0;
+            const interval = setInterval(() => {
+                counter++;
+                globalStore.setState('highFrequencyCounter', counter);
+                
+                // Auto-stop after 1000 updates to prevent infinite loop
+                if (counter >= 1000) {
+                    clearInterval(interval);
+                    globalStore.setState('highFrequencyInterval', null);
+                }
+            }, 16); // ~60fps updates
+            
+            globalStore.setState('highFrequencyInterval', interval);
+            globalStore.setState('highFrequencyCounter', 0);
+            
+            console.log('🚀 High frequency test started');
+            return { success: true, result: { started: true, counter: 0 } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    stopHighFrequencyTest: (args, ctx): ActionResult => {
+        try {
+            const globalStore = getStateStore(ctx, { key: 'GLOBAL.highFrequencyTest' });
+            const interval = globalStore.getState('highFrequencyInterval');
+            
+            if (interval) {
+                clearInterval(interval as any);
+                globalStore.setState('highFrequencyInterval', null);
+            }
+            
+            console.log('⏹️ High frequency test stopped');
+            return { success: true, result: { stopped: true } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    incrementSelectorCounter: (args, ctx): ActionResult => {
+        try {
+            const { counter } = args as any || { counter: 'A' };
+            const stateKey = `selectorCounter${counter}`;
+            
+            const globalStore = getStateStore(ctx, { key: `GLOBAL.${stateKey}` });
+            const currentValue = globalStore.getState(stateKey) as number || 0;
+            const newValue = currentValue + 1;
+            globalStore.setState(stateKey, newValue);
+            
+            console.log(`📊 Selector counter ${counter} incremented: ${newValue}`);
+            return { success: true, result: { counter, value: newValue } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    createMassComponents: (args, ctx): ActionResult => {
+        try {
+            const { count = 100 } = args as any || {};
+            const globalStore = getStateStore(ctx, { key: 'GLOBAL.massComponents' });
+            
+            // Create component data
+            const components = Array.from({ length: count }, (_, i) => ({
+                id: `component-${Date.now()}-${i}`,
+                name: `Component ${i + 1}`,
+                status: 'active',
+                created: Date.now()
+            }));
+            
+            globalStore.setState('massComponents', components);
+            globalStore.setState('massComponentCount', count);
+            
+            console.log(`🏗️ Created ${count} mass components`);
+            return { success: true, result: { count, components: components.length } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    cleanupMassComponents: (args, ctx): ActionResult => {
+        try {
+            const globalStore = getStateStore(ctx, { key: 'GLOBAL.massComponents' });
+            
+            globalStore.setState('massComponents', []);
+            globalStore.setState('massComponentCount', 0);
+            
+            console.log('🧹 Mass components cleaned up');
+            return { success: true, result: { cleaned: true } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    massUpdateComponents: (args, ctx): ActionResult => {
+        try {
+            const globalStore = getStateStore(ctx, { key: 'GLOBAL.massComponents' });
+            const components = globalStore.getState('massComponents') as any[] || [];
+            
+            // Update all components with new timestamp
+            const updatedComponents = components.map(comp => ({
+                ...comp,
+                lastUpdated: Date.now(),
+                status: Math.random() > 0.5 ? 'active' : 'updating'
+            }));
+            
+            globalStore.setState('massComponents', updatedComponents);
+            globalStore.setState('lastMassUpdate', Date.now());
+            
+            console.log(`🔄 Mass updated ${updatedComponents.length} components`);
+            return { success: true, result: { updated: updatedComponents.length } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
 };
+
+const combinedActionHandler = {...actionRegistry, ...formActionRegistry}
 
 export async function runAction(
     action: SerializableAction | undefined,
@@ -837,7 +1059,7 @@ export async function runAction(
     };
 
     try {
-        const handler = actionRegistry[name];
+        const handler = combinedActionHandler[name];
         let result: ActionResult ;
         
         if (handler) {

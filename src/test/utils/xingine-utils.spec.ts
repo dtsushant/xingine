@@ -1,7 +1,7 @@
 // complete test for file xingine.utils
 
 import { getActionRef, getTypedValue} from "../../core/utils/type";
-import {SerializableAction} from "../../core/expressions/action";
+import {SerializableAction} from "../../core/expressions";
 import {extrapolate} from "../../core/utils/extrapolate-string.util";
 
 describe("Xingine-utils",()=>{

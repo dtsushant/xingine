@@ -1,6 +1,7 @@
 // src/types/component-meta-map.ts
 
 import {EventBindings} from "../expressions/action";
+import { ConditionalRenderConfig } from "../expressions/providers";
 
 export interface InputTypeProperties {
   /**
@@ -293,4 +294,5 @@ export interface FieldMeta<
   required?: boolean;
   order?:number;
   properties?: FieldInputTypeProperties[T];
+  conditionalRender?: ConditionalRenderConfig;
 }

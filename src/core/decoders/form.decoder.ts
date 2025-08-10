@@ -39,6 +39,16 @@ import {
 } from "../component/component-meta-map";
 import { dynamicShapeDecoder } from "../decoders/shared.decoder";
 import {eventBindingsDecoder} from "./action.decoder";
+import { ConditionalRenderConfig } from "../expressions/providers";
+import { conditionalExpressionDecoder } from "./expression.decoder";
+
+export const conditionalRenderConfigDecoder: Decoder<ConditionalRenderConfig> = object({
+  condition: conditionalExpressionDecoder,
+  provider: optional(unknown), // DataProvider is complex, so we use unknown for now
+}).transform((decoded) => ({
+  condition: decoded.condition,
+  provider: decoded.provider as any // Type assertion for DataProvider
+}));
 
 export const inputTypeDecoder: Decoder<InputTypeProperties> = object({
   placeholder: optional(string),
@@ -242,7 +252,8 @@ const fieldMetaDecoderBase = object({
   value: optional(string),
   properties: optional(unknown),
   event:optional(eventBindingsDecoder),
-  order:optional(number)
+  order:optional(number),
+  conditionalRender: optional(conditionalRenderConfigDecoder)
 });
 
 function fieldMetaDecoder(): Decoder<FieldMeta> {
@@ -335,6 +346,7 @@ export const formMetaDecoder: Decoder<FormMeta> = object({
   fields: array(fieldMetaDecoder()).transform((f) => f ?? []),
   action: string,
   event: optional(eventBindingsDecoder),
+  showJsonEditor: optional(boolean),
   dispatch: optional(
     formDispatchPropertiesDecoder().transform((f) => {
       return f;

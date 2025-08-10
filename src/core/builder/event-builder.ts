@@ -1,5 +1,4 @@
-import { EventBindings, SerializableAction, EventActionContext } from '../expressions/action';
-import { ConditionalExpression } from '../expressions/operators';
+import { ConditionalExpression,EventBindings, SerializableAction, EventActionContext } from '../expressions';
 
 /**
  * Event Builder for creating event bindings with fluent API

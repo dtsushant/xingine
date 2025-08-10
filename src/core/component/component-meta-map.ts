@@ -52,6 +52,7 @@ export interface FormMeta {
   action: string;
   event?:EventBindings;
   dispatch?: FormDispatchProperties;
+  showJsonEditor?: boolean;
   [key: string]: unknown;
 }
 

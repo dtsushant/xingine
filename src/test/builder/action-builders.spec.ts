@@ -13,8 +13,7 @@ import {
     Actions,
     Conditions
 } from '../../core/builder/action-builders';
-import { SerializableAction, ConditionalChain } from '../../core/expressions/action';
-import { ConditionalExpression } from '../../core/expressions/operators';
+import {SerializableAction, ConditionalChain, ConditionalExpression } from '../../core/expressions';
 
 describe('ActionBuilders', () => {
     

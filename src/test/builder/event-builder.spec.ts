@@ -1,5 +1,5 @@
 import { EventBuilder, createEvents, Events } from '../../core/builder/event-builder';
-import { SerializableAction } from '../../core/expressions/action';
+import { SerializableAction } from '../../core/expressions';
 
 describe('EventBuilder', () => {
     describe('Basic Event Binding', () => {

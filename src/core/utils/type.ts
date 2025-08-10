@@ -2,9 +2,8 @@ import {
   BaseFilterCondition, ConditionalExpression,
   GroupCondition,
   SearchCondition,
-  SearchQuery,
-} from "../expressions/operators";
-import {SerializableAction} from "../expressions/action";
+  SearchQuery, SerializableAction
+} from "../expressions";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 

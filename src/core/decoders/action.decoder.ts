@@ -1,12 +1,26 @@
-import {boolean, Decoder, either, object, optional, record, string} from "decoders";
-import {EventActionContext, EventBindings, SerializableAction} from "../expressions/action";
+import {boolean, Decoder, either, object, optional, record, string, array, lazy} from "decoders";
+import {EventActionContext, EventBindings, SerializableAction, ConditionalChain} from "../expressions";
 import {dynamicShapeDecoder} from "./shared.decoder";
+import {conditionalExpressionDecoder} from "./expression.decoder";
 
-export const serializableActionDecoder: Decoder<SerializableAction> = either(string , object({
-    action: string,
-    args: optional(record(dynamicShapeDecoder)),
-    valueFromEvent: optional(boolean),
-}));
+// Add decoder for ConditionalChain
+const conditionalChainDecoder: Decoder<ConditionalChain> = object({
+    condition: conditionalExpressionDecoder, // Accepts any valid ConditionalExpression
+    action: array(lazy(() => serializableActionDecoder)),
+});
+
+export const serializableActionDecoder: Decoder<SerializableAction> = either(
+    string,
+    object({
+        action: string,
+        args: optional(record(dynamicShapeDecoder)),
+        valueFromEvent: optional(boolean),
+        chains: optional(array(conditionalChainDecoder)),
+        then: optional(array(lazy(() => serializableActionDecoder))),
+    })
+);
+
+export const serializableActionDecoderList:Decoder<SerializableAction[]> = array(serializableActionDecoder);
 
 export const eventActionKeys = [
     'onClick',
