@@ -1,4 +1,4 @@
-import {EventBindings} from "../expressions/action";
+import {EventBindings} from "../expressions";
 
 export interface TextDetailProperties {
   placeholder?: string;

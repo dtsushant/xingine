@@ -1,6 +1,6 @@
 // src/types/component-meta-map.ts
 
-import {EventBindings} from "../expressions/action";
+import {EventBindings} from "../expressions";
 import { ConditionalRenderConfig } from "../expressions/providers";
 
 export interface InputTypeProperties {

@@ -1,5 +1,5 @@
 import { runAction, ActionExecutionContext, SerializableAction } from '../../core/expressions';
-import { FormActionContext } from '../../core/expressions/context/FormContextHolder';
+import { FormActionContext } from '../../core/expressions';
 
 describe('formActionRegistry with runAction', () => {
     let formData: Record<string, unknown>;

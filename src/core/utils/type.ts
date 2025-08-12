@@ -11,7 +11,7 @@ export function extractRouteParams(path: string): string[] {
   const matches = path.match(/:([a-zA-Z0-9_.]+)/g);
   return matches?.map((param) => param.slice(1)) ?? [];
 }
-export function resolveDynamicPath(
+export function resolveSluggedPath(
   template: string,
   params: unknown,
   conditionalNamedPath?: Record<string, string>,

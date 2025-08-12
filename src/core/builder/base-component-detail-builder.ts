@@ -760,7 +760,17 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
         if (!this.properties.event) {
           this.properties.event = {};
         }
-
+        /*const actionsWithShowHide = [
+            ...actions,
+            {
+                action: 'showHide',
+                args: {
+                    condition: true, // Default condition - can be overridden by specific field conditions
+                    provider: undefined,
+                    data: undefined
+                }
+            } as SerializableAction
+        ];*/
         // Register the onLoad action to onInit event
         this.properties.event.onInit = {
           action: 'onLoad',

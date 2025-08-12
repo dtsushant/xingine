@@ -14,7 +14,7 @@ import {
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
-import { EventBindings } from '../expressions/action';
+import { EventBindings } from '../expressions';
 import { ConditionalExpression } from '../expressions/operators';
 import { ConditionalRenderConfig, DataProvider, DefaultFormDataProvider } from '../expressions/providers';
 import { BaseComponentDetailBuilder } from './base-component-detail-builder';

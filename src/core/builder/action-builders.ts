@@ -5,7 +5,14 @@
  * with better type safety and readability.
  */
 
-import { SerializableAction, ConditionalChain,ConditionalExpression, Operator, SearchCondition } from '../expressions';
+import {
+    SerializableAction,
+    ConditionalChain,
+    ConditionalExpression,
+    Operator,
+    SearchCondition,
+    FormDataSetterMeta
+} from '../expressions';
 
 /**
  * Builder for creating ConditionalExpression objects with fluent API
@@ -350,6 +357,8 @@ export const Actions = {
         ActionBuilder.create('login').withArgs({ username, password }),
     logout: () => ActionBuilder.create('logout'),
     showHide:(dataProvider:Record<string,unknown>,condition:ConditionalExpression) => ActionBuilder.create('showHide').withArgs({data: dataProvider, condition: condition}),
+    setFormData: (formDataSetterMeta:FormDataSetterMeta) =>
+        ActionBuilder.create('setFormData').withArgs(formDataSetterMeta as unknown as Record<string, unknown>),
 };
 
 export default {

@@ -5,8 +5,7 @@ import {
   TabDispatchProperties,
   TableDispatchProperties, TableMeta,
 } from "./component/component-meta-map";
-import {ConditionalExpression} from "./expressions/operators";
-import {EventBindings} from "./expressions/action";
+import {ConditionalExpression, EventBindings} from "./expressions";
 import {ButtonMeta, IconMeta, InputMeta} from "./component";
 import {StyleMeta} from "./expressions/style";
 import {SvgMeta} from "./component/svg-meta-map";

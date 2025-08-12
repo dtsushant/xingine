@@ -4,7 +4,7 @@ import {
 } from "../component/form-meta-map";
 import { DetailFieldMeta } from "../component/detail-meta-map";
 import { Operator } from "../expressions/operators";
-import {EventBindings} from "../expressions/action";
+import {EventBindings} from "../expressions";
 import {StyleMeta} from "../expressions";
 
 export type Method = "POST" | "GET";
