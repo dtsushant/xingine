@@ -161,7 +161,8 @@ export interface FormActionContext {
     // Form actions
     resetForm: () => void;
     submitForm: () => Promise<ActionResult>;
-
+    setInitialFormData:(data: Record<string, unknown>) => void;
+    getInitialFormData : Record<string, unknown>;
     // Lifecycle methods
     onLoad: (actions: SerializableAction[]) => Promise<ActionResult[]>;
 
@@ -169,6 +170,7 @@ export interface FormActionContext {
 
 // Action argument types for each form action
 export type FormActionArgs = {
+    setInitialFormData: Record<string, unknown>;
     setFormData: FormDataSetterMeta;
     getFormData: void;
     setFormField: FormFieldSetterMeta;

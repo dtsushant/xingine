@@ -22,17 +22,18 @@ export const formActionRegistry: FormActionRegistry = {
         }
         let initialFormData = args?.data as Record<string, unknown> || {};
         if(args && args.setFromResult) {
+
             initialFormData = {...initialFormData,
                 ...actionContext.content.chainContext?.result as Record<string, unknown> || {}
                 }
-            };
+            console.info("setting the inital formdata", initialFormData);
+            ctx.setInitialFormData(initialFormData);
+        };
 
         try {
             ctx.setFormData(initialFormData);
             // Update the form update timestamp for optimized conditional rendering
-            ctx.lastFormUpdateTime = Date.now();
-            console.log("setting the form data", args, initialFormData);
-            console.log("form update timestamp set to:", ctx.lastFormUpdateTime);
+
             return { success: true };
         } catch (error) {
             return { success: false, error };
@@ -135,6 +136,18 @@ export const formActionRegistry: FormActionRegistry = {
         try {
             ctx.clearFormErrors();
             return { success: true, result: { cleared: true } };
+        } catch (error) {
+            return { success: false, error };
+        }
+    },
+
+    setInitialFormData: (_, {formActionContext:ctx}): ActionResult => {
+        if( !ctx ) {
+            return { success: false, error: new Error("FormActionContext is not set or does not have initialFormData method") };
+        }
+        try {
+            ctx.setInitialFormData(_||{});
+            return { success: true };
         } catch (error) {
             return { success: false, error };
         }
