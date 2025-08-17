@@ -134,6 +134,10 @@ export interface FormDataSetterMeta{
     setFromResult?: boolean; // If true, will set the form data from the result of the action
 }
 
+export interface FormActionEventMeta {
+    actionsToExecute?:SerializableAction[]
+}
+
 // FormActionContext is now an interface that defines the actual form context/implementation
 export interface FormActionContext {
     form:unknown;
@@ -160,7 +164,7 @@ export interface FormActionContext {
 
     // Form actions
     resetForm: () => void;
-    submitForm: () => Promise<ActionResult>;
+    submitForm: (meta:FormActionEventMeta) => Promise<ActionResult>;
     setInitialFormData:(data: Record<string, unknown>) => void;
     getInitialFormData : Record<string, unknown>;
     // Lifecycle methods
@@ -181,7 +185,7 @@ export type FormActionArgs = {
     setFormErrors: Record<string, string[]>;
     clearFormErrors: void;
     resetForm: void;
-    submitForm: void;
+    submitForm: FormActionEventMeta;
     onLoad: SerializableAction[];
 }
 

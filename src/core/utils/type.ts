@@ -4,6 +4,7 @@ import {
   SearchCondition,
   SearchQuery, SerializableAction
 } from "../expressions";
+import {FieldMeta} from "../component";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
@@ -67,6 +68,26 @@ export function isGroupCondition(val: unknown): val is GroupCondition {
     typeof val === "object" && val !== null && ("and" in val || "or" in val)
   );
 }
+
+export const isObjectField = (field: FieldMeta): field is FieldMeta & {
+    inputType: 'object';
+    properties: { fields: FieldMeta[] }
+} => {
+    return field.inputType === 'object' &&
+        field.properties !== undefined &&
+        'fields' in field.properties &&
+        Array.isArray(field.properties.fields);
+};
+
+export const isObjectArrayField = (field: FieldMeta): field is FieldMeta & {
+    inputType: 'object[]';
+    properties: { itemFields: FieldMeta[] }
+} => {
+    return field.inputType === 'object[]' &&
+        field.properties !== undefined &&
+        'itemFields' in field.properties &&
+        Array.isArray(field.properties.itemFields);
+};
 
 export function buildMikroOrmWhereFromNestedCondition(
   query: SearchQuery,

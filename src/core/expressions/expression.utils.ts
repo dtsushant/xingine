@@ -1,4 +1,4 @@
-import {ActionExecutionContext} from "./operators";
+import {ActionExecutionContext, SerializableAction} from "./operators";
 import {resolvePath} from "../utils";
 
 export function resolveContextValue(path: string, context: ActionExecutionContext, chainContext?: { result?: unknown }, componentId?: string): unknown {
@@ -31,5 +31,25 @@ export function resolveContextValue(path: string, context: ActionExecutionContex
             return resolvePath(context.global.getAllState(), path);
         }
     }
+}
+
+export const fetchFromActionArgs = (action: SerializableAction, key: string): unknown | undefined => {
+    // If action is a string, return undefined
+    if (typeof action === 'string') {
+        return undefined;
+    }
+
+    // If action is an object with args containing the specified key
+    if (typeof action === 'object' && 'args' in action && action.args) {
+        const args = action.args as Record<string, unknown>;
+
+        // Return the value for the specified key if it exists
+        if (args[key]) {
+            return args[key];
+        }
+    }
+
+    // Return undefined if no handler found for the key
+    return undefined;
 }
 

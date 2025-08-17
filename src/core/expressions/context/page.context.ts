@@ -16,9 +16,14 @@ export interface ApiCallMeta{
     body?: unknown;
 }
 
+export interface NavigateMeta{
+    path:string;
+    params?: Record<string, unknown>;
+}
+
 export type PageActionArgs = {
     makeApiCall: ApiCallMeta;
-    navigate: { path: string };
+    navigate: NavigateMeta;
     setState: { key: string; value: unknown; componentId?: string };
     getState: { key: string; stateKey?: string; componentId?: string };
     toggleState: { key: string; componentId?: string };
@@ -59,6 +64,30 @@ export const ActionContextSubscribers = new WeakMap<
     Map<string, Set<() => void>>
 >();
 
+
+export const slugResolver = (url:string,ctx:ActionExecutionContext,body:Record<string,unknown>)=>{
+    let resolvedUrl = url;
+    if (resolvedUrl.includes(':')) {
+        // First try to resolve from URL params directly
+        resolvedUrl = resolveSluggedPath(resolvedUrl, body);
+
+        // If still has unresolved slugs, try to resolve from context state
+        if (resolvedUrl.includes(':')) {
+            // Get all available state data for slug resolution
+            const globalState = ctx.global.getAllState();
+            const contentState = ctx.content.getAllContentState?.() || {};
+
+            // Combine all available state data
+            const allStateData = { ...globalState, ...contentState };
+
+            // Attempt to resolve remaining slugs
+            resolvedUrl = resolveSluggedPath(resolvedUrl, allStateData);
+        }
+
+        console.log(`🔗 URL slug resolution: ${url} -> ${resolvedUrl}`);
+    }
+    return resolvedUrl;
+}
 
 
 function getStateStore(context: ActionExecutionContext, args: Record<string, unknown> | undefined): ComponentStateStore | ActionContext {
@@ -103,10 +132,12 @@ export const actionRegistry: pageActionRegistry = {
         if (!args || typeof args.path !== 'string') {
             return { success: false, error: new Error('navigate requires args.path to be a string') };
         }
+        // Resolve the path using slug resolver if it contains slugs
+        const resolvedPath = slugResolver(args.path, ctx, args.params || {});
 
         try {
-            ctx.global.navigate(args.path);
-            return { success: true, result: { path: args.path } };
+            ctx.global.navigate(resolvedPath);
+            return { success: true, result: { path: resolvedPath } };
         } catch (error) {
             return { success: false, error };
         }
@@ -205,34 +236,8 @@ export const actionRegistry: pageActionRegistry = {
 
         try {
             const componentId = (params as any).componentId as string;
-            let resolvedUrl = params.url;
-
-            // Resolve slugged paths by replacing URL parameters with values from params
-            // Extract URL parameters and other params separately
-            const { url, componentId: _, ...urlParams } = params as any;
-
-            // Check if URL contains slug parameters (e.g., :userId, :id)
-            if (resolvedUrl.includes(':')) {
-                // First try to resolve from URL params directly
-                resolvedUrl = resolveSluggedPath(resolvedUrl, params.body);
-
-                // If still has unresolved slugs, try to resolve from context state
-                if (resolvedUrl.includes(':')) {
-                    // Get all available state data for slug resolution
-                    const globalState = ctx.global.getAllState();
-                    const contentState = ctx.content.getAllContentState?.() || {};
-
-                    // Combine all available state data
-                    const allStateData = { ...globalState, ...contentState, ...urlParams };
-
-                    // Attempt to resolve remaining slugs
-                    resolvedUrl = resolveSluggedPath(resolvedUrl, allStateData);
-                }
-
-                console.log(`🔗 URL slug resolution: ${url} -> ${resolvedUrl}`);
-            }
-
-            // Create resolved params with the new URL
+                       // Create resolved params with the new URL
+            const resolvedUrl = slugResolver(params.url, ctx, params.body as Record<string, unknown> || {});
             const resolvedParams = {
                 ...params,
                 url: resolvedUrl

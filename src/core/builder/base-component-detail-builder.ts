@@ -18,7 +18,7 @@ import {
 import { DetailFieldMeta } from '../component/detail-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
-import { EventBindings, SerializableAction } from '../expressions';
+import {EventBindings, FormActionEventMeta, SerializableAction} from '../expressions';
 import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
 import {
   extractChartMetaFromClass,
@@ -779,6 +779,59 @@ export class FormRendererBuilder<P extends BaseComponentDetailBuilder<any, any>>
 
         return this;
       }
+
+    /**
+     * Sets onSubmit actions that will be executed when the form is submitted successfully
+     */
+    onSubmitSuccess(actions: FormActionEventMeta): FormRendererBuilder<P> {
+        if (!this.properties.event) {
+            this.properties.event = {};
+        }
+
+        // If onSubmit already exists and is an object with args, merge the success handler
+        if (this.properties.event.onSubmit &&
+            typeof this.properties.event.onSubmit === 'object' &&
+            'args' in this.properties.event.onSubmit &&
+            this.properties.event.onSubmit.args) {
+            this.properties.event.onSubmit.args.onSubmitSuccess = actions;
+        }else{
+            this.properties.event.onSubmit = {
+                action: 'submitForm',
+                args: {
+                    onSubmitSuccess: actions
+                }
+            };
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets onSubmit actions that will be executed when the form submission fails
+     */
+    onSubmitFailure(actions: FormActionEventMeta): FormRendererBuilder<P> {
+        if (!this.properties.event) {
+            this.properties.event = {};
+        }
+
+        // If onSubmit already exists and is an object with args, merge the failure handler
+        if (this.properties.event.onSubmit &&
+            typeof this.properties.event.onSubmit === 'object' &&
+            'args' in this.properties.event.onSubmit &&
+            this.properties.event.onSubmit.args) {
+            this.properties.event.onSubmit.args.onSubmitFailure = actions;
+        }else{
+            // Create or update the onSubmit event
+            this.properties.event.onSubmit = {
+                action: 'submitForm',
+                args: {
+                    onSubmitFailure: actions
+                }
+            };
+        }
+
+        return this;
+    }
 
   /**
    * Completes the form configuration and returns the built component

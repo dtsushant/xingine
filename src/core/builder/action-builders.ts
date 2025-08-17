@@ -359,6 +359,14 @@ export const Actions = {
     showHide:(dataProvider:Record<string,unknown>,condition:ConditionalExpression) => ActionBuilder.create('showHide').withArgs({data: dataProvider, condition: condition}),
     setFormData: (formDataSetterMeta:FormDataSetterMeta) =>
         ActionBuilder.create('setFormData').withArgs(formDataSetterMeta as unknown as Record<string, unknown>),
+    setFormLoadAction: (action: string) =>
+        ActionBuilder.create('setFormLoadAction').withArg('action', action),
+    setFormSubmitAction: (action: string) =>
+        ActionBuilder.create('setFormSubmitAction').withArg('action', action),
+    setFormSubmissionSuccessRedirectionPath: (path: string) =>
+        ActionBuilder.create('setFormSubmissionSuccessRedirectionPath').withArg('path', path),
+    setFormSubmissionFailureAction: (path: string) =>
+        ActionBuilder.create('setFormSubmissionAction').withArg('path', path),
 };
 
 export default {

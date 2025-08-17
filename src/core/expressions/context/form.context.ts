@@ -170,7 +170,11 @@ export const formActionRegistry: FormActionRegistry = {
             return { success: false, error: new Error("FormActionContext is not set or does not have submitForm method") };
         }
         try {
-            const result = await ctx.submitForm();
+            if(!_){
+                console.warn("No events to submit, using empty object");
+                return {success: false, error: new Error("No events defined for submission")}
+            }
+            const result = await ctx.submitForm(_);
             return result;
         } catch (error) {
             return { success: false, error };

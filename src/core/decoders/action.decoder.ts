@@ -1,5 +1,11 @@
 import {boolean, Decoder, either, object, optional, record, string, array, lazy} from "decoders";
-import {EventActionContext, EventBindings, SerializableAction, ConditionalChain} from "../expressions";
+import {
+    EventActionContext,
+    EventBindings,
+    SerializableAction,
+    ConditionalChain,
+    FormActionEventMeta
+} from "../expressions";
 import {dynamicShapeDecoder} from "./shared.decoder";
 import {conditionalExpressionDecoder} from "./expression.decoder";
 
@@ -21,6 +27,9 @@ export const serializableActionDecoder: Decoder<SerializableAction> = either(
 );
 
 export const serializableActionDecoderList:Decoder<SerializableAction[]> = array(serializableActionDecoder);
+export const formActionEventMetaDecoder:Decoder<FormActionEventMeta> = object({
+    actionsToExecute: optional(serializableActionDecoderList)
+});
 
 export const eventActionKeys = [
     'onClick',
