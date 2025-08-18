@@ -16,7 +16,7 @@ import {
   FieldMeta
 } from '../component/component-meta-map';
 import { DetailFieldMeta } from '../component/detail-meta-map';
-import { ButtonMeta, IconMeta, InputMeta } from '../component';
+import {ApiMetaMap, ButtonMeta, IconMeta, InputMeta} from '../component';
 import { StyleMeta } from '../expressions/style';
 import {EventBindings, FormActionEventMeta, SerializableAction} from '../expressions';
 import { EventBindingsBuilder, StyleMetaBuilder } from './reusable-builders';
@@ -59,6 +59,13 @@ export abstract class BaseComponentDetailBuilder<T extends LayoutComponentDetail
   wrapper(): WrapperRendererBuilder<B> {
     return new WrapperRendererBuilder(this.self());
   }
+
+    /**
+     * Creates a WrapperRenderer component
+     */
+    apiComponent(): APIRendererBuilder<B> {
+        return new APIRendererBuilder<B>(this.self());
+    }
 
   /**
    * Creates a ButtonRenderer component
@@ -434,6 +441,70 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
     this.parent.withMeta('ButtonRenderer', this.properties);
     return this.parent.build() as ReturnType<P['build']>;
   }
+}
+
+/**
+ * Builder for ButtonRenderer components
+ */
+export class APIRendererBuilder<P extends BaseComponentDetailBuilder<any, any>> {
+    private properties: ApiMetaMap = { actionUrl: '' };
+    private parent: P;
+
+    constructor(parent: P) {
+        this.parent = parent;
+    }
+
+    /**
+     * Create a builder from an existing ButtonMeta object (static method)
+     */
+    static fromAPIMeta<P extends BaseComponentDetailBuilder<any, any>>(
+        meta: ApiMetaMap,
+        parent: P
+    ): APIRendererBuilder<P> {
+        const builder = new APIRendererBuilder(parent);
+        builder.properties = { ...meta };
+        return builder;
+    }
+
+    /**
+     * Set the complete ButtonMeta object (instance method)
+     */
+    fromApiMeta(meta: ApiMetaMap): APIRendererBuilder<P> {
+        this.properties = { ...meta };
+        return this;
+    }
+
+    /**
+     * Set the complete ButtonMeta object
+     */
+    fromObject(meta: ApiMetaMap): APIRendererBuilder<P> {
+        this.properties = { ...meta };
+        return this;
+    }
+
+    /**
+     * Sets the button name
+     */
+    actionUrl(url: string): APIRendererBuilder<P> {
+        this.properties.actionUrl = url;
+        return this;
+    }
+
+    /**
+     * Sets multiple properties at once
+     */
+    setProperties(properties: Record<string, unknown>): APIRendererBuilder<P> {
+        Object.assign(this.properties, properties);
+        return this;
+    }
+
+    /**
+     * Completes the API component configuration and returns the built component
+     */
+    build(): ReturnType<P['build']> {
+        this.parent.withMeta('APIRenderer', this.properties);
+        return this.parent.build() as ReturnType<P['build']>;
+    }
 }
 
 /**

@@ -38,7 +38,7 @@ export const dateDetailDecoder: Decoder<DateDetailProperties> = object({
 });
 
 export const selectDetailDecoder: Decoder<SelectDetailProperties> = object({
-  options: optional(array(object({ label: string, value: string }))),
+  options: array(object({ label: string, value: string })),
   fallback: optional(string),
 });
 
@@ -95,12 +95,12 @@ function detailFieldMetaDecoder(): Decoder<DetailFieldMeta> {
 }
 
 export const objectDetailDecoder: Decoder<ObjectDetailProperties> = object({
-  fields: array(detailFieldMetaDecoder()).transform((f) => f ?? []),
+  fields: array(detailFieldMetaDecoder()),
 });
 
 export const objectArrayDetailDecoder: Decoder<ObjectArrayDetailProperties> =
   object({
-    itemFields: array(detailFieldMetaDecoder()).transform((f) => f ?? []),
+    itemFields: array(detailFieldMetaDecoder()),
   });
 
 export const detailPropertyDecoderMap = {
@@ -122,7 +122,7 @@ const detailDispatchPropertiesDecoder: Decoder<DetailDispatchProperties> =
   });
 
 export const detailMetaDecoder: Decoder<DetailMeta> = object({
-  fields: array(detailFieldMetaDecoder()).transform((f) => f ?? []),
+  fields: array(detailFieldMetaDecoder()),
   action: string,
   event: optional(eventBindingsDecoder),
   dispatch: optional(detailDispatchPropertiesDecoder),

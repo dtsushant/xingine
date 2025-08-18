@@ -333,7 +333,10 @@ export const Conditions = {
  */
 export const Actions = {
     // Navigation actions
-    navigate: (path: string) => ActionBuilder.create('navigate').withArg('path', path),
+    navigate: (path: string,params:Record<string, unknown>={}) => ActionBuilder.create('navigate').withArgs({
+        path,
+        params
+    }),
     
     // State management actions
     setState: (key: string, value: unknown) => ActionBuilder.create('setState').withArgs({ key, value }),

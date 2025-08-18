@@ -272,7 +272,7 @@ export const objectTypeDecoder: Decoder<ObjectFieldProperties> = object({
 
 export const objectListTypeDecoder: Decoder<ObjectListFieldProperties> = object(
   {
-    itemFields: array(fieldMetaDecoder()).transform((f) => f ?? []),
+    itemFields: array(fieldMetaDecoder()),
   },
 );
 
@@ -343,7 +343,7 @@ function formDispatchPropertiesDecoder(): Decoder<FormDispatchProperties> {
     ),
   });*/
 export const formMetaDecoder: Decoder<FormMeta> = object({
-  fields: array(fieldMetaDecoder()).transform((f) => f ?? []),
+  fields: array(fieldMetaDecoder()),
   action: string,
   event: optional(eventBindingsDecoder),
   showJsonEditor: optional(boolean),

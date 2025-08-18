@@ -6,7 +6,7 @@ import {
   TableDispatchProperties, TableMeta,
 } from "./component/component-meta-map";
 import {ConditionalExpression, EventBindings} from "./expressions";
-import {ButtonMeta, IconMeta, InputMeta} from "./component";
+import {ApiMetaMap, ButtonMeta, IconMeta, InputMeta} from "./component";
 import {StyleMeta} from "./expressions/style";
 import {SvgMeta} from "./component/svg-meta-map";
 
@@ -104,6 +104,7 @@ export type ComponentMetaMap = {
   DetailRenderer: DetailMeta;
   ChartRenderer: ChartMeta;
   WrapperRenderer: WrapperMeta;
+  APIRenderer:ApiMetaMap;
   LayoutRenderer: Record<string, unknown>;
   HeaderRenderer: WrapperMeta;
   SiderRenderer: SiderMeta;

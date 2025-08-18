@@ -15,8 +15,12 @@ describe('formActionRegistry with runAction', () => {
 
         formContext = {
             form:formData,
+            lastFormUpdateTime: Date.now(),
+            getLastFormUpdateTime: () => formContext.lastFormUpdateTime,
             setFormData: (data) => { formData = { ...data }; },
+            setInitialFormData: (data) => { formData = { ...data }; },
             getFormData: () => ({ ...formData }),
+            getInitialFormData: { ...formData },
             setFormField: ({ fieldName, value }) => { formFieldValues[fieldName] = value; },
             getFormField: (fieldName) => formFieldValues[fieldName],
             validateForm: () => Object.keys(formErrors).length === 0,

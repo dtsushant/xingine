@@ -25,6 +25,7 @@ import {dynamicShapeDecoder, inputMetaDecoder} from "./decoders";
 import {eventBindingsDecoder} from "./decoders/action.decoder";
 import {iconMetaDecoder} from "./decoders/icon.decoder";
 import {styleDecoder} from "./decoders/style.decoder";
+import {apiComponentDecoder} from "./decoders/api-component.decoder";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -98,6 +99,8 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return record(dynamicShapeDecoder).verify(input);
     case "PopupRenderer":
         return record(dynamicShapeDecoder).verify(input);
+    case "APIRenderer":
+        return apiComponentDecoder.verify(input);
     default:
       return record(dynamicShapeDecoder).verify(input);
   }
@@ -128,14 +131,14 @@ export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object
 export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
 
 export const pathPropertiesDecoder:Decoder<PathProperties> = object({
-    path: string,
+    path: optional(string),
     overrideLayout: optional(string),
 })
 
 export const commissarDecoder: Decoder<Commissar> = object({
-  path: either(string , pathPropertiesDecoder),
+  path: either(string, pathPropertiesDecoder),
   permission: optional(array(string)),
-  meta: optional(componentMetaDecoder()),
+  meta: componentMetaDecoder(),
 });
 
 export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
@@ -217,7 +220,3 @@ const permissionDecoder: Decoder<Permission> = object({
 export const genericErrorsDecoder: Decoder<GenericErrors> = record(
   either(string, record(string)),
 );
-
-
-
-
