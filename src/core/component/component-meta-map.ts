@@ -3,7 +3,7 @@ import {
   FieldMeta,
 } from "../component/form-meta-map";
 import { DetailFieldMeta } from "../component/detail-meta-map";
-import { Operator } from "../expressions/operators";
+import {Operator, SerializableAction} from "../expressions/operators";
 import {EventBindings} from "../expressions";
 import {StyleMeta} from "../expressions";
 
@@ -69,7 +69,7 @@ export interface TableMeta {
   dataSourceUrl: string;
   rowKey?: string;
   event?:EventBindings;
-  dispatch?: TableDispatchProperties;
+  handleRowClick?: SerializableAction; // optional: string name of row click handler function
   [key: string]: unknown;
 }
 

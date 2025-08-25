@@ -6,7 +6,7 @@ import {
     ConditionalChain, FormActionArgs, FormFieldSetterMeta,
     SerializableAction
 } from "../operators";
-import {evaluateCondition, resolvePath, resolveSluggedPath} from "../../utils";
+import {evaluateCondition, extrapolate, resolvePath, resolveSluggedPath} from "../../utils";
 import {serializableActionDecoderList} from "../../decoders";
 import {resolveContextValue} from "../expression.utils";
 
@@ -24,6 +24,7 @@ export interface NavigateMeta{
 export type PageActionArgs = {
     makeApiCall: ApiCallMeta;
     navigate: NavigateMeta;
+    withDefaultData:Record<string,unknown>;
     setState: { key: string; value: unknown; componentId?: string };
     getState: { key: string; stateKey?: string; componentId?: string };
     toggleState: { key: string; componentId?: string };
@@ -67,9 +68,18 @@ export const ActionContextSubscribers = new WeakMap<
 
 export const slugResolver = (url:string,ctx:ActionExecutionContext,body:Record<string,unknown>)=>{
     let resolvedUrl = url;
+    console.log("the context", ctx);
     if (resolvedUrl.includes(':')) {
-        // First try to resolve from URL params directly
-        resolvedUrl = resolveSluggedPath(resolvedUrl, body);
+
+        if(ctx.content.chainContext){
+            const chainedResult  = ctx.content.chainContext?.result as Record<string, unknown> || {}
+            resolvedUrl = resolveSluggedPath(resolvedUrl, chainedResult);
+        }
+
+        if(resolvedUrl.includes(':')){
+            // First try to resolve from URL params directly
+            resolvedUrl = resolveSluggedPath(resolvedUrl, body);
+        }
 
         // If still has unresolved slugs, try to resolve from context state
         if (resolvedUrl.includes(':')) {
@@ -77,9 +87,9 @@ export const slugResolver = (url:string,ctx:ActionExecutionContext,body:Record<s
             const globalState = ctx.global.getAllState();
             const contentState = ctx.content.getAllContentState?.() || {};
 
+
             // Combine all available state data
             const allStateData = { ...globalState, ...contentState };
-
             // Attempt to resolve remaining slugs
             resolvedUrl = resolveSluggedPath(resolvedUrl, allStateData);
         }
@@ -129,6 +139,7 @@ export type pageActionRegistry = {
 
 export const actionRegistry: pageActionRegistry = {
     navigate: (args, ctx): ActionResult => {
+        console.log("calling navigate with context", ctx, " and argument", args);
         if (!args || typeof args.path !== 'string') {
             return { success: false, error: new Error('navigate requires args.path to be a string') };
         }
@@ -141,6 +152,10 @@ export const actionRegistry: pageActionRegistry = {
         } catch (error) {
             return { success: false, error };
         }
+    },
+
+    withDefaultData: (args, ctx): ActionResult => {
+      return {success:true,result:args.data || {}}
     },
 
     setState: (args, ctx): ActionResult => {
@@ -475,7 +490,11 @@ export const actionRegistry: pageActionRegistry = {
                 stateStore.setState('showToast', true);
                 console.log(`Toast [${type}]:`, message);
             } else {
-                ctx.global.showToast(message, type);
+                let toastMessage = message;
+                if(ctx.content.chainContext){
+                    toastMessage = extrapolate(message,  ctx.content.chainContext?.result as Record<string,unknown>|| {});
+                }
+                ctx.global.showToast(toastMessage, type);
             }
             return { success: true, result: { message, type } };
         } catch (error) {

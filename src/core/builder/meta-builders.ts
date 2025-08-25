@@ -14,7 +14,7 @@ import {
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
-import { EventBindings } from '../expressions';
+import {EventBindings, SerializableAction} from '../expressions';
 import { ConditionalExpression } from '../expressions/operators';
 import { ConditionalRenderConfig, DataProvider, DefaultFormDataProvider } from '../expressions/providers';
 import { BaseComponentDetailBuilder } from './base-component-detail-builder';
@@ -396,9 +396,9 @@ export class TableMetaBuilder {
     return this;
   }
 
-  dispatch(dispatch: TableMeta['dispatch']): TableMetaBuilder {
-    this.meta.dispatch = dispatch;
-    return this;
+  handleRowClick(action:SerializableAction):TableMetaBuilder{
+      this.meta.handleRowClick = action;
+      return this;
   }
 
   property(key: string, value: unknown): TableMetaBuilder {

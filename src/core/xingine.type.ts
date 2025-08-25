@@ -9,9 +9,7 @@ import {ConditionalExpression, EventBindings} from "./expressions";
 import {ApiMetaMap, ButtonMeta, IconMeta, InputMeta} from "./component";
 import {StyleMeta} from "./expressions/style";
 import {SvgMeta} from "./component/svg-meta-map";
-
-
-
+import {TextMeta} from "./component/text-meta-map";
 
 
 export interface Comrade {
@@ -80,6 +78,12 @@ export interface TabMeta {
   [key: string]: unknown;
 }
 
+export interface ComponentScope{
+    parent: string;
+    current: string;
+    [key:string]: unknown;
+}
+
 export interface WrapperMeta {
   [key:string] : unknown;
   event?:EventBindings;
@@ -123,7 +127,7 @@ export type ComponentMetaMap = {
   MenuRenderer: Record<string, unknown>;
   TitleRenderer: Record<string, unknown>;
   CardRenderer: Record<string, unknown>;
-  TextRenderer: Record<string, unknown>;
+  TextRenderer: TextMeta;
   LinkRenderer: Record<string, unknown>;
   PopupRenderer: Record<string, unknown>;
 } & {

@@ -14,7 +14,7 @@ import {
 } from "../component/component-meta-map";
 import { operatorDecoder } from "../decoders/expression.decoder";
 import { decodeFieldInputPropertiesByInputType } from "../decoders/form.decoder";
-import {eventBindingsDecoder} from "./action.decoder";
+import {eventBindingsDecoder, serializableActionDecoder} from "./action.decoder";
 
 export const tableColumnDecoder: Decoder<ColumnMeta> = object({
   title: string,
@@ -41,5 +41,6 @@ export const tableMetaDecoder: Decoder<TableMeta> = object({
   dataSourceUrl: string,
   rowKey: optional(string),
   event: optional(eventBindingsDecoder),
+  handleRowClick: optional(serializableActionDecoder),
   pagination: optional(boolean),
 });

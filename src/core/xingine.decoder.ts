@@ -26,6 +26,7 @@ import {eventBindingsDecoder} from "./decoders/action.decoder";
 import {iconMetaDecoder} from "./decoders/icon.decoder";
 import {styleDecoder} from "./decoders/style.decoder";
 import {apiComponentDecoder} from "./decoders/api-component.decoder";
+import {textMetaDecoder} from "./decoders/text.decoder";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -94,7 +95,7 @@ function decodeMetaByComponent(component: string, input: unknown): object {
     case "CardRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "TextRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return textMetaDecoder.verify(input);
     case "LinkRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "PopupRenderer":

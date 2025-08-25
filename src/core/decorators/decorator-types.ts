@@ -1,7 +1,7 @@
 import { FieldInputTypeProperties, FieldMeta } from '../component/form-meta-map';
 import { DetailFieldMeta } from '../component/detail-meta-map';
 import { ColumnMeta } from '../component/component-meta-map';
-import {EventBindings} from "../expressions";
+import {EventBindings, SerializableAction} from "../expressions";
 
 /**
  * Base constructor type for class decorators
@@ -95,6 +95,7 @@ export interface TableClassOptions {
   size?: 'small' | 'middle' | 'large';
   scroll?: { x?: number; y?: number };
   dataSourceUrl?: string;
+  handleRowClick?:SerializableAction;
   className?: string;
   style?: Record<string, any>;
 }

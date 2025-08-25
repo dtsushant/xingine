@@ -341,7 +341,8 @@ export const Actions = {
     // State management actions
     setState: (key: string, value: unknown) => ActionBuilder.create('setState').withArgs({ key, value }),
     toggleState: (key: string) => ActionBuilder.create('toggleState').withArg('key', key),
-    
+
+    withDefaultData:(data:Record<string,unknown>)=> ActionBuilder.create('withDefaultData').withArgs({data}),
     // Storage actions
     setStorage: (key: string, value: string) => ActionBuilder.create('setLocalStorage').withArgs({ key, value }),
     getStorage: (key: string, stateKey?: string) => ActionBuilder.create('getLocalStorage').withArgs({ key, stateKey }),

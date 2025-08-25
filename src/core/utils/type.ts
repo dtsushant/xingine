@@ -8,6 +8,38 @@ import {FieldMeta} from "../component";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
+export function slugMapper(pattern: string, pathname: string): Record<string, string> {
+    const patternParts = pattern.split("/").filter(Boolean);
+    const pathParts = pathname.split("/").filter(Boolean);
+
+    const params: Record<string, string> = {};
+
+    patternParts.forEach((part, i) => {
+        if (part.startsWith(":") && pathParts[i]) {
+            const key = part.slice(1); // remove leading ":"
+            params[key] = pathParts[i];
+        }
+    });
+
+    return params;
+}
+
+export function matchingPath(pattern: string, pathname: string): boolean {
+    const patternParts = pattern.split("/").filter(Boolean);
+    const pathParts = pathname.split("/").filter(Boolean);
+
+    if (patternParts.length !== pathParts.length) {
+        return false;
+    }
+
+    return patternParts.every((part, i) => {
+        if (part.startsWith(":")) {
+            return true; // treat as wildcard
+        }
+        return part === pathParts[i];
+    });
+}
+
 export function extractRouteParams(path: string): string[] {
   const matches = path.match(/:([a-zA-Z0-9_.]+)/g);
   return matches?.map((param) => param.slice(1)) ?? [];
@@ -24,6 +56,7 @@ export function resolveSluggedPath(
     }
     const value = resolvePath(params, keyToResolve);
     if (value === undefined) {
+
       console.warn(`Missing route param: ${key}`);
       return `:${key}`;
     }
