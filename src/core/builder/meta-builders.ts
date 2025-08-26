@@ -287,11 +287,6 @@ export class FormMetaBuilder {
     return this;
   }
 
-  dispatch(dispatch: FormMeta['dispatch']): FormMetaBuilder {
-    this.meta.dispatch = dispatch;
-    return this;
-  }
-
   /**
    * Enables or disables the JSON editor for this form
    */

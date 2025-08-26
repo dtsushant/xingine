@@ -306,6 +306,7 @@ export const actionRegistry: pageActionRegistry = {
             }
 
             const currentValue = stateStore.getState(key) as boolean;
+            console.log("the current value for the key is ", currentValue, "the key ", key)
             const newValue = !currentValue;
             stateStore.setState(key, newValue);
 

@@ -346,10 +346,5 @@ export const formMetaDecoder: Decoder<FormMeta> = object({
   fields: array(fieldMetaDecoder()),
   action: string,
   event: optional(eventBindingsDecoder),
-  showJsonEditor: optional(boolean),
-  dispatch: optional(
-    formDispatchPropertiesDecoder().transform((f) => {
-      return f;
-    }),
-  ),
+  showJsonEditor: optional(boolean)
 });
