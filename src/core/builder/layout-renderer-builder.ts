@@ -82,7 +82,6 @@ export class LayoutRendererBuilder {
     this.layout.style.style = style;
     return this;
   }
-
   /**
    * Configures the header section
    */
@@ -224,6 +223,146 @@ export class LayoutRendererBuilder {
    */
   build(): LayoutRenderer {
     return { ...this.layout };
+  }
+
+  // ========================================
+  // UI Builder Support Methods
+  // ========================================
+
+  /**
+   * Check if a section can be added (for UI constraint checking)
+   * @param sectionType The section type to check
+   * @returns true if the section can be added, false if it already exists
+   */
+  canAddSection(sectionType: 'header' | 'sider' | 'footer' | 'content'): boolean {
+    switch (sectionType) {
+      case 'header':
+        return !this.layout.header;
+      case 'sider':
+        return !this.layout.sider;
+      case 'footer':
+        return !this.layout.footer;
+      case 'content':
+        return true; // Content can always be added (multiple allowed)
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Check if a specific section exists
+   * @param sectionType The section type to check
+   * @returns true if the section exists
+   */
+  hasSection(sectionType: 'header' | 'sider' | 'footer' | 'content'): boolean {
+    switch (sectionType) {
+      case 'header':
+        return !!this.layout.header;
+      case 'sider':
+        return !!this.layout.sider;
+      case 'footer':
+        return !!this.layout.footer;
+      case 'content':
+        return this.layout.content.meta.length > 0;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Get available section types that can be added (for UI dropdown)
+   * @returns Array of section types that can be added
+   */
+  getAvailableChildTypes(): ('header' | 'sider' | 'footer' | 'content')[] {
+    const availableTypes: ('header' | 'sider' | 'footer' | 'content')[] = [];
+
+    if (this.canAddSection('header')) {
+      availableTypes.push('header');
+    }
+
+    // Content can always be added (multiple allowed)
+    availableTypes.push('content');
+
+    if (this.canAddSection('sider')) {
+      availableTypes.push('sider');
+    }
+
+    if (this.canAddSection('footer')) {
+      availableTypes.push('footer');
+    }
+
+    return availableTypes;
+  }
+
+  /**
+   * Get the count of content items
+   * @returns Number of content items
+   */
+  getContentCount(): number {
+    return this.layout.content.meta.length;
+  }
+
+  /**
+   * Get all active sections
+   * @returns Array of section types that have content
+   */
+  getActiveSections(): ('header' | 'sider' | 'footer' | 'content')[] {
+    const sections: ('header' | 'sider' | 'footer' | 'content')[] = [];
+
+    if (this.hasSection('header')) sections.push('header');
+    if (this.hasSection('content')) sections.push('content');
+    if (this.hasSection('sider')) sections.push('sider');
+    if (this.hasSection('footer')) sections.push('footer');
+
+    return sections;
+  }
+
+  /**
+   * Remove a section (for UI operations)
+   * @param sectionType The section type to remove
+   * @param contentIndex Optional index for content items
+   */
+  removeSection(sectionType: 'header' | 'sider' | 'footer' | 'content', contentIndex?: number): LayoutRendererBuilder {
+    switch (sectionType) {
+      case 'header':
+        delete this.layout.header;
+        break;
+      case 'sider':
+        delete this.layout.sider;
+        break;
+      case 'footer':
+        delete this.layout.footer;
+        break;
+      case 'content':
+        if (typeof contentIndex === 'number' && this.layout.content.meta[contentIndex]) {
+          this.layout.content.meta.splice(contentIndex, 1);
+        }
+        break;
+    }
+    return this;
+  }
+
+  /**
+   * Get layout constraint information for UI builders
+   * @returns Object containing constraint information
+   */
+  getConstraints() {
+    return {
+      singleSections: ['header', 'sider', 'footer'], // Only one allowed
+      multipleSections: ['content'], // Multiple allowed
+      maxSections: {
+        header: 1,
+        sider: 1,
+        footer: 1,
+        content: Infinity
+      },
+      currentCounts: {
+        header: this.hasSection('header') ? 1 : 0,
+        sider: this.hasSection('sider') ? 1 : 0,
+        footer: this.hasSection('footer') ? 1 : 0,
+        content: this.getContentCount()
+      }
+    };
   }
 }
 

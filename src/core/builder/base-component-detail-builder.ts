@@ -35,7 +35,7 @@ import {ClassConstructor} from "../decorators";
 export abstract class BaseComponentDetailBuilder<T extends LayoutComponentDetail, B extends BaseComponentDetailBuilder<T, B>> {
   protected layoutDetail: T;
 
-  constructor(initialDetail: T) {
+  protected constructor(initialDetail: T) {
     this.layoutDetail = { ...initialDetail };
   }
 
