@@ -20,6 +20,7 @@ import { formMetaDecoder } from "./decoders/form.decoder";
 import { detailMetaDecoder } from "./decoders/detail.decoder";
 import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
+import { sliderMetaDecoder } from "./decoders/slider.decoder";
 import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
 import {dynamicShapeDecoder, inputMetaDecoder} from "./decoders";
 import {eventBindingsDecoder} from "./decoders/action.decoder";
@@ -62,6 +63,8 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return detailMetaDecoder.verify(input);
     case "ChartRenderer":
         return chartMetaDecoder.verify(input);
+    case "SliderRenderer":
+        return sliderMetaDecoder.verify(input);
     case "WrapperRenderer":
         return wrapperMetaDecoder.verify(input);
   case "ConditionalRenderer":

@@ -471,6 +471,13 @@ export class LayoutSectionBuilder {
   }
 
   /**
+   * Creates a slider component for this section
+   */
+  slider(): LayoutSectionComponentBuilder {
+    return new LayoutSectionComponentBuilder(this.parent, this.section, this.sectionStyle, 'slider', this.pathValue, this.permissionValue);
+  }
+
+  /**
    * Sets the component using a pre-built LayoutComponentDetail
    */
   withComponent(meta: LayoutComponentDetail): LayoutRendererBuilder {
@@ -540,7 +547,7 @@ export class LayoutSectionComponentBuilder {
     private parent: LayoutRendererBuilder,
     private section: 'header' | 'content' | 'sider' | 'footer',
     private sectionStyle?: StyleMeta,
-    private componentType: 'wrapper' | 'button' | 'input' | 'form' | 'table' | 'chart' = 'wrapper',
+    private componentType: 'wrapper' | 'button' | 'input' | 'form' | 'table' | 'chart' | 'slider' = 'wrapper',
     pathValue?: string,
     permissionValue?: string[]
   ) {
@@ -567,6 +574,8 @@ export class LayoutSectionComponentBuilder {
         return this.componentBuilder.table();
       case 'chart':
         return this.componentBuilder.chart();
+      case 'slider':
+        return this.componentBuilder.slider();
       default:
         return this.componentBuilder.wrapper();
     }

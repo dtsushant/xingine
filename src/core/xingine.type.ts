@@ -101,12 +101,26 @@ export interface ConditionalMeta{
     [key: string]: unknown;
 }
 
+export interface SliderMeta {
+    slides: LayoutComponentDetail[];
+    autoPlay?: boolean;
+    autoPlayInterval?: number;
+    showNavigation?: boolean;
+    showDots?: boolean;
+    infinite?: boolean;
+    startIndex?: number;
+    style?: StyleMeta;
+    event?: EventBindings;
+    [key: string]: unknown;
+}
+
 export type ComponentMetaMap = {
   FormRenderer: FormMeta;
   TableRenderer: TableMeta;
   TabRenderer: TabMeta;
   DetailRenderer: DetailMeta;
   ChartRenderer: ChartMeta;
+  SliderRenderer: SliderMeta;
   WrapperRenderer: WrapperMeta;
   APIRenderer:ApiMetaMap;
   LayoutRenderer: Record<string, unknown>;

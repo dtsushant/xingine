@@ -3,7 +3,8 @@ import {
   ComponentMeta, 
   ComponentMetaMap,
   WrapperMeta,
-  ConditionalMeta
+  ConditionalMeta,
+  SliderMeta
 } from '../xingine.type';
 import { 
   ChartDataset, 
@@ -100,6 +101,13 @@ export abstract class BaseComponentDetailBuilder<T extends LayoutComponentDetail
    */
   chart(): ChartRendererBuilder<B> {
     return new ChartRendererBuilder(this.self());
+  }
+
+  /**
+   * Creates a SliderRenderer component
+   */
+  slider(): SliderRendererBuilder<B> {
+    return new SliderRendererBuilder(this.self());
   }
 
   /**
@@ -1353,6 +1361,162 @@ export class ChartConfigBuilderWithParent<P extends BaseComponentDetailBuilder<a
     return this.parent;
   }
 }
+
+/**
+ * Builder for SliderRenderer components
+ */
+export class SliderRendererBuilder<P extends BaseComponentDetailBuilder<any, any>> {
+  private properties: SliderMeta = {
+    slides: [],
+    autoPlay: false,
+    autoPlayInterval: 3000,
+    showNavigation: true,
+    showDots: true,
+    infinite: true,
+    startIndex: 0
+  };
+  private parent: P;
+
+  constructor(parent: P) {
+    this.parent = parent;
+  }
+
+  /**
+   * Create a builder from an existing SliderMeta object
+   */
+  static fromSliderMeta<P extends BaseComponentDetailBuilder<any, any>>(
+    meta: SliderMeta, 
+    parent: P
+  ): SliderRendererBuilder<P> {
+    const builder = new SliderRendererBuilder(parent);
+    builder.properties = { ...meta };
+    return builder;
+  }
+
+  /**
+   * Set the complete SliderMeta object
+   */
+  fromObject(meta: SliderMeta): SliderRendererBuilder<P> {
+    this.properties = { ...meta };
+    return this;
+  }
+
+  /**
+   * Adds a slide to the slider
+   */
+  addSlide(slide: LayoutComponentDetail): SliderRendererBuilder<P> {
+    this.properties.slides.push(slide);
+    return this;
+  }
+
+  /**
+   * Adds multiple slides to the slider
+   */
+  addSlides(slides: LayoutComponentDetail[]): SliderRendererBuilder<P> {
+    this.properties.slides.push(...slides);
+    return this;
+  }
+
+  /**
+   * Sets all slides at once
+   */
+  slides(slides: LayoutComponentDetail[]): SliderRendererBuilder<P> {
+    this.properties.slides = [...slides];
+    return this;
+  }
+
+  /**
+   * Enable/disable auto play
+   */
+  autoPlay(enabled: boolean, interval?: number): SliderRendererBuilder<P> {
+    this.properties.autoPlay = enabled;
+    if (interval !== undefined) {
+      this.properties.autoPlayInterval = interval;
+    }
+    return this;
+  }
+
+  /**
+   * Set auto play interval in milliseconds
+   */
+  autoPlayInterval(interval: number): SliderRendererBuilder<P> {
+    this.properties.autoPlayInterval = interval;
+    return this;
+  }
+
+  /**
+   * Show/hide navigation arrows
+   */
+  showNavigation(show: boolean): SliderRendererBuilder<P> {
+    this.properties.showNavigation = show;
+    return this;
+  }
+
+  /**
+   * Show/hide dots indicator
+   */
+  showDots(show: boolean): SliderRendererBuilder<P> {
+    this.properties.showDots = show;
+    return this;
+  }
+
+  /**
+   * Enable/disable infinite looping
+   */
+  infinite(enabled: boolean): SliderRendererBuilder<P> {
+    this.properties.infinite = enabled;
+    return this;
+  }
+
+  /**
+   * Set starting slide index
+   */
+  startIndex(index: number): SliderRendererBuilder<P> {
+    this.properties.startIndex = index;
+    return this;
+  }
+
+  /**
+   * Set style properties
+   */
+  style(style: SliderMeta['style']): SliderRendererBuilder<P> {
+    this.properties.style = style;
+    return this;
+  }
+
+  /**
+   * Set event bindings
+   */
+  event(event: SliderMeta['event']): SliderRendererBuilder<P> {
+    this.properties.event = event;
+    return this;
+  }
+
+  /**
+   * Sets a custom property
+   */
+  property(key: string, value: unknown): SliderRendererBuilder<P> {
+    (this.properties as any)[key] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple properties at once
+   */
+  setProperties(properties: Record<string, unknown>): SliderRendererBuilder<P> {
+    Object.assign(this.properties, properties);
+    return this;
+  }
+
+  /**
+   * Completes the slider configuration and returns the built component
+   */
+  build(): ReturnType<P['build']> {
+    this.parent.withMeta('SliderRenderer', this.properties);
+    return this.parent.build() as ReturnType<P['build']>;
+  }
+}
+
 export class DetailRendererBuilder<P extends BaseComponentDetailBuilder<any, any>> {
   private properties: DetailMeta = {
     fields: [],
