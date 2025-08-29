@@ -1,3 +1,6 @@
 export * from './action'
 export * from './operators'
 export * from './style'
+export * from './providers'
+export * from './context'
+export * from './expression.utils'

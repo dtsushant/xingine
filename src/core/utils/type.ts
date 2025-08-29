@@ -2,17 +2,49 @@ import {
   BaseFilterCondition, ConditionalExpression,
   GroupCondition,
   SearchCondition,
-  SearchQuery,
-} from "../expressions/operators";
-import {SerializableAction} from "../expressions/action";
+  SearchQuery, SerializableAction
+} from "../expressions";
+import {FieldMeta} from "../component";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
+
+export function slugMapper(pattern: string, pathname: string): Record<string, string> {
+    const patternParts = pattern.split("/").filter(Boolean);
+    const pathParts = pathname.split("/").filter(Boolean);
+
+    const params: Record<string, string> = {};
+
+    patternParts.forEach((part, i) => {
+        if (part.startsWith(":") && pathParts[i]) {
+            const key = part.slice(1); // remove leading ":"
+            params[key] = pathParts[i];
+        }
+    });
+
+    return params;
+}
+
+export function matchingPath(pattern: string, pathname: string): boolean {
+    const patternParts = pattern.split("/").filter(Boolean);
+    const pathParts = pathname.split("/").filter(Boolean);
+
+    if (patternParts.length !== pathParts.length) {
+        return false;
+    }
+
+    return patternParts.every((part, i) => {
+        if (part.startsWith(":")) {
+            return true; // treat as wildcard
+        }
+        return part === pathParts[i];
+    });
+}
 
 export function extractRouteParams(path: string): string[] {
   const matches = path.match(/:([a-zA-Z0-9_.]+)/g);
   return matches?.map((param) => param.slice(1)) ?? [];
 }
-export function resolveDynamicPath(
+export function resolveSluggedPath(
   template: string,
   params: unknown,
   conditionalNamedPath?: Record<string, string>,
@@ -24,6 +56,7 @@ export function resolveDynamicPath(
     }
     const value = resolvePath(params, keyToResolve);
     if (value === undefined) {
+
       console.warn(`Missing route param: ${key}`);
       return `:${key}`;
     }
@@ -68,6 +101,26 @@ export function isGroupCondition(val: unknown): val is GroupCondition {
     typeof val === "object" && val !== null && ("and" in val || "or" in val)
   );
 }
+
+export const isObjectField = (field: FieldMeta): field is FieldMeta & {
+    inputType: 'object';
+    properties: { fields: FieldMeta[] }
+} => {
+    return field.inputType === 'object' &&
+        field.properties !== undefined &&
+        'fields' in field.properties &&
+        Array.isArray(field.properties.fields);
+};
+
+export const isObjectArrayField = (field: FieldMeta): field is FieldMeta & {
+    inputType: 'object[]';
+    properties: { itemFields: FieldMeta[] }
+} => {
+    return field.inputType === 'object[]' &&
+        field.properties !== undefined &&
+        'itemFields' in field.properties &&
+        Array.isArray(field.properties.itemFields);
+};
 
 export function buildMikroOrmWhereFromNestedCondition(
   query: SearchQuery,

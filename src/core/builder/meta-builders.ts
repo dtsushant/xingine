@@ -3,20 +3,22 @@ import {
   WrapperMeta,
   Commissar, PathProperties
 } from '../xingine.type';
-import { 
-  FormMeta, 
-  DetailMeta, 
-  TableMeta, 
+import {
+  FormMeta,
+  DetailMeta,
+  TableMeta,
   ChartMeta,
   ChartConfig,
   ChartDataset,
-  ColumnMeta
+  ColumnMeta, FieldMeta
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { StyleMeta } from '../expressions/style';
-import { EventBindings } from '../expressions/action';
+import {EventBindings, SerializableAction} from '../expressions';
 import { ConditionalExpression } from '../expressions/operators';
+import { ConditionalRenderConfig, DataProvider, DefaultFormDataProvider } from '../expressions/providers';
 import { BaseComponentDetailBuilder } from './base-component-detail-builder';
+import {ActionBuilder} from "./action-builders";
 
 /**
  * Builder for ConditionalMeta objects
@@ -265,12 +267,12 @@ export class FormMetaBuilder {
     return new FormMetaBuilder();
   }
 
-  fields(fields: FormMeta['fields']): FormMetaBuilder {
+  fields(fields: FieldMeta[]): FormMetaBuilder {
     this.meta.fields = fields;
     return this;
   }
 
-  addField(field: FormMeta['fields'][0]): FormMetaBuilder {
+  addField(field: FieldMeta): FormMetaBuilder {
     this.meta.fields.push(field);
     return this;
   }
@@ -285,8 +287,11 @@ export class FormMetaBuilder {
     return this;
   }
 
-  dispatch(dispatch: FormMeta['dispatch']): FormMetaBuilder {
-    this.meta.dispatch = dispatch;
+  /**
+   * Enables or disables the JSON editor for this form
+   */
+  showJsonEditor(show: boolean = true): FormMetaBuilder {
+    this.meta.showJsonEditor = show;
     return this;
   }
 
@@ -386,9 +391,9 @@ export class TableMetaBuilder {
     return this;
   }
 
-  dispatch(dispatch: TableMeta['dispatch']): TableMetaBuilder {
-    this.meta.dispatch = dispatch;
-    return this;
+  handleRowClick(action:SerializableAction):TableMetaBuilder{
+      this.meta.handleRowClick = action;
+      return this;
   }
 
   property(key: string, value: unknown): TableMetaBuilder {
@@ -499,11 +504,6 @@ export class ChartConfigMetaBuilder {
 
   dataSourceUrl(url: string): ChartConfigMetaBuilder {
     this.config.dataSourceUrl = url;
-    return this;
-  }
-
-  renderer(renderer: ChartConfig['renderer']): ChartConfigMetaBuilder {
-    this.config.renderer = renderer;
     return this;
   }
 
@@ -621,5 +621,113 @@ export class CommissarBuilder extends BaseComponentDetailBuilder<Commissar, Comm
       throw new Error('Path is required for Commissar');
     }
     return { ...commissar };
+  }
+}
+
+/**
+ * Builder for FieldMeta objects with conditional rendering support
+ */
+export class FieldMetaBuilder {
+  private field: FieldMeta = {};
+
+  static create(): FieldMetaBuilder {
+    return new FieldMetaBuilder();
+  }
+
+  name(name: string): FieldMetaBuilder {
+    this.field.name = name;
+    return this;
+  }
+
+  label(label: string): FieldMetaBuilder {
+    this.field.label = label;
+    return this;
+  }
+
+  inputType(inputType: FieldMeta['inputType']): FieldMetaBuilder {
+    this.field.inputType = inputType;
+    return this;
+  }
+
+  value(value: string): FieldMetaBuilder {
+    this.field.value = value;
+    return this;
+  }
+
+  required(required: boolean = true): FieldMetaBuilder {
+    this.field.required = required;
+    return this;
+  }
+
+  order(order: number): FieldMetaBuilder {
+    this.field.order = order;
+    return this;
+  }
+
+  properties(properties: FieldMeta['properties']): FieldMetaBuilder {
+    this.field.properties = properties;
+    return this;
+  }
+
+  event(event: EventBindings): FieldMetaBuilder {
+    this.field.event = event;
+    return this;
+  }
+
+  /**
+   * Adds conditional rendering to the field
+   */
+  withCondition(condition: ConditionalExpression, provider?: DataProvider): FieldMetaBuilder {
+    this.field.conditionalRender = {
+      condition,
+      provider // Optional, defaults to form data if not provided
+    };
+    
+    return this;
+  }
+
+  /**
+   * Adds conditional rendering with a simple field-based condition
+   */
+  showWhen(fieldName: string, operator: string, value: unknown): FieldMetaBuilder {
+    const condition: ConditionalExpression = {
+      field: fieldName,
+      operator: operator as any,
+      value
+    };
+    
+    return this.withCondition(condition);
+  }
+
+  /**
+   * Shows field when another field equals a specific value
+   */
+  showWhenEquals(fieldName: string, value: unknown): FieldMetaBuilder {
+    return this.showWhen(fieldName, 'eq', value);
+  }
+
+  /**
+   * Shows field when another field is not equal to a specific value
+   */
+  showWhenNotEquals(fieldName: string, value: unknown): FieldMetaBuilder {
+    return this.showWhen(fieldName, 'ne', value);
+  }
+
+  /**
+   * Shows field when another field contains a specific value (for multi-select/array fields)
+   */
+  showWhenContains(fieldName: string, value: unknown): FieldMetaBuilder {
+    return this.showWhen(fieldName, 'in', value);
+  }
+
+  /**
+   * Shows field when another field is not null/undefined/empty
+   */
+  showWhenNotEmpty(fieldName: string): FieldMetaBuilder {
+    return this.showWhen(fieldName, 'ne', null);
+  }
+
+  build(): FieldMeta {
+    return { ...this.field };
   }
 }

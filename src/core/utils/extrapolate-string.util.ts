@@ -90,8 +90,24 @@ export function evaluateExpression(expression: string, context: Record<string, u
                 const rightVal = parseValue(right);
 
                 switch (op) {
-                    case '===': return leftVal === rightVal;
-                    case '!==': return leftVal !== rightVal;
+                    case '===':
+                        // Special handling: treat undefined as false when comparing with false
+                        if (rightVal === false && leftVal === undefined) {
+                            return true;
+                        }
+                        if (leftVal === false && rightVal === undefined) {
+                            return true;
+                        }
+                        return leftVal === rightVal;
+                    case '!==':
+                        // Special handling: treat undefined as false when comparing with false
+                        if (rightVal === false && leftVal === undefined) {
+                            return false;
+                        }
+                        if (leftVal === false && rightVal === undefined) {
+                            return false;
+                        }
+                        return leftVal !== rightVal;
                     case '==': return leftVal == rightVal;
                     case '!=': return leftVal != rightVal;
                     case '>=': return Number(leftVal) >= Number(rightVal);
@@ -165,5 +181,3 @@ function splitByTopLevelOperator(expr: string, operator: '&&' | '||'): string[] 
     if (current) result.push(current);
     return result;
 }
-
-

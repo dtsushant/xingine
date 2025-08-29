@@ -4,6 +4,13 @@ import {
 import { 
   BaseComponentDetailBuilder
 } from './base-component-detail-builder';
+import { ClassConstructor, ClassType } from '../decorators/decorator-types';
+import {
+  extractFormMetaFromClass,
+  extractTableMetaFromClass,
+  extractDetailMetaFromClass,
+  extractChartMetaFromClass
+} from '../utils/class-to-component.util';
 
 /**
  * Fluent builder for creating LayoutComponentDetail instances
@@ -45,4 +52,5 @@ export class LayoutComponentDetailBuilder extends BaseComponentDetailBuilder<Lay
   protected self(): LayoutComponentDetailBuilder {
     return this;
   }
+
 }

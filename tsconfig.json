@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "declaration": true,
     "lib": ["ES2019", "DOM"],
+    "types": ["jest"],
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
@@ -17,5 +18,5 @@
     "resolveJsonModule": true
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/**/*.demo.ts", "src/**/login-action-example.ts", "src/**/realistic-login.demo.ts", "src/**/clean-login-example.ts", "src/**/map-demo.ts"]
 }

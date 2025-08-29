@@ -1,74 +1,16 @@
 import "reflect-metadata";
-import {
-  CommissarProperties,
-  FieldValidationError,
-  FormValidationResult,
-  ModuleProperties,
-  ModulePropertyOptions,
-  ProvisioneerProps,
-  ProvisioneerProperties,
-} from "./xingine.type";
-import { Constructor } from "./utils/type";
+
 import {
   ColumnMeta,
   FieldMeta,
   FormMeta,
-  InputTypeProperties,
-  NumberTypeProperties,
-  PasswordTypeProperties,
-  SelectTypeProperties,
-  DateTypeProperties,
-  TextareaTypeProperties,
 } from "./component/component-meta-map";
 import { DetailFieldMeta } from "./component/detail-meta-map";
 
-export const MODULE_PROPERTY_METADATA_KEY = "custom:module-property";
-export const PROVISIONEER_METADATA = "xingine:provisioneer";
 export const FORM_FIELD_METADATA = "xingine:form-field";
 export const DETAIL_FIELD_METADATA = "xingine:detail-field";
 export const COLUMN_PROPERTY_METADATA = "xingine:column-property";
 
-/**
- *A @Provisioneer is a service controller that acts as a centralized,state-assigned provision handler.
- * It exposes a defined set of provision points (actions), each governed by a @Commissar, representing specific state-sanctioned duties.
- * The Provisioneer is not autonomous in defining its functional intent;
- * instead, it operates strictly under system-defined allocations and routes.
- */
-export function Provisioneer(options: ProvisioneerProps): ClassDecorator {
-  return (target) => {
-    const finalOptions: ProvisioneerProps = {
-      ...options,
-      name: options.name ?? target.name,
-    };
-    Reflect.defineMetadata(PROVISIONEER_METADATA, finalOptions, target);
-  };
-}
-
-export function getProvisioneerProperties(
-  controllerClass: Constructor,
-): ProvisioneerProperties | undefined {
-  return Reflect.getMetadata(PROVISIONEER_METADATA, controllerClass) as
-    | ProvisioneerProperties
-    | undefined;
-}
-
-export function ModuleProperty(options: ModulePropertyOptions): ClassDecorator {
-  return (target) => {
-    const finalOptions: ModuleProperties = {
-      ...options,
-      name: target.name,
-    };
-    Reflect.defineMetadata(MODULE_PROPERTY_METADATA_KEY, finalOptions, target);
-  };
-}
-
-export function getModulePropertyMetadata<T extends object>(
-  moduleClass: new (...args: []) => T,
-): ModuleProperties | undefined {
-  return Reflect.getMetadata(MODULE_PROPERTY_METADATA_KEY, moduleClass) as
-    | ModuleProperties
-    | undefined;
-}
 
 export function FormField(meta: FieldMeta): PropertyDecorator {
   return (target, propertyKey) => {

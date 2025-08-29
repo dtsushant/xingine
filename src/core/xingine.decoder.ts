@@ -1,13 +1,9 @@
 import {
     ComponentMeta, ComponentMetaMap, ConditionalMeta,
-    ExpositionRule,
     GenericErrors, LayoutComponentDetail,
-    LayoutMandate, LayoutRenderer,
-    ModuleProperties,
-    ModulePropertyOptions,
-    Panel,
-    Permission, Renderer, SiderMeta, TabMeta,
-    UIComponent, UIComponentDetail, WrapperMeta, Commissar, PathProperties,
+     LayoutRenderer,
+    Permission,  SiderMeta, TabMeta,
+      WrapperMeta, Commissar, PathProperties,
 } from "./xingine.type";
 import {
   array, boolean, constant,
@@ -24,12 +20,14 @@ import { formMetaDecoder } from "./decoders/form.decoder";
 import { detailMetaDecoder } from "./decoders/detail.decoder";
 import { tableMetaDecoder } from "./decoders/table.decoder";
 import { chartMetaDecoder } from "./decoders/chart.decoder";
+import { sliderMetaDecoder } from "./decoders/slider.decoder";
 import {conditionalExpressionDecoder} from "./decoders/expression.decoder";
-import {isRenderer, isUIComponentDetail} from "./xingine.util";
 import {dynamicShapeDecoder, inputMetaDecoder} from "./decoders";
 import {eventBindingsDecoder} from "./decoders/action.decoder";
 import {iconMetaDecoder} from "./decoders/icon.decoder";
 import {styleDecoder} from "./decoders/style.decoder";
+import {apiComponentDecoder} from "./decoders/api-component.decoder";
+import {textMetaDecoder} from "./decoders/text.decoder";
 
 const tabMetaDecoder: Decoder<TabMeta> = object({
   tabs: array(
@@ -65,6 +63,8 @@ function decodeMetaByComponent(component: string, input: unknown): object {
         return detailMetaDecoder.verify(input);
     case "ChartRenderer":
         return chartMetaDecoder.verify(input);
+    case "SliderRenderer":
+        return sliderMetaDecoder.verify(input);
     case "WrapperRenderer":
         return wrapperMetaDecoder.verify(input);
   case "ConditionalRenderer":
@@ -98,11 +98,13 @@ function decodeMetaByComponent(component: string, input: unknown): object {
     case "CardRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "TextRenderer":
-        return record(dynamicShapeDecoder).verify(input);
+        return textMetaDecoder.verify(input);
     case "LinkRenderer":
         return record(dynamicShapeDecoder).verify(input);
     case "PopupRenderer":
         return record(dynamicShapeDecoder).verify(input);
+    case "APIRenderer":
+        return apiComponentDecoder.verify(input);
     default:
       return record(dynamicShapeDecoder).verify(input);
   }
@@ -133,14 +135,14 @@ export const layoutComponentDetailDecoder:Decoder<LayoutComponentDetail>= object
 export const layoutComponentDetailListDecoder:Decoder<LayoutComponentDetail[]> = array(layoutComponentDetailDecoder);
 
 export const pathPropertiesDecoder:Decoder<PathProperties> = object({
-    path: string,
+    path: optional(string),
     overrideLayout: optional(string),
 })
 
 export const commissarDecoder: Decoder<Commissar> = object({
-  path: either(string , pathPropertiesDecoder),
+  path: either(string, pathPropertiesDecoder),
   permission: optional(array(string)),
-  meta: optional(componentMetaDecoder()),
+  meta: componentMetaDecoder(),
 });
 
 export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
@@ -168,6 +170,8 @@ export const layoutRendererDecoder: Decoder<LayoutRenderer> = object({
     })
   ),
 });
+
+export const layoutRendererListDecoder: Decoder<LayoutRenderer[]> = array(layoutRendererDecoder);
 
 export const wrapperMetaDecoder: Decoder<WrapperMeta> = lazy(() =>
     unknown.transform((input) => {
@@ -212,127 +216,6 @@ export const conditionalMetaDecoder:Decoder<ConditionalMeta>=exact({
     falseComponent:optional(layoutComponentDetailDecoder)
 })
 
-export const expositionRuleDecoder:Decoder<ExpositionRule> = exact({
-  visible: optional(either(boolean, conditionalExpressionDecoder)),
-  disabled: optional(either(boolean, conditionalExpressionDecoder)),
-  className: optional(string),
-  style: optional(dict(string)),
-  icon: optional(iconMetaDecoder),
-  tooltip: optional(string),
-  order: optional(number),
-  tag: optional(string),
-  wrapper: optional(string),
-  section: optional(string),
-});
-
-export const panelDecoder: Decoder<Panel> = object({
-  presidium: string,
-  assembly: string,
-  doctrine: string,
-});
-
-export const LayoutMandateDecoder: Decoder<LayoutMandate> = object({
-  layout: string,
-  structure: panelDecoder,
-  clearanceRequired: optional(array(string)),
-});
-
-export const uiComponentDetailDecoder: Decoder<UIComponentDetail> = object({
-  component: string,
-  path: string,
-  layout: optional(string),
-  expositionRule: optional(expositionRuleDecoder),
-  roles: optional(array(string)),
-  permissions: optional(array(string)),
-  meta: optional(componentMetaDecoder()),
-});
-
-export const rendererDecoder: Decoder<Renderer> = lazy(()=>object({
-  componentDetail: uiComponentDecoder,
-  mode: optional(string),
-
-  layout: optional(
-      exact({
-        display: optional(string),
-        columns: optional(number),
-        spacing: optional(either(string, number)),
-        alignment: optional(string),
-      })
-  ),
-
-  interaction: optional(
-      exact({
-        clickable: optional(boolean),
-        hoverable: optional(boolean),
-        draggable: optional(boolean),
-        keyboardNavigable: optional(boolean),
-      })
-  ),
-
-  display: optional(
-      exact({
-        showBorder: optional(boolean),
-        showShadow: optional(boolean),
-        backgroundColor: optional(string),
-        textColor: optional(string),
-        borderRadius: optional(either(string, number)),
-        opacity: optional(number),
-      })
-  ),
-
-
-
-  animation: optional(
-      exact({
-        type: optional(string),
-        duration: optional(number),
-        easing: optional(string),
-        animateOnMount: optional(boolean),
-      })
-  ),
-  responsive: optional(
-      exact({
-          breakpoints: optional(
-              exact({
-                  mobile: optional(lazy(() => rendererDecoder)),
-                  tablet: optional(lazy(() => rendererDecoder)),
-                  desktop: optional(lazy(() => rendererDecoder)),
-              })
-          ),
-        hiddenOn: optional(array(either(constant('mobile'), constant('tablet'), constant('desktop')))),
-      })
-  ),
-
-  cssClasses: optional(array(string)),
-  customStyles: optional(dict(either(string, number))),
-
-  accessibility: optional(
-      exact({
-        role: optional(string),
-        ariaLabel: optional(string),
-        ariaDescription: optional(string),
-        tabIndex: optional(number),
-      })
-  ),
-}));
-
-
-export const uiComponentDecoder: Decoder<UIComponent> = lazy(() =>
-    unknown.transform((input) => {
-        if (isUIComponentDetail(input as UIComponent)) {
-            return uiComponentDetailDecoder.verify(input);
-        } else if (isRenderer(input as UIComponent)) {
-            return rendererDecoder.verify(input);
-        } else {
-            throw new Error("Invalid UIComponent: must be UIComponentDetail or Renderer");
-        }
-    })
-);
-
-export const uiComponentDecoderList:Decoder<UIComponent[]>= array(uiComponentDecoder);
-
-
-
 const permissionDecoder: Decoder<Permission> = object({
   name: string,
   description: string,
@@ -341,28 +224,3 @@ const permissionDecoder: Decoder<Permission> = object({
 export const genericErrorsDecoder: Decoder<GenericErrors> = record(
   either(string, record(string)),
 );
-
-// ModulePropertyOptions decoder
-const modulePropertyOptionsDecoder: Decoder<ModulePropertyOptions> = object({
-  description: optional(string),
-  uiComponent: optional(array(uiComponentDecoder)),
-  permissions: array(permissionDecoder),
-});
-
-export const modulePropertyOptionsListDecoder: Decoder<
-  ModulePropertyOptions[]
-> = array(modulePropertyOptionsDecoder);
-
-export const modulePropertiesDecoder: Decoder<ModuleProperties> = object({
-  name: string,
-  uiComponent: optional(array(uiComponentDecoder)),
-  permissions: array(permissionDecoder),
-  description: optional(string),
-});
-
-export const modulePropertiesListDecoder: Decoder<ModuleProperties[]> = array(
-  modulePropertiesDecoder,
-);
-
-
-

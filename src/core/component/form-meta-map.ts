@@ -1,6 +1,7 @@
 // src/types/component-meta-map.ts
 
-import {EventBindings} from "../expressions/action";
+import {EventBindings} from "../expressions";
+import { ConditionalRenderConfig } from "../expressions/providers";
 
 export interface InputTypeProperties {
   /**
@@ -286,11 +287,12 @@ export interface FieldMeta<
   T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties,
 > {
   name?: string;
-  label: string;
+  label?: string;
   event?:EventBindings;
-  inputType: T;
+  inputType?: T;
   value?: string;
   required?: boolean;
   order?:number;
   properties?: FieldInputTypeProperties[T];
+  conditionalRender?: ConditionalRenderConfig;
 }

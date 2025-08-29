@@ -66,3 +66,4 @@ const expressionDecoder = object({
 
 export const searchQueryDecoder: Decoder<SearchQuery> = expressionDecoder;
 export const conditionalExpressionDecoder: Decoder<ConditionalExpression> = expressionDecoder;
+

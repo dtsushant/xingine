@@ -1,7 +1,7 @@
 // complete test for file xingine.utils
 
 import { getActionRef, getTypedValue} from "../../core/utils/type";
-import {SerializableAction} from "../../core/expressions/action";
+import {SerializableAction} from "../../core/expressions";
 import {extrapolate} from "../../core/utils/extrapolate-string.util";
 
 describe("Xingine-utils",()=>{
@@ -95,10 +95,10 @@ describe('extrapolate', () => {
          * */
         const layout = {
             sider: true,
-            collapsed: true,
+            collapsed: false,
         };
         const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
-        expect(result).toBe('Main margin: 20');
+        expect(result).toBe('Main margin: 40');
     });
 
     it('adjusting margin - no sider', () => {
@@ -123,7 +123,7 @@ describe('extrapolate', () => {
     it('adjusting margin - sider not collapsed', () => {
         const layout = {
             sider: true,
-            collapsed: false,
+            collapsed: undefined,
         };
         const result = extrapolate('Main margin: #{sider && collapsed ? "20" : sider && collapsed === false ? "40" : "0"}', layout);
         expect(result).toBe('Main margin: 40');

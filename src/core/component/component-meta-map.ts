@@ -3,9 +3,8 @@ import {
   FieldMeta,
 } from "../component/form-meta-map";
 import { DetailFieldMeta } from "../component/detail-meta-map";
-import { Operator } from "../expressions/operators";
-import {Renderer} from "../xingine.type";
-import {EventBindings} from "../expressions/action";
+import {Operator, SerializableAction} from "../expressions/operators";
+import {EventBindings} from "../expressions";
 import {StyleMeta} from "../expressions";
 
 export type Method = "POST" | "GET";
@@ -52,7 +51,7 @@ export interface FormMeta {
   fields: FieldMeta[];
   action: string;
   event?:EventBindings;
-  dispatch?: FormDispatchProperties;
+  showJsonEditor?: boolean;
   [key: string]: unknown;
 }
 
@@ -69,7 +68,7 @@ export interface TableMeta {
   dataSourceUrl: string;
   rowKey?: string;
   event?:EventBindings;
-  dispatch?: TableDispatchProperties;
+  handleRowClick?: SerializableAction; // optional: string name of row click handler function
   [key: string]: unknown;
 }
 
@@ -99,20 +98,11 @@ export interface ChartConfig {
   dataSourceUrl?: string;
   event?:EventBindings;
   style?:StyleMeta;
-  /**
-   * Renderer configuration for this specific chart.
-   */
-  renderer?: Renderer;
 }
 
 export interface ChartMeta {
   charts: ChartConfig[];
   event?:EventBindings;
-  /**
-   * Global renderer configuration for all charts in this meta.
-   * Individual chart renderers will override these settings.
-   */
-  renderer?: Renderer;
   [key: string]: unknown;
 }
 

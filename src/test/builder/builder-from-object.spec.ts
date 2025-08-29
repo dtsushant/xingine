@@ -95,10 +95,12 @@ describe('Builder fromObject Methods', () => {
       const result = LayoutComponentDetailBuilder.create()
         .form()
         .fromFormMeta(formMeta)
+        .showJsonEditor(true)
         .build();
 
       expect(result.meta?.component).toBe('FormRenderer');
       expect((result.meta?.properties as any).action).toBe('/test-submit');
+        expect((result.meta?.properties as any).showJsonEditor).toBe(true);
       expect((result.meta?.properties as any).fields).toHaveLength(2);
     });
 

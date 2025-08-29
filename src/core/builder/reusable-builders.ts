@@ -1,5 +1,4 @@
-import { EventBindings, SerializableAction } from '../expressions/action';
-import { StyleMeta } from '../expressions/style';
+import { EventBindings, SerializableAction,StyleMeta } from '../expressions';
 
 /**
  * Reusable builder for EventBindings with common event methods

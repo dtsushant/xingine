@@ -5,276 +5,12 @@ import {
   TabDispatchProperties,
   TableDispatchProperties, TableMeta,
 } from "./component/component-meta-map";
-import {ConditionalExpression} from "./expressions/operators";
-import {EventBindings} from "./expressions/action";
-import {ButtonMeta, IconMeta, InputMeta} from "./component";
+import {ConditionalExpression, EventBindings} from "./expressions";
+import {ApiMetaMap, ButtonMeta, IconMeta, InputMeta} from "./component";
 import {StyleMeta} from "./expressions/style";
 import {SvgMeta} from "./component/svg-meta-map";
+import {TextMeta} from "./component/text-meta-map";
 
-
-
-export interface ExpositionRule {
-  /**
-   * Whether the component/property should be visible.
-   * Can be a static boolean or a condition to evaluate.
-   */
-  visible?: boolean | ConditionalExpression;
-
-  /**
-   * Whether the component/property should be disabled (read-only).
-   */
-  disabled?: boolean | ConditionalExpression;
-
-  /**
-   * Optional CSS class name(s).
-   */
-  className?: string;
-
-  /**
-   * Optional inline style (key-value pairs as string).
-   */
-  style?: Record<string, string>;
-
-  /**
-   * Icon key, to be looked up from a predefined icon map.
-   */
-  icon?: IconMeta;
-
-
-  /**
-   * Tooltip text to show on hover.
-   */
-  tooltip?: string;
-
-  /**
-   * Display order among sibling components.
-   */
-  order?: number;
-
-
-  /**
-   * Optional badge/tag like "beta", "recommended", etc.
-   */
-  tag?: string;
-
-  /**
-   * Name of the wrapper element or layout type (e.g., 'div', 'card', 'fieldset').
-   */
-  wrapper?: string;
-
-
-  /**
-   * Logical group/section this component belongs to.
-   */
-  section?: string;
-
-
-}
-
-export interface Panel {
-  presidium: string;
-  assembly: string;
-  doctrine: string;
-}
-
-export interface LayoutMandate {
-  layout: string;
-  structure: Panel;
-  clearanceRequired?: string[];
-}
-
-export type UIComponentDetail = {
-  component: string;
-  path: string;
-  expositionRule?: ExpositionRule;
-  layout?: string;
-  roles?: string[];
-  permissions?: string[];
-  meta?: ComponentMeta;
-};
-
-/**
- * Interface for describing the rendering behavior of UI elements.
- * This interface is fully serializable for use in both UI and DTO contexts.
- */
-export interface Renderer {
-
-  /**
-   * Detailed description of the UI component to render or the nested Renderer
-   * This should include the component type
-   */
-
-  componentDetail : UIComponent;
-  /**
-   * The rendering mode or style to apply.
-   * Examples: 'default', 'compact', 'minimal', 'detailed', 'card', 'list', 'grid'
-   */
-  mode?: string;
-
-  /**
-   * Layout configuration for the rendered element.
-   */
-  layout?: {
-    /**
-     * Display type: 'block', 'inline', 'flex', 'grid', etc.
-     */
-    display?: string;
-
-    /**
-     * Number of columns for grid layouts.
-     */
-    columns?: number;
-
-    /**
-     * Spacing between elements.
-     */
-    spacing?: string | number;
-
-    /**
-     * Alignment of content: 'left', 'center', 'right', 'justify'
-     */
-    alignment?: string;
-  };
-
-  /**
-   * Interaction behavior configuration.
-   */
-  interaction?: {
-    /**
-     * Whether the element is clickable.
-     */
-    clickable?: boolean;
-
-    /**
-     * Whether the element supports hover effects.
-     */
-    hoverable?: boolean;
-
-    /**
-     * Whether the element supports drag and drop.
-     */
-    draggable?: boolean;
-
-    /**
-     * Whether the element supports keyboard navigation.
-     */
-    keyboardNavigable?: boolean;
-  };
-
-  /**
-   * Display properties for visual customization.
-   */
-  display?: {
-    /**
-     * Whether to show borders.
-     */
-    showBorder?: boolean;
-
-    /**
-     * Whether to show shadows.
-     */
-    showShadow?: boolean;
-
-    /**
-     * Background color or theme.
-     */
-    backgroundColor?: string;
-
-    /**
-     * Text color or theme.
-     */
-    textColor?: string;
-
-    /**
-     * Border radius for rounded corners.
-     */
-    borderRadius?: string | number;
-
-    /**
-     * Opacity level (0-1).
-     */
-    opacity?: number;
-  };
-
-  /**
-   * Responsive behavior configuration.
-   */
-  responsive?: {
-    /**
-     * Breakpoints for different screen sizes.
-     */
-    breakpoints?: {
-      mobile?: Partial<Renderer>;
-      tablet?: Partial<Renderer>;
-      desktop?: Partial<Renderer>;
-    };
-
-    /**
-     * Whether the element should be hidden on certain screen sizes.
-     */
-    hiddenOn?: ('mobile' | 'tablet' | 'desktop')[];
-  };
-
-  /**
-   * Animation and transition settings.
-   */
-  animation?: {
-    /**
-     * Type of animation: 'fade', 'slide', 'scale', 'none'
-     */
-    type?: string;
-
-    /**
-     * Animation duration in milliseconds.
-     */
-    duration?: number;
-
-    /**
-     * Animation easing function.
-     */
-    easing?: string;
-
-    /**
-     * Whether to animate on initial render.
-     */
-    animateOnMount?: boolean;
-  };
-
-  /**
-   * Custom CSS classes to apply.
-   */
-  cssClasses?: string[];
-
-  /**
-   * Custom inline styles.
-   */
-  customStyles?: Record<string, string | number>;
-
-  /**
-   * Accessibility configuration.
-   */
-  accessibility?: {
-    /**
-     * ARIA role for the element.
-     */
-    role?: string;
-
-    /**
-     * ARIA label for screen readers.
-     */
-    ariaLabel?: string;
-
-    /**
-     * ARIA description.
-     */
-    ariaDescription?: string;
-
-    /**
-     * Tab index for keyboard navigation.
-     */
-    tabIndex?: number;
-  };
-}
 
 export interface Comrade {
   id: string;
@@ -292,14 +28,13 @@ export interface GroupedPermission {
   [key: string]: Permission[];
 }
 
-export type UIComponent = Renderer | UIComponentDetail ;
 
 export interface LayoutComponentDetail {
   meta?: ComponentMeta; // For xingine component meta - more flexible typing
 }
 
 export interface PathProperties {
-  path:string;
+  path?:string;
   overrideLayout?: string; // If this component should override the layout
 }
 
@@ -311,9 +46,9 @@ export interface Commissar extends LayoutComponentDetail {
 
 export interface LayoutRenderer {
   type: string;
-  style?:StyleMeta;
+  style?: StyleMeta;
   header?: {
-    style?:StyleMeta;
+    style?: StyleMeta;
     meta?: LayoutComponentDetail;
   };
   content: {
@@ -321,14 +56,16 @@ export interface LayoutRenderer {
     meta: Commissar[];
   };
   sider?: {
-    style?:StyleMeta;
+    style?: StyleMeta;
     meta?: LayoutComponentDetail;
   };
   footer?: {
-    style?:StyleMeta;
+    style?: StyleMeta;
     meta?: LayoutComponentDetail;
   };
 }
+
+
 
 export interface TabMeta {
   event?:EventBindings;
@@ -339,6 +76,12 @@ export interface TabMeta {
   }[];
   dispatch?: TabDispatchProperties;
   [key: string]: unknown;
+}
+
+export interface ComponentScope{
+    parent: string;
+    current: string;
+    [key:string]: unknown;
 }
 
 export interface WrapperMeta {
@@ -358,13 +101,28 @@ export interface ConditionalMeta{
     [key: string]: unknown;
 }
 
+export interface SliderMeta {
+    slides: LayoutComponentDetail[];
+    autoPlay?: boolean;
+    autoPlayInterval?: number;
+    showNavigation?: boolean;
+    showDots?: boolean;
+    infinite?: boolean;
+    startIndex?: number;
+    style?: StyleMeta;
+    event?: EventBindings;
+    [key: string]: unknown;
+}
+
 export type ComponentMetaMap = {
   FormRenderer: FormMeta;
   TableRenderer: TableMeta;
   TabRenderer: TabMeta;
   DetailRenderer: DetailMeta;
   ChartRenderer: ChartMeta;
+  SliderRenderer: SliderMeta;
   WrapperRenderer: WrapperMeta;
+  APIRenderer:ApiMetaMap;
   LayoutRenderer: Record<string, unknown>;
   HeaderRenderer: WrapperMeta;
   SiderRenderer: SiderMeta;
@@ -383,7 +141,7 @@ export type ComponentMetaMap = {
   MenuRenderer: Record<string, unknown>;
   TitleRenderer: Record<string, unknown>;
   CardRenderer: Record<string, unknown>;
-  TextRenderer: Record<string, unknown>;
+  TextRenderer: TextMeta;
   LinkRenderer: Record<string, unknown>;
   PopupRenderer: Record<string, unknown>;
 } & {
@@ -396,28 +154,62 @@ export interface ComponentMeta<
   properties: ComponentMetaMap[T];
 }
 
-export interface ModulePropertyOptions {
-  uiComponent?: UIComponent[];
-  permissions: Permission[];
-  description?: string;
+export interface LayoutExpositionMap {
+  [key: string]: LayoutComponentDetail | Commissar;
 }
 
-export interface ModuleProperties extends ModulePropertyOptions {
-  name: string;
-  isMenuItem?: boolean; // if true along with having a path will be a menu in sider
-  path?:string;
+
+/**
+ * Alternative generic version if you need type safety for specific layouts
+ * Maps directly to LayoutRenderer structure
+ */
+export interface TypedLayoutExposition<
+  TPresidium extends keyof LayoutExpositionMap = keyof LayoutExpositionMap,
+  TAssembly extends keyof LayoutExpositionMap = keyof LayoutExpositionMap,
+  TSider extends keyof LayoutExpositionMap = keyof LayoutExpositionMap,
+  TDoctrine extends keyof LayoutExpositionMap = keyof LayoutExpositionMap
+> {
+  type: string;                    // Layout type identifier (maps to LayoutRenderer.type)
+  presidium?: TPresidium;          // Header component key (maps to LayoutRenderer.header)
+  assembly: TAssembly[];           // Content component keys (maps to LayoutRenderer.content)  
+  sider?: TSider;                  // Sidebar component key (maps to LayoutRenderer.sider)
+  doctrine?: TDoctrine;            // Footer component key (maps to LayoutRenderer.footer)
 }
 
-export interface ProvisioneerProperties {
-  name: string;
-  description?: string;
-  layoutMandate: LayoutMandate;
-  clearance: Permission[];
+/**
+ * Registry for managing layout component definitions
+ */
+export interface LayoutComponentRegistry {
+  register(key: string, component: LayoutComponentDetail | Commissar): void;
+  get(key: string): LayoutComponentDetail | Commissar | undefined;
+  has(key: string): boolean;
+  getAll(): LayoutExpositionMap;
+  clear(): void;
+  delete(key: string): boolean;
+  size(): number;
+  getKeys(): string[];
 }
+
+/**
+ * Layout builder utility type for creating LayoutRenderer from TypedLayoutExposition
+ */
+export interface LayoutExpositionBuilder {
+  build<T extends TypedLayoutExposition>(exposition: T, registry: LayoutExpositionMap): LayoutRenderer;
+}
+
+/**
+ * Factory function type for building LayoutRenderer from TypedLayoutExposition
+ */
+export type LayoutExpositionFactory = <T extends TypedLayoutExposition>(
+  exposition: T, 
+  registry: LayoutExpositionMap,
+  options?: {
+    style?: StyleMeta;
+  }
+) => LayoutRenderer;
+
 
 export type GenericErrors = Record<string, string | Record<string, string>>;
-
-export type ProvisioneerProps = Partial<ProvisioneerProperties> & { name: string };
 
 export type ComponentDispatchByComponent<T extends keyof ComponentMetaMap> =
   T extends "FormRenderer"
@@ -434,20 +226,6 @@ export type ComponentDispatchMap = {
   [K in keyof ComponentMetaMap]: ComponentDispatchByComponent<K>;
 };
 
-export interface CommissarProperties<
-  TReq = unknown,
-  TOperative extends keyof ComponentMetaMap = keyof ComponentMetaMap,
-> {
-  layout?: string;
-  expositionRule?: ExpositionRule;
-  component: string;
-  operative: TOperative;
-  meta?: ComponentMetaMap[TOperative];
-  directive: new () => TReq;
-  dispatch?: ComponentDispatchMap[TOperative];
-  preAction?: string;
-  postAction?: string;
-}
 
 export interface FieldValidationError {
   field: string;

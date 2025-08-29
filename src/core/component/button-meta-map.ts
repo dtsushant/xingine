@@ -1,4 +1,4 @@
-import {EventBindings} from "../expressions/action";
+import {EventBindings} from "../expressions";
 import {IconMeta} from "./icon-meta-map";
 import {StyleMeta} from "../expressions/style";
 
