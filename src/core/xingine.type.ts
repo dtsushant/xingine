@@ -10,6 +10,7 @@ import {ApiMetaMap, ButtonMeta, IconMeta, InputMeta} from "./component";
 import {StyleMeta} from "./expressions/style";
 import {SvgMeta} from "./component/svg-meta-map";
 import {TextMeta} from "./component/text-meta-map";
+import { WrapInMeta, WithWrapIn } from "./component/wrap-in-meta";
 
 
 export interface Comrade {
@@ -67,7 +68,7 @@ export interface LayoutRenderer {
 
 
 
-export interface TabMeta {
+export interface TabMeta extends WithWrapIn<{
   event?:EventBindings;
   tabs: {
     label: string;
@@ -76,7 +77,7 @@ export interface TabMeta {
   }[];
   dispatch?: TabDispatchProperties;
   [key: string]: unknown;
-}
+}> {}
 
 export interface ComponentScope{
     parent: string;
@@ -84,24 +85,24 @@ export interface ComponentScope{
     [key:string]: unknown;
 }
 
-export interface WrapperMeta {
+export interface WrapperMeta extends WithWrapIn<{
   [key:string] : unknown;
   event?:EventBindings;
   content?:string;
   style?:StyleMeta;
   children?:LayoutComponentDetail[];
-}
+}> {}
 
 export type SiderMeta = WrapperMeta;
 
-export interface ConditionalMeta{
+export interface ConditionalMeta extends WithWrapIn<{
     condition: ConditionalExpression;
     trueComponent: LayoutComponentDetail;
     falseComponent?: LayoutComponentDetail;
     [key: string]: unknown;
-}
+}> {}
 
-export interface SliderMeta {
+export interface SliderMeta extends WithWrapIn<{
     slides: LayoutComponentDetail[];
     autoPlay?: boolean;
     autoPlayInterval?: number;
@@ -112,7 +113,7 @@ export interface SliderMeta {
     style?: StyleMeta;
     event?: EventBindings;
     [key: string]: unknown;
-}
+}> {}
 
 export type ComponentMetaMap = {
   FormRenderer: FormMeta;

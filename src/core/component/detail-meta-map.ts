@@ -1,4 +1,5 @@
 import {EventBindings} from "../expressions";
+import { WithWrapIn } from "./wrap-in-meta";
 
 export interface TextDetailProperties {
   placeholder?: string;
@@ -60,11 +61,11 @@ export type DetailInputTypeProperties = {
 };
 export interface DetailFieldMeta<
   T extends keyof DetailInputTypeProperties = keyof DetailInputTypeProperties,
-> {
+> extends WithWrapIn<{
   name?: string;
   label: string;
   event?:EventBindings;
   inputType: T;
   value?: unknown;
   properties?: DetailInputTypeProperties[T];
-}
+}> {}

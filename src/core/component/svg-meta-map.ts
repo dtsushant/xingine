@@ -1,6 +1,7 @@
 import {StyleMeta} from "../expressions";
+import { WithWrapIn } from "./wrap-in-meta";
 
-export interface SvgMeta {
+export interface SvgMeta extends WithWrapIn<{
     /**
      * The raw SVG markup string.
      * This must be a valid, sanitized SVG starting with `<svg>...</svg>`.
@@ -20,4 +21,4 @@ export interface SvgMeta {
     alt?: string;
 
     [key: string]: unknown;
-}
+}> {}

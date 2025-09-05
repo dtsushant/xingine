@@ -13,6 +13,8 @@ export * from "./core/decoders"
 export * from "./core/expressions"
 export * from "./core/builder"
 export { PROVISIONEER_METADATA } from "./core/decorators/metadata-constants"
+// Export WrapInMeta functionality
+export * from "./core/component/wrap-in-meta"
 // Export class decorators and utilities with new names to avoid conflicts
 export { 
   FormClass, 

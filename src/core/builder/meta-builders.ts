@@ -13,6 +13,7 @@ import {
   ColumnMeta, FieldMeta
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
+import { WrapInMeta, WrapInMetaBuilder } from '../component/wrap-in-meta';
 import { StyleMeta } from '../expressions/style';
 import {EventBindings, SerializableAction} from '../expressions';
 import { ConditionalExpression } from '../expressions/operators';
@@ -50,6 +51,23 @@ export class ConditionalMetaBuilder {
 
   property(key: string, value: unknown): ConditionalMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): ConditionalMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ConditionalMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
     return this;
   }
 
@@ -113,6 +131,23 @@ export class IconMetaBuilder {
     return this;
   }
 
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): IconMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): IconMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
   build(): IconMeta {
     return { ...this.meta };
   }
@@ -150,6 +185,23 @@ export class ButtonMetaBuilder {
 
   property(key: string, value: unknown): ButtonMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): ButtonMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ButtonMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
     return this;
   }
 
@@ -198,6 +250,23 @@ export class InputMetaBuilder {
 
   property(key: string, value: unknown): InputMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): InputMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): InputMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
     return this;
   }
 
@@ -252,6 +321,23 @@ export class WrapperMetaBuilder {
     return this;
   }
 
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): WrapperMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): WrapperMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
   build(): WrapperMeta {
     return { ...this.meta };
   }
@@ -300,6 +386,23 @@ export class FormMetaBuilder {
     return this;
   }
 
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): FormMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): FormMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
   build(): FormMeta {
     if (!this.meta.action) {
       throw new Error('Form action is required');
@@ -345,6 +448,23 @@ export class DetailMetaBuilder {
 
   property(key: string, value: unknown): DetailMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): DetailMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): DetailMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
     return this;
   }
 
@@ -401,6 +521,23 @@ export class TableMetaBuilder {
     return this;
   }
 
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): TableMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): TableMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
   build(): TableMeta {
     if (!this.meta.dataSourceUrl) {
       throw new Error('Table dataSourceUrl is required');
@@ -441,6 +578,23 @@ export class ChartMetaBuilder {
 
   property(key: string, value: unknown): ChartMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): ChartMetaBuilder {
+    this.meta.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ChartMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.wrapIn = builderFn(builder).build();
     return this;
   }
 
@@ -725,6 +879,23 @@ export class FieldMetaBuilder {
    */
   showWhenNotEmpty(fieldName: string): FieldMetaBuilder {
     return this.showWhen(fieldName, 'ne', null);
+  }
+
+  /**
+   * Add wrapper configuration
+   */
+  withWrapIn(wrapIn: WrapInMeta): FieldMetaBuilder {
+    this.field.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): FieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.field.wrapIn = builderFn(builder).build();
+    return this;
   }
 
   build(): FieldMeta {

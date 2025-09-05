@@ -28,6 +28,7 @@ import {
   extractTableMetaFromClass
 } from "../utils";
 import {ClassConstructor} from "../decorators";
+import { WrapInMeta, WrapInMetaBuilder } from '../component/wrap-in-meta';
 
 /**
  * Base builder class for LayoutComponentDetail and related types
@@ -443,6 +444,24 @@ export class ButtonRendererBuilder<P extends BaseComponentDetailBuilder<any, any
   }
 
   /**
+   * Adds wrapIn meta using the WrapInMetaBuilder
+   */
+  withWrapIn(wrapIn: WrapInMeta): ButtonRendererBuilder<P> {
+    this.properties.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Adds wrapIn meta using a builder function
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ButtonRendererBuilder<P> {
+    const builder = WrapInMetaBuilder.create();
+    const result = builderFn(builder);
+    this.properties.wrapIn = result.build();
+    return this;
+  }
+
+  /**
    * Completes the button configuration and returns the built component
    */
   build(): ReturnType<P['build']> {
@@ -678,6 +697,24 @@ export class InputRendererBuilder<P extends BaseComponentDetailBuilder<any, any>
     const builder = StyleMetaBuilder.create();
     const result = builderFn(builder);
     this.properties.style = result.build();
+    return this;
+  }
+
+  /**
+   * Adds wrapIn meta using the WrapInMetaBuilder
+   */
+  withWrapIn(wrapIn: WrapInMeta): InputRendererBuilder<P> {
+    this.properties.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Adds wrapIn meta using a builder function
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): InputRendererBuilder<P> {
+    const builder = WrapInMetaBuilder.create();
+    const result = builderFn(builder);
+    this.properties.wrapIn = result.build();
     return this;
   }
 

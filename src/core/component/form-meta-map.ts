@@ -2,6 +2,7 @@
 
 import {EventBindings} from "../expressions";
 import { ConditionalRenderConfig } from "../expressions/providers";
+import { WithWrapIn } from "./wrap-in-meta";
 
 export interface InputTypeProperties {
   /**
@@ -285,7 +286,7 @@ export type FieldInputTypeProperties = {
 
 export interface FieldMeta<
   T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties,
-> {
+> extends WithWrapIn<{
   name?: string;
   label?: string;
   event?:EventBindings;
@@ -295,4 +296,4 @@ export interface FieldMeta<
   order?:number;
   properties?: FieldInputTypeProperties[T];
   conditionalRender?: ConditionalRenderConfig;
-}
+}> {}

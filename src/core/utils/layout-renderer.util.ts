@@ -5,7 +5,8 @@
  * including finding renderers by type, extracting sections, and matching commissars.
  */
 
-import { LayoutRenderer, Commissar, matchingPath } from "../../index";
+import { LayoutRenderer, Commissar } from "../xingine.type";
+import { matchingPath } from "./type";
 
 // Interface for layout section extraction result
 export interface LayoutSections {

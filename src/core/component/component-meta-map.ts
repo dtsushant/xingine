@@ -6,6 +6,7 @@ import { DetailFieldMeta } from "../component/detail-meta-map";
 import {Operator, SerializableAction} from "../expressions/operators";
 import {EventBindings} from "../expressions";
 import {StyleMeta} from "../expressions";
+import { WrapInMeta, WithWrapIn } from "./wrap-in-meta";
 
 export type Method = "POST" | "GET";
 export interface ColumnMeta {
@@ -47,30 +48,30 @@ export interface DetailDispatchProperties {
   scrollToField?: string;
 }
 
-export interface FormMeta {
+export interface FormMeta extends WithWrapIn<{
   fields: FieldMeta[];
   action: string;
   event?:EventBindings;
   showJsonEditor?: boolean;
   [key: string]: unknown;
-}
+}> {}
 
-export interface DetailMeta {
+export interface DetailMeta extends WithWrapIn<{
   fields: DetailFieldMeta[];
   event?:EventBindings;
   action: string;
   dispatch?: DetailDispatchProperties;
   [key: string]: unknown;
-}
+}> {}
 
-export interface TableMeta {
+export interface TableMeta extends WithWrapIn<{
   columns: ColumnMeta[];
   dataSourceUrl: string;
   rowKey?: string;
   event?:EventBindings;
   handleRowClick?: SerializableAction; // optional: string name of row click handler function
   [key: string]: unknown;
-}
+}> {}
 
 
 
@@ -100,11 +101,11 @@ export interface ChartConfig {
   style?:StyleMeta;
 }
 
-export interface ChartMeta {
+export interface ChartMeta extends WithWrapIn<{
   charts: ChartConfig[];
   event?:EventBindings;
   [key: string]: unknown;
-}
+}> {}
 
 
 export * from "./form-meta-map";
