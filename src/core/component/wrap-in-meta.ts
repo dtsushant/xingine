@@ -38,6 +38,12 @@ export interface WrapInMeta {
   htmlAttributes?: Record<string, string | number | boolean>;
 
   /**
+   * Optional className to apply to the container that wraps the children
+   * This allows for applying grid layouts or other styling specifically to the children container
+   */
+  childrenClassName?: string;
+
+  /**
    * Additional properties for extensibility
    */
   [key: string]: unknown;
@@ -213,6 +219,15 @@ export class WrapInMetaBuilder {
    */
   property(key: string, value: unknown): WrapInMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  /**
+   * Set the className for the children container
+   * This allows for applying grid layouts or other styling specifically to the children container
+   */
+  childrenClassName(className: string): WrapInMetaBuilder {
+    this.meta.childrenClassName = className;
     return this;
   }
 

@@ -26,6 +26,15 @@ export {
   DetailField as DetailFieldDecorator,
   ChartSeries
 } from "./core/decorators"
+// Export new property-level decorators
+export { 
+  FormField,
+  FormGroup,
+  FormWrapper,
+  TableColumn as TableColumnDecorator,
+  DetailField,
+  ChartSeries as ChartSeriesDecorator
+} from "./core/decorators/property-decorators"
 export * from "./core/utils/class-to-component.util"
 export * from "./core/utils/type-inference.util"
 

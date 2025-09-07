@@ -20,6 +20,7 @@ import {
   DateTypeProperties,
   FieldMeta,
   FileInputProperties,
+  GrouperFieldProperties,
   InputTypeProperties,
   LookupTypeProperties,
   NestedCheckboxOption,
@@ -33,6 +34,7 @@ import {
   TextareaTypeProperties,
   TreeSelectTypeProperties,
 } from "../component/form-meta-map";
+import { StyleMeta } from "../expressions/style";
 import {
   FormDispatchProperties,
   FormMeta,
@@ -41,6 +43,12 @@ import { dynamicShapeDecoder } from "../decoders/shared.decoder";
 import {eventBindingsDecoder} from "./action.decoder";
 import { ConditionalRenderConfig } from "../expressions/providers";
 import { conditionalExpressionDecoder } from "./expression.decoder";
+import { wrapInMetaDecoder } from "./wrap-in-meta.decoder";
+
+export const styleMetaDecoder: Decoder<StyleMeta> = object({
+  className: optional(string),
+  style: optional(record(unknown))
+});
 
 export const conditionalRenderConfigDecoder: Decoder<ConditionalRenderConfig> = object({
   condition: conditionalExpressionDecoder,
@@ -202,6 +210,11 @@ export const fileInputPropertiesDecoder: Decoder<FileInputProperties> = object({
   fileCountValidationMessage: optional(string),
 });
 
+export const grouperFieldPropertiesDecoder: Decoder<GrouperFieldProperties> = object({
+  fields: array(lazy(() => fieldMetaDecoder())),
+  title: optional(string)
+});
+
 export function decodeFieldInputPropertiesByInputType(
   inputType: string,
   input?: unknown,
@@ -236,6 +249,8 @@ export function decodeFieldInputPropertiesByInputType(
       return objectTypeDecoder.verify(input);
     case "object[]":
       return objectListTypeDecoder.verify(input);
+    case "grouper":
+      return grouperFieldPropertiesDecoder.verify(input);
     case "file":
       return fileInputPropertiesDecoder.verify(input);
     default:
@@ -253,7 +268,9 @@ const fieldMetaDecoderBase = object({
   properties: optional(unknown),
   event:optional(eventBindingsDecoder),
   order:optional(number),
-  conditionalRender: optional(conditionalRenderConfigDecoder)
+  conditionalRender: optional(conditionalRenderConfigDecoder),
+  wrapIn: optional(wrapInMetaDecoder),
+  style: optional(styleMetaDecoder)
 });
 
 function fieldMetaDecoder(): Decoder<FieldMeta> {

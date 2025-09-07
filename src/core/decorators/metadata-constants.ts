@@ -11,6 +11,8 @@ export const PROVISIONEER_METADATA = 'xingine:provisioneer';
 
 // Property-level metadata keys
 export const FORM_FIELD_METADATA = 'xingine:form-field';
+export const FORM_GROUP_METADATA = 'xingine:form-group';
+export const FORM_WRAPPER_METADATA = 'xingine:form-wrapper';
 export const TABLE_COLUMN_METADATA = 'xingine:table-column';
 export const DETAIL_FIELD_METADATA = 'xingine:detail-field';
 export const CHART_SERIES_METADATA = 'xingine:chart-series';

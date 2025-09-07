@@ -898,6 +898,162 @@ export class FieldMetaBuilder {
     return this;
   }
 
+  /**
+   * Add wrapper configuration with direct WrapInMeta object
+   */
+  wrapIn(wrapIn: WrapInMeta): FieldMetaBuilder {
+    this.field.wrapIn = wrapIn;
+    return this;
+  }
+
+  build(): FieldMeta {
+    return { ...this.field };
+  }
+}
+
+/**
+ * Builder for grouper fields that group multiple fields with custom styling
+ */
+export class GrouperFieldMetaBuilder {
+  private field: FieldMeta = {
+    inputType: 'grouper',
+    properties: { fields: [] }
+  };
+
+  static create(): GrouperFieldMetaBuilder {
+    return new GrouperFieldMetaBuilder();
+  }
+
+  /**
+   * Set the name for this grouper (optional, usually omitted for layout-only groupers)
+   */
+  name(name: string): GrouperFieldMetaBuilder {
+    this.field.name = name;
+    return this;
+  }
+
+  /**
+   * Set label for this grouper (optional, for collapsible groups)
+   */
+  label(label: string): GrouperFieldMetaBuilder {
+    this.field.label = label;
+    return this;
+  }
+
+  /**
+   * Set the fields to be grouped
+   */
+  fields(fields: FieldMeta[]): GrouperFieldMetaBuilder {
+    this.field.properties = { fields };
+    return this;
+  }
+
+  /**
+   * Add a single field to the group
+   */
+  addField(field: FieldMeta): GrouperFieldMetaBuilder {
+    const properties = this.field.properties as { fields: FieldMeta[] };
+    properties.fields.push(field);
+    return this;
+  }
+
+  /**
+   * Add multiple fields using a builder function
+   */
+  withFields(builderFn: (fields: FieldMeta[]) => FieldMeta[]): GrouperFieldMetaBuilder {
+    const properties = this.field.properties as { fields: FieldMeta[] };
+    properties.fields = builderFn(properties.fields);
+    return this;
+  }
+
+  /**
+   * Set the order for this grouper
+   */
+  order(order: number): GrouperFieldMetaBuilder {
+    this.field.order = order;
+    return this;
+  }
+
+  /**
+   * Add conditional rendering to the grouper
+   */
+  withCondition(condition: ConditionalExpression, provider?: DataProvider): GrouperFieldMetaBuilder {
+    this.field.conditionalRender = {
+      condition,
+      provider
+    };
+    return this;
+  }
+
+  /**
+   * Shows grouper when a field equals a specific value
+   */
+  showWhenEquals(fieldName: string, value: unknown): GrouperFieldMetaBuilder {
+    return this.withCondition({
+      field: fieldName,
+      operator: 'eq',
+      value
+    });
+  }
+
+  /**
+   * Add wrapper configuration for styling the group container
+   */
+  withWrapIn(wrapIn: WrapInMeta): GrouperFieldMetaBuilder {
+    this.field.wrapIn = wrapIn;
+    return this;
+  }
+
+  /**
+   * Add wrapper configuration using builder (for styling the group container)
+   */
+  wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): GrouperFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.field.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
+  /**
+   * Quick method to create a row layout grouper
+   */
+  asRow(gap: string = '1rem'): GrouperFieldMetaBuilder {
+    return this.wrapInMeta(w => w
+      .className('flex flex-row')
+      .cssStyle({ gap })
+    );
+  }
+
+  /**
+   * Quick method to create a grid layout grouper
+   */
+  asGrid(columns: number, gap: string = '1rem'): GrouperFieldMetaBuilder {
+    return this.wrapInMeta(w => w
+      .className('grid')
+      .cssStyle({ 
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap 
+      })
+    );
+  }
+
+  /**
+   * Quick method to create a card-style grouper
+   */
+  asCard(title?: string): GrouperFieldMetaBuilder {
+    this.label(title || '');
+    return this.wrapInMeta(w => w
+      .className('bg-white p-4 rounded-lg shadow-md border')
+    );
+  }
+
+  /**
+   * Add event bindings
+   */
+  event(event: EventBindings): GrouperFieldMetaBuilder {
+    this.field.event = event;
+    return this;
+  }
+
   build(): FieldMeta {
     return { ...this.field };
   }

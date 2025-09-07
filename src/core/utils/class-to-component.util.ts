@@ -15,6 +15,8 @@ import {
   DETAIL_CLASS_METADATA,
   CHART_CLASS_METADATA,
   FORM_FIELD_METADATA,
+  FORM_GROUP_METADATA,
+  FORM_WRAPPER_METADATA,
   TABLE_COLUMN_METADATA,
   DETAIL_FIELD_METADATA,
   CHART_SERIES_METADATA
@@ -32,7 +34,7 @@ import {
 } from './type-inference.util';
 
 /**
- * Extracts FormMeta from a decorated class
+ * Extracts FormMeta from a decorated class with field grouping support
  */
 export function extractFormMetaFromClass<T extends {}>(
   classType: ClassConstructor<T>,
@@ -49,14 +51,100 @@ export function extractFormMetaFromClass<T extends {}>(
   // Get all properties from class
   const allProperties = getAllClassProperties(classType);
   
+  // Extract field groups and wrapper configurations
+  const formGroups = Reflect.getMetadata(FORM_GROUP_METADATA, classType) || [];
+  const wrapperMethodName = Reflect.getMetadata(FORM_WRAPPER_METADATA, classType);
+  
+  // Get wrapper map if a wrapper method is defined
+  let wrapperMap: Record<string, any> = {};
+  if (wrapperMethodName && typeof classType.prototype[wrapperMethodName] === 'function') {
+    try {
+      wrapperMap = classType.prototype[wrapperMethodName]() || {};
+    } catch (error) {
+      console.warn(`Error calling wrapper method ${wrapperMethodName}:`, error);
+    }
+  }
+  
   // Merge decorated fields with auto-inferred fields
-  const fields = mergeFormFields(decoratedFields, allProperties, classType, depth, visitedWithCurrent);
+  const allFields = mergeFormFields(decoratedFields, allProperties, classType, depth, visitedWithCurrent, wrapperMethodName);
+  
+  // Process field groups using the new decorator system
+  const finalFields = processFormGroups(allFields, formGroups, wrapperMap);
   
   return {
-    fields: fields,
+    fields: finalFields,
     action: classOptions.action || '',
     ...classOptions
   };
+}
+
+/**
+ * Processes form groups using the new @FormGroup decorator system
+ */
+function processFormGroups(
+  allFields: FieldMeta[], 
+  formGroups: Array<{fieldName: string, grouperId: string}>, 
+  wrapperMap: Record<string, any>
+): FieldMeta[] {
+  if (!formGroups || formGroups.length === 0) {
+    return allFields;
+  }
+  
+  const processedFields: FieldMeta[] = [];
+  const fieldsInGroups = new Set<string>();
+  
+  // Group fields by grouperId
+  const groupedFields = new Map<string, FieldMeta[]>();
+  
+  for (const groupInfo of formGroups) {
+    const field = allFields.find(f => f.name === groupInfo.fieldName);
+    if (field) {
+      if (!groupedFields.has(groupInfo.grouperId)) {
+        groupedFields.set(groupInfo.grouperId, []);
+      }
+      groupedFields.get(groupInfo.grouperId)!.push(field);
+      fieldsInGroups.add(field.name!);
+    }
+  }
+  
+  // Create grouper fields for each group
+  for (const [grouperId, fields] of groupedFields) {
+    if (fields.length > 0) {
+      // Sort fields by their order
+      const sortedFields = fields.sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      // Get wrapper configuration from wrapperMap or use default div wrapper
+      const wrapperConfig = wrapperMap[grouperId] || {
+        wrapWith: 'div' as const,
+        style: { className: `form-group-${grouperId}` }
+      };
+      
+      // Create a grouper field for this group
+      const grouperField: FieldMeta = {
+        name: grouperId,
+        label: grouperId, // Could be enhanced to have a proper label
+        inputType: 'grouper',
+        order: Math.min(...sortedFields.map(f => f.order || 0)),
+        properties: {
+          fields: sortedFields,
+          // Transfer title from wrapper config properties to grouper properties
+          title: wrapperConfig.properties?.title || wrapperConfig.title
+        },
+        wrapIn: wrapperConfig
+      };
+      
+      processedFields.push(grouperField);
+    }
+  }
+  
+  // Add any remaining fields that weren't assigned to groups
+  const ungroupedFields = allFields.filter(field => 
+    field.name && !fieldsInGroups.has(field.name)
+  );
+  processedFields.push(...ungroupedFields);
+  
+  // Sort all fields by order
+  return processedFields.sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
 /**
@@ -125,7 +213,8 @@ function mergeFormFields(
   allProperties: string[],
   classType: ClassConstructor,
   depth: number = 0,
-  visited: Set<ClassConstructor> = new Set()
+  visited: Set<ClassConstructor> = new Set(),
+  wrapperMethodName?: string
 ): FieldMeta[] {
   const fieldMap = new Map<string, FieldMeta>();
   
@@ -195,9 +284,9 @@ function mergeFormFields(
     fieldMap.set(field.name, fieldMeta);
   });
   
-  // Add auto-inferred fields for remaining properties
+  // Add auto-inferred fields for remaining properties (excluding wrapper method)
   allProperties.forEach(propName => {
-    if (!fieldMap.has(propName)) {
+    if (!fieldMap.has(propName) && propName !== wrapperMethodName) {
       const inferredField = inferFormField(propName, classType, depth, visited);
       fieldMap.set(propName, inferredField);
     }

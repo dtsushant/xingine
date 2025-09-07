@@ -1,7 +1,8 @@
 import { FieldInputTypeProperties, FieldMeta } from '../component/form-meta-map';
 import { DetailFieldMeta } from '../component/detail-meta-map';
-import { ColumnMeta } from '../component/component-meta-map';
+import { ColumnMeta, FormMeta } from '../component/component-meta-map';
 import {EventBindings, SerializableAction} from "../expressions";
+import { WrapInMeta } from '../component/wrap-in-meta';
 
 /**
  * Base constructor type for class decorators
@@ -20,23 +21,25 @@ export type AnyClassConstructor = abstract new (...args: any[]) => any;
 export type ClassType<T = any> = Function & { prototype: T };
 
 /**
- * Configuration options for @FormClass decorator
+ * Configuration for @FormGroup decorator - assigns a field to a specific group
  */
-export interface FormClassOptions {
-  title?: string;
-  submitLabel?: string;
-  resetLabel?: string;
-  event?:EventBindings;
-  layout?: 'vertical' | 'horizontal' | 'inline';
-  validation?: {
-    validateOnBlur?: boolean;
-    validateOnChange?: boolean;
-    showErrorSummary?: boolean;
-  };
-  action?: string;
-  className?: string;
-  style?: Record<string, any>;
+export interface FormGroupOptions {
+  /**
+   * Unique identifier for the form group
+   */
+  grouperId: string;
 }
+
+/**
+ * Type for the wrapper map returned by @FormWrapper decorated functions
+ */
+export type WrapperMap = Record<string, WrapInMeta>;
+
+/**
+ * Configuration options for @FormClass decorator
+ * Extends FormMeta properties but excludes 'fields' since those are defined via @FormField decorators
+ */
+export interface FormClassOptions extends Omit<FormMeta, 'fields'> {}
 
 /**
  * Configuration options for @FormField decorator
@@ -47,31 +50,6 @@ export interface FormFieldOptions<
   placeholder?: string;
   options?: FieldInputTypeProperties[T] extends { options: infer O } ? O | 'auto' : never;
 
-
-  /*inputType?: T;
-  label?: string;
-  required?: boolean;
-  helpText?: string;
-  validation?: {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    min?: number;
-    max?: number;
-  };
-  options?: FieldInputTypeProperties[T] extends { options: infer O } ? O | 'auto' : never;
-  min?: number;
-  max?: number;
-  step?: number;
-  rows?: number;
-  disabled?: boolean;
-  hidden?: boolean;
-  span?: number;
-  order?: number;
-  // For object/object[] fields (xingine's nested structure)
-  fields?: FieldMeta[];
-  itemFields?: FieldMeta[];*/
   itemType?: ClassConstructor; // Explicit item type for arrays
 }
 

@@ -3,10 +3,14 @@ import {
   FormFieldOptions,
   TableColumnOptions,
   DetailFieldOptions,
-  ChartSeriesOptions
+  ChartSeriesOptions,
+  FormGroupOptions,
+  WrapperMap
 } from './decorator-types';
 import {
   FORM_FIELD_METADATA,
+  FORM_GROUP_METADATA,
+  FORM_WRAPPER_METADATA,
   TABLE_COLUMN_METADATA,
   DETAIL_FIELD_METADATA,
   CHART_SERIES_METADATA
@@ -22,6 +26,35 @@ export function FormField(options: FormFieldOptions = {}) {
     const fieldData = { name: propertyKey, ...options };
     existingFields.push(fieldData);
     Reflect.defineMetadata(FORM_FIELD_METADATA, existingFields, target.constructor);
+  };
+}
+
+/**
+ * Property decorator for assigning form fields to groups
+ * @param options - Configuration options for the form group assignment
+ */
+export function FormGroup(options: FormGroupOptions) {
+  return function (target: any, propertyKey: string) {
+    const existingGroups = Reflect.getMetadata(FORM_GROUP_METADATA, target.constructor) || [];
+    const groupData = { 
+      fieldName: propertyKey,
+      grouperId: options.grouperId
+    };
+    existingGroups.push(groupData);
+    Reflect.defineMetadata(FORM_GROUP_METADATA, existingGroups, target.constructor);
+  };
+}
+
+/**
+ * Method decorator for defining wrapper configurations
+ * Applied to a method that returns a WrapperMap
+ * @returns Method decorator
+ */
+export function FormWrapper() {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    // Store the method name that returns the wrapper map
+    Reflect.defineMetadata(FORM_WRAPPER_METADATA, propertyKey, target.constructor);
+    return descriptor;
   };
 }
 

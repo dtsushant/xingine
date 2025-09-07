@@ -769,4 +769,34 @@ describe('Optional fields and label generation improvements', () => {
     // Custom label should be preserved
     expect(fieldsMap.get('roleName')?.label).toBe('Role Name');
   });
+
+  // Test class for enhanced FormClassOptions with FormMeta properties
+  @FormClass({
+    title: 'JSON Debug Form',
+    showJsonEditor: true,
+    description: 'Form with JSON editor enabled'
+  })
+  class FormWithJsonEditor {
+    @FormField({ inputType: 'input', label: 'Username' })
+    username: string = '';
+
+    @FormField({ inputType: 'password', label: 'Password' })
+    password: string = '';
+  }
+
+  it('should support FormMeta properties in FormClassOptions including showJsonEditor', () => {
+    const formMeta = extractFormMetaFromClass(FormWithJsonEditor);
+    
+    // Should include all FormMeta properties from FormClassOptions
+    expect(formMeta.title).toBe('JSON Debug Form');
+    expect(formMeta.showJsonEditor).toBe(true);
+    expect(formMeta.description).toBe('Form with JSON editor enabled');
+    
+    // Should still include fields from @FormField decorators
+    expect(formMeta.fields).toHaveLength(2);
+    
+    const fieldsMap = new Map(formMeta.fields.map((f: FieldMeta) => [f.name, f]));
+    expect(fieldsMap.get('username')?.label).toBe('Username');
+    expect(fieldsMap.get('password')?.inputType).toBe('password');
+  });
 });

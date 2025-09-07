@@ -1,6 +1,7 @@
 // src/types/component-meta-map.ts
 
 import {EventBindings} from "../expressions";
+import { StyleMeta } from "../expressions/style";
 import { ConditionalRenderConfig } from "../expressions/providers";
 import { WithWrapIn } from "./wrap-in-meta";
 
@@ -186,6 +187,24 @@ export type ObjectListFieldProperties = {
 };
 
 /**
+ * Properties for grouper fields that act as layout containers.
+ * Grouper fields are purely for styling/layout and not tied to DTO properties.
+ * They wrap multiple fields with custom styling and layout handled by WrapInMeta.
+ */
+export interface GrouperFieldProperties {
+  /**
+   * Array of fields to be grouped together inside this container.
+   */
+  fields: FieldMeta[];
+  
+  /**
+   * Optional title to be rendered at the top of the grouper container.
+   * This will be rendered through a dangerous content renderer to support HTML/markup.
+   */
+  title?: string;
+}
+
+/**
  * Properties for file input fields supporting file upload functionality.
  * This interface is fully serializable for use in both UI and DTO contexts.
  */
@@ -281,6 +300,7 @@ export type FieldInputTypeProperties = {
   button: ButtonTypeProperties;
   object: ObjectFieldProperties;
   "object[]": ObjectListFieldProperties;
+  grouper: GrouperFieldProperties;
   file: FileInputProperties;
 };
 
@@ -296,4 +316,6 @@ export interface FieldMeta<
   order?:number;
   properties?: FieldInputTypeProperties[T];
   conditionalRender?: ConditionalRenderConfig;
+  group?: string; // Field group ID this field belongs to
+  style?: StyleMeta; // Additional style configuration for enhanced design capabilities
 }> {}
