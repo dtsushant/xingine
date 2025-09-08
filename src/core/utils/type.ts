@@ -112,6 +112,16 @@ export const isObjectField = (field: FieldMeta): field is FieldMeta & {
         Array.isArray(field.properties.fields);
 };
 
+export const isGrouperField = (field: FieldMeta): field is FieldMeta & {
+    inputType: 'grouper';
+    properties: { fields: FieldMeta[] }
+} => {
+    return field.inputType === 'grouper' &&
+        field.properties !== undefined &&
+        'fields' in field.properties &&
+        Array.isArray(field.properties.fields);
+};
+
 export const isObjectArrayField = (field: FieldMeta): field is FieldMeta & {
     inputType: 'object[]';
     properties: { itemFields: FieldMeta[] }

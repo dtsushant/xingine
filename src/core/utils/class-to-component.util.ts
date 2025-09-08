@@ -125,6 +125,7 @@ function processFormGroups(
         label: grouperId, // Could be enhanced to have a proper label
         inputType: 'grouper',
         order: Math.min(...sortedFields.map(f => f.order || 0)),
+        conditionalRender: wrapperConfig.conditionalRender,
         properties: {
           fields: sortedFields,
           // Transfer title from wrapper config properties to grouper properties
@@ -269,6 +270,44 @@ function mergeFormFields(
           }
         } else {
           properties = properties || getDefaultPropertiesForInputType(inputType);
+        }
+      }
+    } else {
+      // Handle explicit object and object[] types
+      if (inputType === 'object') {
+        // For explicit object types, check if we need to extract nested fields
+        const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
+        if (typeof propertyType === 'function' && propertyType.prototype && !properties?.fields) {
+          if (visited.has(propertyType)) {
+            properties = { fields: [] }; // Prevent infinite recursion
+          } else {
+            const nestedFields = extractFormMetaFromClass(propertyType, depth + 1, visited);
+            properties = { fields: nestedFields.fields };
+          }
+        }
+      } else if (inputType === 'object[]') {
+        // For explicit object[] types, check if we need to extract item fields
+        const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
+        if (propertyType === Array && !properties?.itemFields) {
+          // Try to infer the item type from the property name or other metadata
+          let itemType = field.itemType;
+          if (!itemType) {
+            // Try to infer from TypeScript generic type information if available
+            // This is where we'd need additional metadata or naming conventions
+            itemType = inferArrayItemType(field.name, classType, propertyType);
+          }
+          
+          if (itemType && typeof itemType === 'function' && itemType.prototype) {
+            if (visited.has(itemType)) {
+              properties = { itemFields: [] }; // Prevent infinite recursion
+            } else {
+              const itemFields = extractFormMetaFromClass(itemType, depth + 1, visited);
+              properties = { itemFields: itemFields.fields };
+            }
+          } else {
+            // Fall back to extracting from heuristics
+            properties = { itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
+          }
         }
       }
     }
@@ -674,6 +713,76 @@ function inferDetailField(propertyName: string, classType: ClassConstructor): De
     label: camelCaseToLabel(propertyName),
     inputType: inputType
   };
+}
+
+/**
+ * Infers the item type for array properties based on naming conventions and context
+ */
+function inferArrayItemType(
+  propertyName: string,
+  classType: ClassConstructor,
+  propertyType: any
+): ClassConstructor | null {
+  // Try to look for global classes that match the property name pattern
+  // This is a heuristic approach since TypeScript generics are erased at runtime
+  
+  const lowerName = propertyName.toLowerCase();
+  
+  // Common patterns: propertyName -> ClassName
+  // companyLocations -> CompanyLocation
+  // userProfiles -> UserProfile
+  // etc.
+  
+  if (lowerName.endsWith('locations')) {
+    // Look for CompanyLocation, Location, etc.
+    const possibleNames = [
+      'CompanyLocation',
+      'Location',
+      capitalize(lowerName.slice(0, -1)) // "locations" -> "Location"
+    ];
+    
+    for (const name of possibleNames) {
+      const itemType = tryGetGlobalClass(name);
+      if (itemType) return itemType;
+    }
+  }
+  
+  if (lowerName.endsWith('items') || lowerName.endsWith('objects') || lowerName.endsWith('records')) {
+    const baseName = lowerName.replace(/(items|objects|records)$/, '');
+    const possibleNames = [
+      capitalize(baseName) + 'Item',
+      capitalize(baseName) + 'Object',
+      capitalize(baseName),
+      capitalize(lowerName.slice(0, -1)) // Remove 's'
+    ];
+    
+    for (const name of possibleNames) {
+      const itemType = tryGetGlobalClass(name);
+      if (itemType) return itemType;
+    }
+  }
+  
+  // Generic pattern: remove 's' and capitalize
+  if (lowerName.endsWith('s') && lowerName.length > 1) {
+    const singularName = capitalize(lowerName.slice(0, -1));
+    const itemType = tryGetGlobalClass(singularName);
+    if (itemType) return itemType;
+  }
+  
+  return null;
+}
+
+/**
+ * Attempts to get a class from the global scope
+ */
+function tryGetGlobalClass(className: string): ClassConstructor | null {
+  try {
+    // In a real implementation, you might need to maintain a registry of available classes
+    // For now, we'll return null and rely on explicit decoration
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**
