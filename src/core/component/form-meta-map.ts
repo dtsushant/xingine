@@ -189,10 +189,25 @@ export interface ButtonTypeProperties {
 }
 export type ObjectFieldProperties = {
   fields: FieldMeta[];
+  /**
+   * Optional wrapper configuration for the children container.
+   * This allows for applying custom layouts like grid, flexbox, etc. to the nested fields.
+   */
+  childWrapper?: WrapInMeta;
 };
 
 export type ObjectListFieldProperties = {
   itemFields: FieldMeta[];
+  /**
+   * Optional wrapper configuration for each item in the array.
+   * This allows for applying custom layouts and styling to each object instance.
+   */
+  childWrapper?: WrapInMeta;
+  /**
+   * Optional wrapper configuration for the entire list container.
+   * This allows for applying custom layouts to the array container itself.
+   */
+  listWrapper?: WrapInMeta;
 };
 
 /**

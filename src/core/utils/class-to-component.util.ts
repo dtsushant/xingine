@@ -276,41 +276,69 @@ function mergeFormFields(
       // Handle explicit object and object[] types
       if (inputType === 'object') {
         // For explicit object types, check if we need to extract nested fields
-        const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
-        if (typeof propertyType === 'function' && propertyType.prototype && !properties?.fields) {
+        console.log(`Processing object field: ${field.name}`);
+        let propertyType = field.itemType; // Check for explicit itemType first
+        console.log(`Field itemType:`, propertyType?.name || 'not set');
+        if (!propertyType) {
+          propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
+          console.log(`Fallback to design:type:`, propertyType?.name || 'not found');
+        }
+        console.log(`Current properties.fields:`, properties?.fields?.length || 0);
+        if (typeof propertyType === 'function' && propertyType.prototype && (!properties?.fields || properties.fields.length === 0)) {
+          console.log(`Extracting nested fields from ${propertyType.name}`);
           if (visited.has(propertyType)) {
-            properties = { fields: [] }; // Prevent infinite recursion
+            properties = { ...properties, fields: [] }; // Prevent infinite recursion
+            console.log(`Prevented recursion for ${propertyType.name}`);
           } else {
             const nestedFields = extractFormMetaFromClass(propertyType, depth + 1, visited);
-            properties = { fields: nestedFields.fields };
+            console.log(`Extracted ${nestedFields.fields.length} nested fields from ${propertyType.name}`);
+            properties = { ...properties, fields: nestedFields.fields };
+            console.log(`Updated properties.fields count:`, properties.fields.length);
           }
         }
       } else if (inputType === 'object[]') {
         // For explicit object[] types, check if we need to extract item fields
+        console.log(`Processing object[] field: ${field.name}`);
         const propertyType = Reflect.getMetadata('design:type', classType.prototype, field.name);
-        if (propertyType === Array && !properties?.itemFields) {
+        console.log(`Field itemType:`, field.itemType?.name || 'not set');
+        console.log(`Current properties.itemFields:`, properties?.itemFields?.length || 0);
+        if (propertyType === Array && (!properties?.itemFields || properties.itemFields.length === 0)) {
           // Try to infer the item type from the property name or other metadata
           let itemType = field.itemType;
+          console.log(`Using itemType:`, itemType?.name || 'not found');
           if (!itemType) {
             // Try to infer from TypeScript generic type information if available
             // This is where we'd need additional metadata or naming conventions
             itemType = inferArrayItemType(field.name, classType, propertyType);
+            console.log(`Inferred itemType:`, itemType?.name || 'failed to infer');
           }
           
           if (itemType && typeof itemType === 'function' && itemType.prototype) {
+            console.log(`Extracting item fields from ${itemType.name}`);
             if (visited.has(itemType)) {
-              properties = { itemFields: [] }; // Prevent infinite recursion
+              properties = { ...properties, itemFields: [] }; // Prevent infinite recursion
+              console.log(`Prevented recursion for ${itemType.name}`);
             } else {
               const itemFields = extractFormMetaFromClass(itemType, depth + 1, visited);
-              properties = { itemFields: itemFields.fields };
+              console.log(`Extracted ${itemFields.fields.length} item fields from ${itemType.name}`);
+              properties = { ...properties, itemFields: itemFields.fields };
+              console.log(`Updated properties.itemFields count:`, properties.itemFields.length);
             }
           } else {
             // Fall back to extracting from heuristics
-            properties = { itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
+            properties = { ...properties, itemFields: extractArrayItemFields(field.name, classType, depth, visited) };
           }
         }
       }
     }
+    
+    // Debug: Log final properties before creating FieldMeta
+    if (field.name === 'company' || field.name === 'companyLocations') {
+      console.log(`Final properties for ${field.name}:`, JSON.stringify(properties, null, 2));
+    }
+    
+    // Create a copy of field without properties to avoid override
+    const { properties: originalProperties, ...fieldWithoutProperties } = field;
     
     const fieldMeta: FieldMeta = {
       name: field.name,
@@ -318,7 +346,7 @@ function mergeFormFields(
       inputType: inputType || 'input',
       required: field.required || false,
       properties: properties || getDefaultPropertiesForInputType(inputType || 'input'),
-      ...field
+      ...fieldWithoutProperties
     };
     
     fieldMap.set(field.name, fieldMeta);

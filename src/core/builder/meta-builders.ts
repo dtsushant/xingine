@@ -934,6 +934,59 @@ export class FieldMetaBuilder {
     return this;
   }
 
+  /**
+   * Configure object field with nested fields and optional child wrapper
+   */
+  objectFields(fields: FieldMeta[], childWrapper?: WrapInMeta): FieldMetaBuilder {
+    this.field.inputType = 'object';
+    this.field.properties = {
+      fields,
+      childWrapper
+    };
+    return this;
+  }
+
+  /**
+   * Configure object[] field with item fields and optional wrappers
+   */
+  objectArrayFields(itemFields: FieldMeta[], childWrapper?: WrapInMeta, listWrapper?: WrapInMeta): FieldMetaBuilder {
+    this.field.inputType = 'object[]';
+    this.field.properties = {
+      itemFields,
+      childWrapper,
+      listWrapper
+    };
+    return this;
+  }
+
+  /**
+   * Add child wrapper for object/object[] fields
+   */
+  withChildWrapper(childWrapper: WrapInMeta): FieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = {};
+    }
+    
+    // Type assertion to handle the union type
+    const properties = this.field.properties as any;
+    properties.childWrapper = childWrapper;
+    return this;
+  }
+
+  /**
+   * Add list wrapper for object[] fields
+   */
+  withListWrapper(listWrapper: WrapInMeta): FieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = {};
+    }
+    
+    // Type assertion to handle the union type
+    const properties = this.field.properties as any;
+    properties.listWrapper = listWrapper;
+    return this;
+  }
+
   build(): FieldMeta {
     return { ...this.field };
   }
@@ -1161,6 +1214,277 @@ export class GrouperFieldMetaBuilder {
    */
   event(event: EventBindings): GrouperFieldMetaBuilder {
     this.field.event = event;
+    return this;
+  }
+
+  build(): FieldMeta {
+    return { ...this.field };
+  }
+}
+
+/**
+ * Builder for object fields with nested form fields and advanced styling
+ */
+export class ObjectFieldMetaBuilder {
+  private field: FieldMeta = {
+    inputType: 'object',
+    properties: { fields: [] }
+  };
+
+  static create(): ObjectFieldMetaBuilder {
+    return new ObjectFieldMetaBuilder();
+  }
+
+  name(name: string): ObjectFieldMetaBuilder {
+    this.field.name = name;
+    return this;
+  }
+
+  label(label: string | TitleMeta): ObjectFieldMetaBuilder {
+    this.field.label = label;
+    return this;
+  }
+
+  labelWithWrapper(content: string, wrapIn?: WrapInMeta): ObjectFieldMetaBuilder {
+    this.field.label = { content, wrapIn };
+    return this;
+  }
+
+  required(required: boolean = true): ObjectFieldMetaBuilder {
+    this.field.required = required;
+    return this;
+  }
+
+  fields(fields: FieldMeta[]): ObjectFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { fields: [] };
+    }
+    (this.field.properties as any).fields = fields;
+    return this;
+  }
+
+  addField(field: FieldMeta): ObjectFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { fields: [] };
+    }
+    (this.field.properties as any).fields.push(field);
+    return this;
+  }
+
+  withChildWrapper(childWrapper: WrapInMeta): ObjectFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { fields: [] };
+    }
+    (this.field.properties as any).childWrapper = childWrapper;
+    return this;
+  }
+
+  withChildWrapperBuilder(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ObjectFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    return this.withChildWrapper(builderFn(builder).build());
+  }
+
+  wrapIn(wrapIn: WrapInMeta): ObjectFieldMetaBuilder {
+    this.field.wrapIn = wrapIn;
+    return this;
+  }
+
+  wrapInBuilder(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ObjectFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.field.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
+  /**
+   * Quick method to create a card-style object field
+   */
+  asCard(titleText?: string): ObjectFieldMetaBuilder {
+    if (titleText) {
+      this.label(titleText);
+    }
+    return this.wrapInBuilder(w => w
+      .className('bg-white p-6 rounded-lg shadow-md border border-gray-200/50')
+    );
+  }
+
+  /**
+   * Quick method to create a grid layout for child fields
+   */
+  asGrid(columns: number = 2, gap: string = '1rem'): ObjectFieldMetaBuilder {
+    return this.withChildWrapperBuilder(w => w
+      .className('grid')
+      .cssStyle({ 
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap 
+      })
+    );
+  }
+
+  /**
+   * Quick method to create a card with grid layout for child fields
+   */
+  asCardWithGrid(titleText?: string, columns: number = 2, gap: string = '1rem'): ObjectFieldMetaBuilder {
+    return this.asCard(titleText).asGrid(columns, gap);
+  }
+
+  conditionalRender(config: ConditionalRenderConfig): ObjectFieldMetaBuilder {
+    this.field.conditionalRender = config;
+    return this;
+  }
+
+  showWhenEquals(fieldName: string, value: unknown): ObjectFieldMetaBuilder {
+    this.field.conditionalRender = {
+      condition: { field: fieldName, operator: 'eq', value }
+    };
+    return this;
+  }
+
+  build(): FieldMeta {
+    return { ...this.field };
+  }
+}
+
+/**
+ * Builder for object[] fields with array item fields and advanced styling
+ */
+export class ObjectArrayFieldMetaBuilder {
+  private field: FieldMeta = {
+    inputType: 'object[]',
+    properties: { itemFields: [] }
+  };
+
+  static create(): ObjectArrayFieldMetaBuilder {
+    return new ObjectArrayFieldMetaBuilder();
+  }
+
+  name(name: string): ObjectArrayFieldMetaBuilder {
+    this.field.name = name;
+    return this;
+  }
+
+  label(label: string | TitleMeta): ObjectArrayFieldMetaBuilder {
+    this.field.label = label;
+    return this;
+  }
+
+  labelWithWrapper(content: string, wrapIn?: WrapInMeta): ObjectArrayFieldMetaBuilder {
+    this.field.label = { content, wrapIn };
+    return this;
+  }
+
+  required(required: boolean = true): ObjectArrayFieldMetaBuilder {
+    this.field.required = required;
+    return this;
+  }
+
+  itemFields(fields: FieldMeta[]): ObjectArrayFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { itemFields: [] };
+    }
+    (this.field.properties as any).itemFields = fields;
+    return this;
+  }
+
+  addItemField(field: FieldMeta): ObjectArrayFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { itemFields: [] };
+    }
+    (this.field.properties as any).itemFields.push(field);
+    return this;
+  }
+
+  withChildWrapper(childWrapper: WrapInMeta): ObjectArrayFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { itemFields: [] };
+    }
+    (this.field.properties as any).childWrapper = childWrapper;
+    return this;
+  }
+
+  withChildWrapperBuilder(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ObjectArrayFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    return this.withChildWrapper(builderFn(builder).build());
+  }
+
+  withListWrapper(listWrapper: WrapInMeta): ObjectArrayFieldMetaBuilder {
+    if (!this.field.properties) {
+      this.field.properties = { itemFields: [] };
+    }
+    (this.field.properties as any).listWrapper = listWrapper;
+    return this;
+  }
+
+  withListWrapperBuilder(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ObjectArrayFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    return this.withListWrapper(builderFn(builder).build());
+  }
+
+  wrapIn(wrapIn: WrapInMeta): ObjectArrayFieldMetaBuilder {
+    this.field.wrapIn = wrapIn;
+    return this;
+  }
+
+  wrapInBuilder(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): ObjectArrayFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.field.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
+  /**
+   * Quick method to create a card-style list container
+   */
+  asCardList(titleText?: string): ObjectArrayFieldMetaBuilder {
+    if (titleText) {
+      this.label(titleText);
+    }
+    return this.wrapInBuilder(w => w
+        .className('bg-white p-6 rounded-lg shadow-md border border-gray-200/50')
+      )
+      .withListWrapperBuilder(w => w
+        .className('space-y-4 mt-4')
+      );
+  }
+
+  /**
+   * Quick method to create card-style items in the array
+   */
+  asCardItems(): ObjectArrayFieldMetaBuilder {
+    return this.withChildWrapperBuilder(w => w
+      .className('bg-gray-50 p-4 rounded-md border border-gray-200')
+    );
+  }
+
+  /**
+   * Quick method to create a grid layout for each item's fields
+   */
+  asItemGrid(columns: number = 2, gap: string = '1rem'): ObjectArrayFieldMetaBuilder {
+    return this.withChildWrapperBuilder(w => w
+      .className('grid')
+      .cssStyle({ 
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap 
+      })
+    );
+  }
+
+  /**
+   * Quick method to create a complete card list with card items and grid layout
+   */
+  asCardListWithGridItems(titleText?: string, columns: number = 2, gap: string = '1rem'): ObjectArrayFieldMetaBuilder {
+    return this.asCardList(titleText)
+      .asCardItems()
+      .asItemGrid(columns, gap);
+  }
+
+  conditionalRender(config: ConditionalRenderConfig): ObjectArrayFieldMetaBuilder {
+    this.field.conditionalRender = config;
+    return this;
+  }
+
+  showWhenEquals(fieldName: string, value: unknown): ObjectArrayFieldMetaBuilder {
+    this.field.conditionalRender = {
+      condition: { field: fieldName, operator: 'eq', value }
+    };
     return this;
   }
 
