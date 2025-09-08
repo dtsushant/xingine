@@ -33,6 +33,7 @@ import {
   SwitchTypeProperties,
   TextareaTypeProperties,
   TreeSelectTypeProperties,
+  TitleMeta,
 } from "../component/form-meta-map";
 import { StyleMeta } from "../expressions/style";
 import {
@@ -210,9 +211,15 @@ export const fileInputPropertiesDecoder: Decoder<FileInputProperties> = object({
   fileCountValidationMessage: optional(string),
 });
 
+export const titleMetaDecoder: Decoder<TitleMeta> = object({
+  content: string,
+  wrapIn: optional(lazy(() => wrapInMetaDecoder))
+});
+
 export const grouperFieldPropertiesDecoder: Decoder<GrouperFieldProperties> = object({
   fields: array(lazy(() => fieldMetaDecoder())),
-  title: optional(string)
+  title: optional(titleMetaDecoder),
+  childWrapper: optional(lazy(() => wrapInMetaDecoder))
 });
 
 export function decodeFieldInputPropertiesByInputType(
@@ -261,7 +268,7 @@ export function decodeFieldInputPropertiesByInputType(
 }
 const fieldMetaDecoderBase = object({
   name: string,
-  label: string,
+  label: optional(unknown), // Handle string | TitleMeta during transformation
   inputType: string,
   required: optional(boolean),
   value: optional(string),
@@ -279,7 +286,19 @@ function fieldMetaDecoder(): Decoder<FieldMeta> {
       baseFieldMeta.inputType,
       baseFieldMeta.properties,
     );
-    return { ...baseFieldMeta, properties: strictMeta } as FieldMeta;
+    
+    // Handle label validation - can be string or TitleMeta
+    let label: string | TitleMeta | undefined = baseFieldMeta.label as any;
+    if (baseFieldMeta.label && typeof baseFieldMeta.label === 'object') {
+      try {
+        label = titleMetaDecoder.verify(baseFieldMeta.label);
+      } catch (error) {
+        // If it fails TitleMeta validation, treat as string
+        label = String(baseFieldMeta.label);
+      }
+    }
+    
+    return { ...baseFieldMeta, properties: strictMeta, label } as FieldMeta;
   });
 }
 
@@ -363,5 +382,7 @@ export const formMetaDecoder: Decoder<FormMeta> = object({
   fields: array(fieldMetaDecoder()),
   action: string,
   event: optional(eventBindingsDecoder),
-  showJsonEditor: optional(boolean)
+  showJsonEditor: optional(boolean),
+  wrapIn: optional(wrapInMetaDecoder),
+  childrenWrapper: optional(wrapInMetaDecoder)
 });

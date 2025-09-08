@@ -128,9 +128,10 @@ function processFormGroups(
         properties: {
           fields: sortedFields,
           // Transfer title from wrapper config properties to grouper properties
-          title: wrapperConfig.properties?.title || wrapperConfig.title
+          title: wrapperConfig.properties?.title || wrapperConfig.title,
+          childWrapper: wrapperConfig.properties?.childWrapper 
         },
-        wrapIn: wrapperConfig
+        wrapIn: wrapperConfig.wrapIn
       };
       
       processedFields.push(grouperField);

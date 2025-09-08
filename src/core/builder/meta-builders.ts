@@ -10,7 +10,10 @@ import {
   ChartMeta,
   ChartConfig,
   ChartDataset,
-  ColumnMeta, FieldMeta
+  ColumnMeta, 
+  FieldMeta,
+  GrouperFieldProperties,
+  TitleMeta
 } from '../component/component-meta-map';
 import { ButtonMeta, IconMeta, InputMeta } from '../component';
 import { WrapInMeta, WrapInMetaBuilder } from '../component/wrap-in-meta';
@@ -400,6 +403,23 @@ export class FormMetaBuilder {
   wrapInMeta(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): FormMetaBuilder {
     const builder = WrapInMetaBuilder.create();
     this.meta.wrapIn = builderFn(builder).build();
+    return this;
+  }
+
+  /**
+   * Set child wrapper for the grouper fields container
+   */
+  childWrapper(wrapIn: WrapInMeta): FormMetaBuilder {
+    this.meta.childWrapper = wrapIn;
+    return this;
+  }
+
+  /**
+   * Set child wrapper using builder function for the grouper fields container
+   */
+  withChildWrapper(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): FormMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    this.meta.childWrapper = builderFn(builder).build();
     return this;
   }
 
@@ -793,8 +813,16 @@ export class FieldMetaBuilder {
     return this;
   }
 
-  label(label: string): FieldMetaBuilder {
+  label(label: string | TitleMeta): FieldMetaBuilder {
     this.field.label = label;
+    return this;
+  }
+
+  /**
+   * Set label as TitleMeta with content and optional wrapIn
+   */
+  labelWithWrapper(content: string, wrapIn?: WrapInMeta): FieldMetaBuilder {
+    this.field.label = { content, wrapIn };
     return this;
   }
 
@@ -935,8 +963,16 @@ export class GrouperFieldMetaBuilder {
   /**
    * Set label for this grouper (optional, for collapsible groups)
    */
-  label(label: string): GrouperFieldMetaBuilder {
+  label(label: string | TitleMeta): GrouperFieldMetaBuilder {
     this.field.label = label;
+    return this;
+  }
+
+  /**
+   * Set label as TitleMeta with content and optional wrapIn
+   */
+  labelWithWrapper(content: string, wrapIn?: WrapInMeta): GrouperFieldMetaBuilder {
+    this.field.label = { content, wrapIn };
     return this;
   }
 
@@ -944,7 +980,35 @@ export class GrouperFieldMetaBuilder {
    * Set the fields to be grouped
    */
   fields(fields: FieldMeta[]): GrouperFieldMetaBuilder {
-    this.field.properties = { fields };
+    this.field.properties = { ...this.field.properties, fields };
+    return this;
+  }
+
+  /**
+   * Set title for the grouper with optional wrapper configuration
+   */
+  title(content: string, wrapIn?: WrapInMeta): GrouperFieldMetaBuilder {
+    const properties = this.field.properties as GrouperFieldProperties;
+    properties.title = { content, wrapIn };
+    return this;
+  }
+
+  /**
+   * Set child wrapper for the grouper fields container
+   */
+  childWrapper(wrapIn: WrapInMeta): GrouperFieldMetaBuilder {
+    const properties = this.field.properties as GrouperFieldProperties;
+    properties.childWrapper = wrapIn;
+    return this;
+  }
+
+  /**
+   * Set child wrapper using builder function for the grouper fields container
+   */
+  withChildWrapper(builderFn: (builder: WrapInMetaBuilder) => WrapInMetaBuilder): GrouperFieldMetaBuilder {
+    const builder = WrapInMetaBuilder.create();
+    const properties = this.field.properties as GrouperFieldProperties;
+    properties.childWrapper = builderFn(builder).build();
     return this;
   }
 
@@ -1024,6 +1088,17 @@ export class GrouperFieldMetaBuilder {
   }
 
   /**
+   * Quick method to create a row layout with child wrapper for fields
+   */
+  asRowWithChildWrapper(gap: string = '1rem', childGap: string = '0.5rem'): GrouperFieldMetaBuilder {
+    return this.wrapInMeta(w => w.className('flex flex-col'))
+      .withChildWrapper(w => w
+        .className('flex flex-row')
+        .cssStyle({ gap: childGap })
+      );
+  }
+
+  /**
    * Quick method to create a grid layout grouper
    */
   asGrid(columns: number, gap: string = '1rem'): GrouperFieldMetaBuilder {
@@ -1037,13 +1112,48 @@ export class GrouperFieldMetaBuilder {
   }
 
   /**
+   * Quick method to create a grid layout with separate child wrapper
+   */
+  asGridWithChildWrapper(columns: number, gap: string = '1rem', childGap: string = '0.5rem'): GrouperFieldMetaBuilder {
+    return this.wrapInMeta(w => w.className('flex flex-col'))
+      .withChildWrapper(w => w
+        .className('grid')
+        .cssStyle({ 
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gap: childGap 
+        })
+      );
+  }
+
+  /**
    * Quick method to create a card-style grouper
    */
-  asCard(title?: string): GrouperFieldMetaBuilder {
-    this.label(title || '');
+  asCard(titleText?: string): GrouperFieldMetaBuilder {
+    if (titleText) {
+      this.title(titleText);
+    }
     return this.wrapInMeta(w => w
       .className('bg-white p-4 rounded-lg shadow-md border')
     );
+  }
+
+  /**
+   * Quick method to create a card with separate child wrapper for fields
+   */
+  asCardWithChildWrapper(titleText?: string, childColumns: number = 2, childGap: string = '1rem'): GrouperFieldMetaBuilder {
+    if (titleText) {
+      this.title(titleText);
+    }
+    return this.wrapInMeta(w => w
+        .className('bg-white p-4 rounded-lg shadow-md border')
+      )
+      .withChildWrapper(w => w
+        .className('grid mt-4')
+        .cssStyle({ 
+          gridTemplateColumns: `repeat(${childColumns}, 1fr)`,
+          gap: childGap 
+        })
+      );
   }
 
   /**

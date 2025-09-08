@@ -3,7 +3,16 @@
 import {EventBindings} from "../expressions";
 import { StyleMeta } from "../expressions/style";
 import { ConditionalRenderConfig } from "../expressions/providers";
-import { WithWrapIn } from "./wrap-in-meta";
+import { WithWrapIn, WrapInMeta } from "./wrap-in-meta";
+
+/**
+ * Type for title configuration that supports both simple strings and complex structures.
+ * Used for field labels, grouper titles, and other content that may need custom wrapping.
+ */
+export type TitleMeta = {
+  content: string;
+  wrapIn?: WrapInMeta;
+};
 
 export interface InputTypeProperties {
   /**
@@ -198,10 +207,15 @@ export interface GrouperFieldProperties {
   fields: FieldMeta[];
   
   /**
-   * Optional title to be rendered at the top of the grouper container.
+   * Optional title configuration with content and optional wrapping metadata.
    * This will be rendered through a dangerous content renderer to support HTML/markup.
    */
-  title?: string;
+  title?: TitleMeta;
+
+  /**
+   * optional Wrapper to wrap the children in
+   */
+  childWrapper?:WrapInMeta;
 }
 
 /**
@@ -308,7 +322,7 @@ export interface FieldMeta<
   T extends keyof FieldInputTypeProperties = keyof FieldInputTypeProperties,
 > extends WithWrapIn<{
   name?: string;
-  label?: string;
+  label?: string | TitleMeta;
   event?:EventBindings;
   inputType?: T;
   value?: string;

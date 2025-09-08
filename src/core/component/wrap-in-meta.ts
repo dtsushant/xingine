@@ -20,7 +20,7 @@ export interface WrapInMeta {
    */
   wrapWith: 'div' | 'p' | 'pre' | 'section' | 'article' | 'main' | 'aside' | 
            'header' | 'footer' | 'nav' | 'span' | 'h1' | 'h2' | 'h3' | 'h4' | 
-           'h5' | 'h6' | 'li' | 'ul' | 'ol';
+           'h5' | 'h6' | 'li' | 'ul' | 'ol' | 'label';
 
   /**
    * Style configuration (className and style object)
@@ -79,7 +79,7 @@ export function validateWrapInMeta(meta: WrapInMeta): boolean {
   const validElements = [
     'div', 'p', 'pre', 'section', 'article', 'main', 'aside',
     'header', 'footer', 'nav', 'span', 'h1', 'h2', 'h3', 'h4',
-    'h5', 'h6', 'li', 'ul', 'ol'
+    'h5', 'h6', 'li', 'ul', 'ol','label'
   ];
 
   if (!validElements.includes(meta.wrapWith)) {

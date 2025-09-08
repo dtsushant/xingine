@@ -53,6 +53,10 @@ export interface FormMeta extends WithWrapIn<{
   action: string;
   event?:EventBindings;
   showJsonEditor?: boolean;
+  /**
+   * optional Wrapper to wrap the children fields in
+   */
+  childWrapper?:WrapInMeta;
   [key: string]: unknown;
 }> {}
 
