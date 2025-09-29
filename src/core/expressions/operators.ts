@@ -1,14 +1,21 @@
-export type Operator =
-  | "eq"
-  | "ne"
-  | "like"
-  | "ilike"
-  | "in"
-  | "nin"
-  | "gt"
-  | "gte"
-  | "lt"
-  | "lte";
+export const Operators = {
+    eq: "Equals",
+    ne: "Not Equals",
+    like: "Like",
+    ilike: "Case Insensitive Like",
+    in: "In",
+    nin: "Not In",
+    gt: "Greater Than",
+    gte: "Greater Than or Equal",
+    lt: "Less Than",
+    lte: "Less Than or Equal",
+} as const;
+
+// 👇 keys of the mapping become the union
+
+export const GroupConditions = {and:"And", or:"Or"} as const;
+
+export type Operator = keyof typeof Operators;
 
 export interface BaseFilterCondition {
   field: string;

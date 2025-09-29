@@ -314,6 +314,71 @@ export interface FileInputProperties {
   fileCountValidationMessage?: string;
 }
 
+/**
+ * Definition of available fields for condition building
+ */
+export interface ConditionFieldDefinition {
+  name: string;
+  type: keyof FieldInputTypeProperties;
+  label: string;
+  options?: Array<{ label: string; value: string }>;
+  operators?: string[];
+}
+
+/**
+ * Properties for the Condition Builder field type
+ */
+export interface ConditionBuilderProperties {
+  /**
+   * Available fields that can be used in conditions
+   * Format: [{ name: 'fieldName', type: 'inputType', label: 'Display Label', options?: [...] }]
+   */
+  availableFields?: ConditionFieldDefinition[];
+  
+  /**
+   * Default logical operator for group conditions
+   */
+  defaultLogicalOperator?: 'and' | 'or';
+  
+  /**
+   * Whether to allow nested group conditions
+   */
+  allowNestedGroups?: boolean;
+  
+  /**
+   * Maximum nesting depth for conditions
+   */
+  maxDepth?: number;
+  
+  /**
+   * Custom operators to include/exclude
+   */
+  allowedOperators?: string[];
+  
+  /**
+   * Whether to show operator descriptions
+   */
+  showOperatorDescriptions?: boolean;
+  
+  /**
+   * Custom styling for condition groups
+   */
+  groupStyling?: {
+    andGroupClass?: string;
+    orGroupClass?: string;
+    baseConditionClass?: string;
+  };
+  
+  /**
+   * Validation rules for the condition builder
+   */
+  validation?: {
+    requireAtLeastOneCondition?: boolean;
+    maxConditions?: number;
+    requiredFields?: string[];
+  };
+}
+
 export type FieldInputTypeProperties = {
   input: InputTypeProperties;
   password: PasswordTypeProperties;
@@ -331,6 +396,7 @@ export type FieldInputTypeProperties = {
   "object[]": ObjectListFieldProperties;
   grouper: GrouperFieldProperties;
   file: FileInputProperties;
+  conditionbuilder: ConditionBuilderProperties;
 };
 
 export interface FieldMeta<
