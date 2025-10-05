@@ -6,6 +6,7 @@ import {styleDecoder} from "./style.decoder";
 
 export const buttonMetaDecoder : Decoder<ButtonMeta> = exact({
     name: string,
+    text: optional(string),
     content:optional(either(string,iconMetaDecoder)),
     event:optional(eventBindingsDecoder),
     style:optional(styleDecoder)

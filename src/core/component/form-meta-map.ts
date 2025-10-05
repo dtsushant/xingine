@@ -4,6 +4,9 @@ import {EventBindings} from "../expressions";
 import { StyleMeta } from "../expressions/style";
 import { ConditionalRenderConfig } from "../expressions/providers";
 import { WithWrapIn, WrapInMeta } from "./wrap-in-meta";
+import {ButtonMeta} from "./button-meta-map";
+import {IconMeta} from "./icon-meta-map";
+import {TextMeta} from "./text-meta-map";
 
 /**
  * Type for title configuration that supports both simple strings and complex structures.
@@ -185,6 +188,8 @@ export interface ButtonTypeProperties {
   text: string;
   type?: ButtonView;
   disabled?: boolean;
+  icon?: IconMeta;
+  style?: StyleMeta;
   onClickAction?: string; // ID or name of action handler to be resolved at runtime
 }
 export type ObjectFieldProperties = {
@@ -208,6 +213,29 @@ export type ObjectListFieldProperties = {
    * This allows for applying custom layouts to the array container itself.
    */
   listWrapper?: WrapInMeta;
+    /**
+     * Optional Text to display on the header of the list when rendered
+     */
+  mainHeaderText?:TextMeta;
+    /**
+     * Optional Text to display on each of the new list added
+     */
+  itemHeaderText?:TextMeta;
+
+    /**
+     * Optional Text to display when there are no items in the list
+     */
+  noItemsText?:TextMeta;
+    /**
+     * Optional wrapper configuration for the add button of the list.
+     * This allows for applying custom layouts to the add button.
+     */
+  addButtonWrapper?:WithWrapIn<ButtonTypeProperties>;
+    /**
+     * Optional wrapper configuration for the remove button of the list.
+     * This allows for applying custom layouts to the remove button.
+     */
+  removeButtonWrapper?: WithWrapIn<ButtonTypeProperties>;
 };
 
 /**
@@ -413,4 +441,8 @@ export interface FieldMeta<
   conditionalRender?: ConditionalRenderConfig;
   group?: string; // Field group ID this field belongs to
   style?: StyleMeta; // Additional style configuration for enhanced design capabilities
+  /**
+  * Additional properties for extensibility
+  */
+  [key: string]: unknown;
 }> {}

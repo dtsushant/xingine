@@ -4,7 +4,7 @@ import {
   SearchCondition,
   SearchQuery, SerializableAction
 } from "../expressions";
-import {FieldMeta} from "../component";
+import {FieldMeta, TitleMeta} from "../component";
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
@@ -333,4 +333,8 @@ export function getActionRef(
   }
 
   return undefined;
+}
+
+export function stringFormTitle(title:string | TitleMeta):string{
+    return typeof title === 'string' ? title: title.content;
 }

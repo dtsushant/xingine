@@ -23,6 +23,7 @@ import { ConditionalExpression } from '../expressions/operators';
 import { ConditionalRenderConfig, DataProvider, DefaultFormDataProvider } from '../expressions/providers';
 import { BaseComponentDetailBuilder } from './base-component-detail-builder';
 import {ActionBuilder} from "./action-builders";
+import {StyleMetaBuilder} from "./reusable-builders";
 
 /**
  * Builder for ConditionalMeta objects
@@ -186,8 +187,22 @@ export class ButtonMetaBuilder {
     return this;
   }
 
+    /**
+     * Add wrapper configuration using builder
+     */
+    withStyle(builderFn: (builder: StyleMetaBuilder) => StyleMetaBuilder): ButtonMetaBuilder {
+        const builder = StyleMetaBuilder.create();
+        this.meta.style = builderFn(builder).build();
+        return this;
+    }
+
   property(key: string, value: unknown): ButtonMetaBuilder {
     this.meta[key] = value;
+    return this;
+  }
+
+  text(text: string): ButtonMetaBuilder {
+    this.meta.text = text;
     return this;
   }
 

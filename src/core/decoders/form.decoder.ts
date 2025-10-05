@@ -45,6 +45,8 @@ import {eventBindingsDecoder} from "./action.decoder";
 import { ConditionalRenderConfig } from "../expressions/providers";
 import { conditionalExpressionDecoder } from "./expression.decoder";
 import { wrapInMetaDecoder } from "./wrap-in-meta.decoder";
+import {iconMetaDecoder} from "./icon.decoder";
+import {textMetaDecoder} from "./text.decoder";
 
 export const styleMetaDecoder: Decoder<StyleMeta> = object({
   className: optional(string),
@@ -171,8 +173,11 @@ const buttonViewDecoder: Decoder<ButtonView> = oneOf([
 export const buttonTypeDecoder: Decoder<ButtonTypeProperties> = object({
   text: string,
   type: optional(buttonViewDecoder),
+  icon:optional(iconMetaDecoder),
+  style:optional(styleMetaDecoder),
   disabled: optional(boolean),
   onClickAction: optional(string),
+  wrapIn: optional(lazy(() => wrapInMetaDecoder))
 });
 
 export const resultMapEntryDecoder = object({
@@ -309,6 +314,13 @@ export const objectTypeDecoder: Decoder<ObjectFieldProperties> = object({
 export const objectListTypeDecoder: Decoder<ObjectListFieldProperties> = object(
   {
     itemFields: array(fieldMetaDecoder()),
+      childWrapper: optional(lazy(() => wrapInMetaDecoder)),
+      listWrapper: optional(lazy(() => wrapInMetaDecoder)),
+      mainHeaderText: optional(textMetaDecoder),
+      itemHeaderText: optional(textMetaDecoder),
+      noItemsText: optional(textMetaDecoder),
+      addButtonWrapper: optional(lazy(() => buttonTypeDecoder)),
+      removeButtonWrapper: optional(lazy(() => buttonTypeDecoder)),
   },
 );
 
